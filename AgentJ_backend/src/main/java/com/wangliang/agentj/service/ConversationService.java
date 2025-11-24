@@ -1,0 +1,12 @@
+package com.wangliang.agentj.service;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class ConversationService {
+
+    /*
+     * AI 对话
+     */
+
+}
