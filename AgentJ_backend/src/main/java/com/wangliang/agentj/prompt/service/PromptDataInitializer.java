@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.cloud.ai.manus.prompt.service;
+package com.wangliang.agentj.prompt.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

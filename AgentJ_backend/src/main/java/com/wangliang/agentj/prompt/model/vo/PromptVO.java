@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.manus.prompt.model.vo;
-
-import org.springframework.ai.chat.messages.MessageType;
+package com.wangliang.agentj.prompt.model.vo;
 
 import com.alibaba.cloud.ai.manus.prompt.model.enums.PromptType;
+import org.springframework.ai.chat.messages.MessageType;
 
 public class PromptVO {
 

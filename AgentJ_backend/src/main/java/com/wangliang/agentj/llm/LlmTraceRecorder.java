@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.manus.llm;
+package com.wangliang.agentj.llm;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;

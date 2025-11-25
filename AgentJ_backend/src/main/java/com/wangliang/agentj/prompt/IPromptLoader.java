@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.manus.prompt;
+package com.wangliang.agentj.prompt;
 
 /**
  * Interface for prompt loader that handles prompt template loading and caching

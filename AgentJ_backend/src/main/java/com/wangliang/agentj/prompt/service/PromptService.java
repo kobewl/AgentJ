@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.manus.prompt.service;
-
-import org.springframework.ai.chat.messages.Message;
+package com.wangliang.agentj.prompt.service;
 
 import com.alibaba.cloud.ai.manus.prompt.model.vo.PromptVO;
+import org.springframework.ai.chat.messages.Message;
 
 import java.util.List;
 import java.util.Map;

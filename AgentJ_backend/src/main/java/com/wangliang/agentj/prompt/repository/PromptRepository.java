@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.manus.prompt.repository;
+package com.wangliang.agentj.prompt.repository;
 
+import com.alibaba.cloud.ai.manus.prompt.model.po.PromptEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-
-import com.alibaba.cloud.ai.manus.prompt.model.po.PromptEntity;
 
 import java.util.List;
 
