@@ -16,15 +16,21 @@
 package com.wangliang.agentj.llm;
 
 
+import com.wangliang.agentj.advisor.MyLoggerAdvisor;
+import com.wangliang.agentj.advisor.ReReadingAdvisor;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.observation.ChatModelObservationConvention;
 import org.springframework.ai.model.SimpleApiKey;
 import org.springframework.ai.model.tool.DefaultToolExecutionEligibilityPredicate;
@@ -52,50 +58,38 @@ public class LlmService {
 	// Cached concurrent map for ChatClient instances with modelName as key
 	private final Map<String, ChatClient> chatClientCache = new ConcurrentHashMap<>();
 
-	private ChatMemoryRepository conversationMemory;
+	private ChatMemory conversationMemory;
 
-	private ChatMemory agentMemory;
-
-	/*
-	 * Required for creating custom chatModel
-	 */
-	@Autowired
-	private ObjectProvider<RestClient.Builder> restClientBuilderProvider;
-
-	@Autowired
-	private ObjectProvider<WebClient.Builder> webClientBuilderProvider;
-
-	@Autowired
-	private ObjectProvider<ObservationRegistry> observationRegistry;
-
-	@Autowired
-	private ObjectProvider<ChatModelObservationConvention> observationConvention;
-
-	@Autowired
-	private ObjectProvider<ToolExecutionEligibilityPredicate> openAiToolExecutionEligibilityPredicate;
-
-	@Autowired
-	private ChatMemoryRepository chatMemoryRepository;
-
-	@Autowired
-	private LlmTraceRecorder llmTraceRecorder;
-
-	@Autowired(required = false)
-	private WebClient webClientWithDnsCache;
+	private static final String SYSTEM_PROMPT = """
+			你是一个全能的博士，专门帮助用户解决各种的疑难杂症。
+			""";
 
 	public LlmService(ChatModel dashScopeModel) {
 
 		// 基于内存的对话记忆
-		conversationMemory = new InMemoryChatMemoryRepository();
+		conversationMemory = MessageWindowChatMemory.builder().build();
+
+		chatClient = ChatClient.builder(dashScopeModel)
+				.defaultSystem(SYSTEM_PROMPT)
+				.defaultAdvisors(
+						MessageChatMemoryAdvisor.builder(conversationMemory).build(),
+						// 自定义日志拦截器
+						new MyLoggerAdvisor(),
+						// Re2 拦截器
+						new ReReadingAdvisor()
+				)
+				.build();
 	}
 
-	/**
-	 * Unified ChatClient builder method that uses the existing openAiApi() method
-	 * @param model Dynamic model entity
-	 * @param options Chat options (with internalToolExecutionEnabled already set)
-	 * @return Configured ChatClient
-	 */
-
+	public String doChat(String message, String chatId){
+		ChatResponse chatResponse = chatClient.prompt()
+				.user(message)
+				.advisors(a -> a.param(chatId, 10))
+				.call()
+				.chatResponse();
+		String content = chatResponse.getResult().getOutput().getText();
+		return content;
+	}
 
 
 }
