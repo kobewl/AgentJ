@@ -97,3 +97,9 @@ spring.log
 # Test reports
 /test-results/
 /test-output/
+
+### 本地敏感配置文件 ###
+**/application-dev.yml
+**/application-local.yml
+**/application-private.yml
+**/*.env
