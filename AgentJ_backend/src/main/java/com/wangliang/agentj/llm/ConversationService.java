@@ -18,13 +18,19 @@ package com.wangliang.agentj.llm;
 
 import com.wangliang.agentj.advisor.MyLoggerAdvisor;
 import com.wangliang.agentj.advisor.ReReadingAdvisor;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -38,6 +44,7 @@ public class ConversationService {
 
 	// Cached concurrent map for ChatClient instances with modelName as key
 	private final Map<String, ChatClient> chatClientCache = new ConcurrentHashMap<>();
+
 
 	private ChatMemory conversationMemory;
 
@@ -70,6 +77,39 @@ public class ConversationService {
 				.chatResponse();
 		String content = chatResponse.getResult().getOutput().getText();
 		return content;
+	}
+
+	/**
+	 * 基于知识库的 RAG 问答
+	 */
+	@Autowired
+	VectorStore vectorStore;
+
+	Advisor retrievalAugmentationAdvisor;
+
+	@PostConstruct
+	public void init() {
+		if (vectorStore != null) {
+			retrievalAugmentationAdvisor = RetrievalAugmentationAdvisor.builder()
+					.documentRetriever(VectorStoreDocumentRetriever.builder()
+							.similarityThreshold(0.50)
+							.vectorStore(vectorStore)
+							.build())
+					.build();
+		}
+	}
+
+	public String doChatWithRag(String message, String chatId){
+		if (retrievalAugmentationAdvisor == null) {
+			return "RAG功能尚未正确配置，请检查VectorStore配置";
+		}
+		
+		String answer = chatClient.prompt()
+				.advisors(retrievalAugmentationAdvisor)
+				.user(message)
+				.call()
+				.content();
+		return answer;
 	}
 
 

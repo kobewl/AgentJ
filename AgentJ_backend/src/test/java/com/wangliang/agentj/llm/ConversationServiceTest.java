@@ -20,4 +20,12 @@ class ConversationServiceTest {
         String secondContent = conversationService.doChat("我是谁？", chatId);
         System.out.println("第二次输出：" + secondContent);
     }
+
+    @Test
+    void doChatWithRag() {
+
+        String chatId = UUID.randomUUID().toString();
+        String firstContent = conversationService.doChatWithRag("什么是Java", chatId);
+        System.out.println("第一次输出：" + firstContent);
+    }
 }

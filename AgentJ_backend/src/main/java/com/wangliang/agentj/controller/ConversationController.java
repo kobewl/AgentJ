@@ -1,6 +1,5 @@
 package com.wangliang.agentj.controller;
 
-import com.wangliang.agentj.service.ConversationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +12,7 @@ import java.util.List;
  * Conversation Controller
  */
 @RestController
-@RequestMapping("/api/conversations")
+@RequestMapping("/conversations")
 @RequiredArgsConstructor
 @Slf4j
 public class ConversationController {
