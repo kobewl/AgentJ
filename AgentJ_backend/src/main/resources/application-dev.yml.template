@@ -2,11 +2,46 @@
 # 复制此文件为 application-dev.yml 并填入你的实际配置
 
 spring:
+  # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: "你的数据库连接URL，例如: jdbc:mysql://localhost:3306/agentj"
+    username: "你的数据库用户名"
+    password: "你的数据库密码"
+  
   ai:
     dashscope:
       api-key: "你的阿里云 DashScope API Key"
       chat:
         options:
           model: qwen-flash
+  
+  # Qdrant配置（用于QdrantConfig类）
+  vectorstore:
+    qdrant:
+      host: 127.0.0.1
+      port: 6334
+      api-key: "你的 Qdrant API Key (可选)"
+      collection-name: knowledge_base
+      use-tls: false
+      initialize-schema: true
 
-# 其他本地开发环境特定的配置可以在这里添加
+# 阿里云百炼配置
+dashscope:
+  api-key: "你的阿里云 DashScope API Key"
+  embedding:
+    model: text-embedding-v4
+    dimension: 1536
+    # 重试配置
+    max-retries: 3
+    retry-delay-millis: 1000
+    concurrent-batches: 4
+
+  # 嵌入存储配置
+  embedding-store:
+    # 存储类型: qdrant
+    type: qdrant
+    # 向量维度
+    dimension: 1536
+    # 相似度阈值
+    similarity-threshold: 0.7

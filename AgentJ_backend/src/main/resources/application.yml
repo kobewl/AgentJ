@@ -17,6 +17,7 @@ spring:
         collection-name: knowledge_base
         use-tls: false
         initialize-schema: true
+  # 数据源配置在 application-dev.yml 中
 
 # 阿里云百炼配置
 dashscope:
