@@ -32,7 +32,6 @@ public class DocumentVectorService {
     /**
      * 应用启动时将文档写入 Qdrant。
      */
-    @PostConstruct
     public void loadDocumentsToVectorStore() {
         List<Document> documents = documentReader.loadAllMarkdownFromDirectory();
         if (documents.isEmpty()) {

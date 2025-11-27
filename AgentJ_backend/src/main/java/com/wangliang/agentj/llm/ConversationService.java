@@ -16,8 +16,12 @@
 package com.wangliang.agentj.llm;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wangliang.agentj.advisor.MyLoggerAdvisor;
 import com.wangliang.agentj.advisor.ReReadingAdvisor;
+import com.wangliang.agentj.tools.searchAPI.WebSearch;
+import com.wangliang.agentj.tools.time.DateTimeTools;
+
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -29,6 +33,8 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
+import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.function.FunctionToolCallback;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,6 +51,7 @@ public class ConversationService {
 	// Cached concurrent map for ChatClient instances with modelName as key
 	private final Map<String, ChatClient> chatClientCache = new ConcurrentHashMap<>();
 
+	private final ObjectMapper objectMapper;
 
 	private ChatMemory conversationMemory;
 
@@ -52,7 +59,8 @@ public class ConversationService {
 			你是一个全能的博士，专门帮助用户解决各种的疑难杂症。
 			""";
 
-	public ConversationService(ChatModel dashScopeModel) {
+	public ConversationService(ChatModel dashScopeModel, ObjectMapper objectMapper) {
+		this.objectMapper = objectMapper;
 
 		// 基于内存的对话记忆
 		conversationMemory = MessageWindowChatMemory.builder().build();
@@ -69,6 +77,9 @@ public class ConversationService {
 				.build();
 	}
 
+	/**
+	 * 带记忆的聊天
+	 */
 	public String doChat(String message, String chatId){
 		ChatResponse chatResponse = chatClient.prompt()
 				.user(message)
@@ -110,6 +121,28 @@ public class ConversationService {
 				.call()
 				.content();
 		return answer;
+	}
+
+	/**
+	 * 带工具调用的聊天 - 使用FunctionToolCallback正确注册工具
+	 */
+	public String doChatWithTools(String message, String chatId){
+		// 创建WebSearch工具回调
+		ToolCallback webSearchToolCallback = FunctionToolCallback
+				.builder("web_search", new WebSearch(objectMapper))
+				.description("Perform a web search using SerpApi and return relevant search results. Use this tool when you need to find information on the web, get up-to-date data, or research specific topics. The tool returns search results including snippets, links, and other relevant information.")
+				.inputType(WebSearch.WebSearchInput.class)
+				.build();
+
+		ChatResponse chatResponse = chatClient.prompt()
+				.user(message)
+				.advisors(a -> a.param(chatId, 10))
+				.tools(new DateTimeTools())
+				.toolCallbacks(webSearchToolCallback)
+				.call()
+				.chatResponse();
+		String content = chatResponse.getResult().getOutput().getText();
+		return content;
 	}
 
 
