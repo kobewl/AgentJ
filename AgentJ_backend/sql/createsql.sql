@@ -21,3 +21,15 @@ CREATE TABLE `system_config` (
     -- 普通索引：支持按分组/子分组/键快速查询
                                  KEY `idx_config_group_sub_key` (`config_group`, `config_sub_group`, `config_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置表';
+
+
+-- 创建MCP配置表
+CREATE TABLE `mcp_config` (
+                              `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                              `mcp_server_name` varchar(255) NOT NULL COMMENT 'MCP服务器名称（唯一）',
+                              `connection_type` varchar(50) NOT NULL COMMENT '连接类型（枚举值）',
+                              `connection_config` varchar(4000) NOT NULL COMMENT '连接配置信息（JSON格式或自定义字符串）',
+                              `status` varchar(10) NOT NULL DEFAULT 'ENABLE' COMMENT '配置状态（ENABLE：启用，DISABLE：禁用）',
+                              PRIMARY KEY (`id`),
+                              UNIQUE KEY `uk_mcp_server_name` (`mcp_server_name`) COMMENT 'MCP服务器名称唯一索引'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='MCP配置表';
