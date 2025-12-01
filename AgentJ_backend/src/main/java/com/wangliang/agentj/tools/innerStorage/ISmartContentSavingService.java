@@ -25,7 +25,7 @@ import com.wangliang.agentj.config.ManusProperties;
 public interface ISmartContentSavingService {
 
 	/**
-	 * Get Manus properties
+	 * Get Manus properties  获取系统配置属性
 	 * @return Manus properties
 	 */
 	ManusProperties getManusProperties();
