@@ -17,7 +17,7 @@
 package com.wangliang.agentj.config;
 
 
-import com.wangliang.agentj.model.entity.ConfigInputType;
+import com.wangliang.agentj.config.entity.ConfigInputType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -16,7 +16,6 @@
 
 package com.wangliang.agentj.config;
 
-import com.wangliang.agentj.model.entity.ConfigInputType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Lazy;

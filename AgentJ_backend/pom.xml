@@ -35,6 +35,8 @@
         <lombok.version>1.18.36</lombok.version>
         <hutool.version>5.8.38</hutool.version>
         <knife4j.version>4.4.0</knife4j.version>
+        <!-- Playwright Configuration -->
+        <playwright.version>1.55.0</playwright.version>
     </properties>
 
     <dependencyManagement>
@@ -100,6 +102,20 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>spring-ai-autoconfigure-model-openai</artifactId>
+                    <groupId>org.springframework.ai</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>spring-ai-autoconfigure-model-chat-memory</artifactId>
+                    <groupId>org.springframework.ai</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-mcp-client-webflux</artifactId>
         </dependency>
         <!-- MCP SDK -->
@@ -134,6 +150,17 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <optional>true</optional>
+        </dependency>
+        <!-- Playwright for browser automation -->
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>${playwright.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.15</version>
         </dependency>
         <!-- Jsoup HTML解析器 -->
         <dependency>

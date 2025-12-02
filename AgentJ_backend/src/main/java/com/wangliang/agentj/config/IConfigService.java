@@ -15,8 +15,7 @@
  */
 package com.wangliang.agentj.config;
 
-
-import com.wangliang.agentj.model.entity.ConfigEntity;
+import com.alibaba.cloud.ai.lynxe.config.entity.ConfigEntity;
 
 import java.util.List;
 import java.util.Optional;
