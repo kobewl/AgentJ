@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.wangliang.agentj.tools.textOperator;
+package com.alibaba.cloud.ai.lynxe.tool.textOperator;
 
-import com.wangliang.agentj.config.ManusProperties;
-import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
-import com.wangliang.agentj.tools.innerStorage.SmartContentSavingService;
-import jakarta.annotation.PreDestroy;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +30,11 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
+import com.alibaba.cloud.ai.lynxe.tool.filesystem.UnifiedDirectoryManager;
+import com.alibaba.cloud.ai.lynxe.tool.innerStorage.SmartContentSavingService;
+
+import jakarta.annotation.PreDestroy;
 
 @Service
 @Primary
@@ -44,7 +46,7 @@ public class TextFileService implements ApplicationRunner, ITextFileService {
 	 * File state class for storing current file path and last operation result
 	 */
 	@Autowired
-	private ManusProperties manusProperties;
+	private LynxeProperties lynxeProperties;
 
 	@Autowired
 	private SmartContentSavingService innerStorageService;
@@ -60,7 +62,7 @@ public class TextFileService implements ApplicationRunner, ITextFileService {
 																												// and
 																												// Markdown
 			".java", ".py", ".js", ".ts", ".jsx", ".tsx", // Common programming languages
-			".html", ".htm", ".css", ".scss", ".sass", ".less", // Web-related
+			".html", ".htm", ".mhtml", ".css", ".scss", ".sass", ".less", // Web-related
 			".xml", ".json", ".yaml", ".yml", ".properties", // Configuration files
 			".sql", ".sh", ".bat", ".cmd", // Scripts and database
 			".log", ".conf", ".ini", // Logs and configuration
@@ -134,8 +136,8 @@ public class TextFileService implements ApplicationRunner, ITextFileService {
 		return getFileState(planId).getCurrentFilePath();
 	}
 
-	public ManusProperties getManusProperties() {
-		return manusProperties;
+	public LynxeProperties getLynxeProperties() {
+		return lynxeProperties;
 	}
 
 	public String getLastOperationResult(String planId) {

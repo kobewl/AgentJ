@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.wangliang.agentj.llm;
+package com.alibaba.cloud.ai.lynxe.llm;
 
-import com.wangliang.agentj.event.LynxeListener;
-import com.wangliang.agentj.event.ModelChangeEvent;
-import com.wangliang.agentj.model.entity.DynamicModelEntity;
-import com.wangliang.agentj.model.repository.DynamicModelRepository;
-import io.micrometer.observation.ObservationRegistry;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.ResponseEntity;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
@@ -39,18 +39,20 @@ import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.alibaba.cloud.ai.lynxe.event.LynxeListener;
+import com.alibaba.cloud.ai.lynxe.event.ModelChangeEvent;
+import com.alibaba.cloud.ai.lynxe.model.entity.DynamicModelEntity;
+import com.alibaba.cloud.ai.lynxe.model.repository.DynamicModelRepository;
+
+import io.micrometer.observation.ObservationRegistry;
+import reactor.core.publisher.Flux;
 
 @Service
 public class LlmService implements LynxeListener<ModelChangeEvent> {
@@ -346,7 +348,7 @@ public class LlmService implements LynxeListener<ModelChangeEvent> {
 	}
 
 	private OpenAiChatModel openAiChatModel(String modelName, DynamicModelEntity dynamicModelEntity,
-											OpenAiChatOptions defaultOptions) {
+			OpenAiChatOptions defaultOptions) {
 		if (modelName == null || modelName.isEmpty()) {
 			log.warn("Model name is null or empty, using default model name: {}", dynamicModelEntity.getModelName());
 			modelName = dynamicModelEntity.getModelName();
@@ -407,7 +409,7 @@ public class LlmService implements LynxeListener<ModelChangeEvent> {
 	}
 
 	private OpenAiApi openAiApi(RestClient.Builder restClientBuilder, WebClient.Builder webClientBuilder,
-								DynamicModelEntity dynamicModelEntity) {
+			DynamicModelEntity dynamicModelEntity) {
 		Map<String, String> headers = dynamicModelEntity.getHeaders();
 		MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
 		if (headers != null) {
@@ -426,7 +428,7 @@ public class LlmService implements LynxeListener<ModelChangeEvent> {
 
 			@Override
 			public ResponseEntity<ChatCompletion> chatCompletionEntity(ChatCompletionRequest chatRequest,
-																	   MultiValueMap<String, String> additionalHttpHeader) {
+					MultiValueMap<String, String> additionalHttpHeader) {
 				// Create a new LlmTraceRecorder instance for this request
 				LlmTraceRecorder recorder = new LlmTraceRecorder(objectMapper);
 				recorder.recordRequest(chatRequest);
@@ -435,7 +437,7 @@ public class LlmService implements LynxeListener<ModelChangeEvent> {
 
 			@Override
 			public Flux<ChatCompletionChunk> chatCompletionStream(ChatCompletionRequest chatRequest,
-																  MultiValueMap<String, String> additionalHttpHeader) {
+					MultiValueMap<String, String> additionalHttpHeader) {
 				// Create a new LlmTraceRecorder instance for this request
 				LlmTraceRecorder recorder = new LlmTraceRecorder(objectMapper);
 				recorder.recordRequest(chatRequest);

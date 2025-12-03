@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.wangliang.agentj.tools.textOperator;
-
-
-import com.wangliang.agentj.config.ManusProperties;
-import com.wangliang.agentj.tools.innerStorage.SmartContentSavingService;
+package com.alibaba.cloud.ai.lynxe.tool.textOperator;
 
 import java.io.IOException;
 import java.nio.file.Path;
+
+import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
+import com.alibaba.cloud.ai.lynxe.tool.innerStorage.SmartContentSavingService;
 
 /**
  * Text file service interface providing file operation management functions
@@ -84,10 +83,10 @@ public interface ITextFileService {
 	String getCurrentFilePath(String planId);
 
 	/**
-	 * Get Manus properties
-	 * @return Manus properties
+	 * Get Lynxe properties
+	 * @return Lynxe properties
 	 */
-	ManusProperties getManusProperties();
+	LynxeProperties getLynxeProperties();
 
 	/**
 	 * Get last operation result
