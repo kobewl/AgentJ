@@ -13,27 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.database.controller;
+package com.wangliang.agentj.tools.database.controller;
 
-import java.util.List;
-import java.util.Map;
-
+import com.wangliang.agentj.tools.database.model.vo.DatasourceConfigVO;
+import com.wangliang.agentj.tools.database.service.DatasourceConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.alibaba.cloud.ai.lynxe.tool.database.model.vo.DatasourceConfigVO;
-import com.alibaba.cloud.ai.lynxe.tool.database.service.DatasourceConfigService;
+import java.util.List;
+import java.util.Map;
 
 /**
  * REST Controller for managing datasource configurations

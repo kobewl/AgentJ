@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.cloud.ai.lynxe.tool.database;
+package com.wangliang.agentj.tools.database;
 
 /**
  * Database configuration constants

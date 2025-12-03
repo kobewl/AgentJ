@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.cloud.ai.lynxe.tool.database.sql;
+package com.wangliang.agentj.tools.database.sql;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

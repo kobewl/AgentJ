@@ -15,9 +15,9 @@
  */
 package com.wangliang.agentj.config;
 
-import com.alibaba.cloud.ai.lynxe.tool.excelProcessor.ExcelProcessingService;
-import com.alibaba.cloud.ai.lynxe.tool.excelProcessor.IExcelProcessingService;
-import com.alibaba.cloud.ai.lynxe.tool.filesystem.UnifiedDirectoryManager;
+import com.wangliang.agentj.tools.excelProcessor.ExcelProcessingService;
+import com.wangliang.agentj.tools.excelProcessor.IExcelProcessingService;
+import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

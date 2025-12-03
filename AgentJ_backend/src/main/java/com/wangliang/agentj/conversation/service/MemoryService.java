@@ -15,7 +15,8 @@
  */
 package com.wangliang.agentj.conversation.service;
 
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.entity.vo.Memory;
+
+import com.wangliang.agentj.conversation.entity.vo.Memory;
 
 import java.util.List;
 

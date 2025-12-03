@@ -16,7 +16,7 @@
 
 package com.wangliang.agentj.runtime.executor;
 
-import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
+import com.wangliang.agentj.config.LynxeProperties;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;

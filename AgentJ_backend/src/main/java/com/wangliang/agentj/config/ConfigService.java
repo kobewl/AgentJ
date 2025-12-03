@@ -15,8 +15,8 @@
  */
 package com.wangliang.agentj.config;
 
-import com.alibaba.cloud.ai.lynxe.config.entity.ConfigEntity;
-import com.alibaba.cloud.ai.lynxe.config.repository.ConfigRepository;
+import com.wangliang.agentj.config.entity.ConfigEntity;
+import com.wangliang.agentj.config.repository.ConfigRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

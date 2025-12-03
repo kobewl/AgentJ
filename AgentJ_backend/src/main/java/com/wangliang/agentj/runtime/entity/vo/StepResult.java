@@ -15,7 +15,8 @@
  */
 package com.wangliang.agentj.runtime.entity.vo;
 
-import com.alibaba.cloud.ai.lynxe.agent.AgentState;
+
+import com.wangliang.agentj.agent.AgentState;
 
 /**
  * Result class for individual step execution

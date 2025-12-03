@@ -13,23 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.database;
+package com.wangliang.agentj.tools.database;
 
-import java.util.Map;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.tools.AbstractBaseTool;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.database.action.ExecuteSqlAction;
+import com.wangliang.agentj.tools.database.action.ExecuteSqlToJsonFileAction;
+import com.wangliang.agentj.tools.database.action.GetTableNameAction;
+import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
+import com.wangliang.agentj.tools.i18n.ToolI18nService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
-import com.alibaba.cloud.ai.lynxe.tool.AbstractBaseTool;
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
-import com.alibaba.cloud.ai.lynxe.tool.database.action.ExecuteSqlAction;
-import com.alibaba.cloud.ai.lynxe.tool.database.action.ExecuteSqlToJsonFileAction;
-import com.alibaba.cloud.ai.lynxe.tool.database.action.GetTableNameAction;
-import com.alibaba.cloud.ai.lynxe.tool.filesystem.UnifiedDirectoryManager;
-import com.alibaba.cloud.ai.lynxe.tool.i18n.ToolI18nService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 
 @Component
 public class DatabaseReadTool extends AbstractBaseTool<DatabaseRequest> {
@@ -45,7 +44,7 @@ public class DatabaseReadTool extends AbstractBaseTool<DatabaseRequest> {
 	private final ToolI18nService toolI18nService;
 
 	public DatabaseReadTool(LynxeProperties lynxeProperties, DataSourceService dataSourceService,
-			ObjectMapper objectMapper, UnifiedDirectoryManager directoryManager, ToolI18nService toolI18nService) {
+                            ObjectMapper objectMapper, UnifiedDirectoryManager directoryManager, ToolI18nService toolI18nService) {
 		this.dataSourceService = dataSourceService;
 		this.objectMapper = objectMapper;
 		this.directoryManager = directoryManager;

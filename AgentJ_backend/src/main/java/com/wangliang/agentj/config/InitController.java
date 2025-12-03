@@ -15,6 +15,9 @@
  */
 package com.wangliang.agentj.config;
 
+import com.wangliang.agentj.model.model.enums.ModelType;
+import com.wangliang.agentj.model.model.vo.ModelConfig;
+import com.wangliang.agentj.model.service.ModelService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

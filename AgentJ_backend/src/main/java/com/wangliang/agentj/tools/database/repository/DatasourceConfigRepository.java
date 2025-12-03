@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.database.repository;
+package com.wangliang.agentj.tools.database.repository;
 
+import com.wangliang.agentj.tools.database.model.po.DatasourceConfigEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import com.alibaba.cloud.ai.lynxe.tool.database.model.po.DatasourceConfigEntity;
 
 import java.util.List;
 import java.util.Optional;

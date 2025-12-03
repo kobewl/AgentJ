@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.config;
 
-import com.alibaba.cloud.ai.lynxe.config.startUp.AppStartupListener;
+import com.wangliang.agentj.config.startUp.AppStartupListener;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 

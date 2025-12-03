@@ -57,7 +57,7 @@ public abstract class AbstractExecutionPlan implements PlanInterface {
 
 	/**
 	 * Constructor with parameters
-	 * @param planId Plan ID
+	 * @param rootPlanId rootPlanId ID
 	 * @param title Plan title
 	 */
 	public AbstractExecutionPlan(String currentPlanId, String rootPlanId, String title) {

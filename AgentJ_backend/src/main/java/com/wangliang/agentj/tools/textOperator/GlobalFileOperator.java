@@ -13,7 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.textOperator;
+package com.wangliang.agentj.tools.textOperator;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.tools.AbstractBaseTool;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.i18n.ToolI18nService;
+import com.wangliang.agentj.tools.innerStorage.SmartContentSavingService;
+import com.wangliang.agentj.tools.shortUrl.ShortUrlService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -25,17 +35,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.alibaba.cloud.ai.lynxe.tool.AbstractBaseTool;
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
-import com.alibaba.cloud.ai.lynxe.tool.i18n.ToolI18nService;
-import com.alibaba.cloud.ai.lynxe.tool.innerStorage.SmartContentSavingService;
-import com.alibaba.cloud.ai.lynxe.tool.shortUrl.ShortUrlService;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Global file operator that performs operations on files. This operator provides access
@@ -199,7 +198,7 @@ public class GlobalFileOperator extends AbstractBaseTool<GlobalFileOperator.Glob
 	private final ToolI18nService toolI18nService;
 
 	public GlobalFileOperator(TextFileService textFileService, SmartContentSavingService innerStorageService,
-			ObjectMapper objectMapper, ShortUrlService shortUrlService, ToolI18nService toolI18nService) {
+                              ObjectMapper objectMapper, ShortUrlService shortUrlService, ToolI18nService toolI18nService) {
 		this.textFileService = textFileService;
 		this.innerStorageService = innerStorageService;
 		this.objectMapper = objectMapper;
@@ -872,19 +871,19 @@ public class GlobalFileOperator extends AbstractBaseTool<GlobalFileOperator.Glob
 				searchPattern = pattern.toLowerCase();
 			}
 			if (wholeWord) {
-				searchPattern = "\\b" + java.util.regex.Pattern.quote(searchPattern) + "\\b";
+				searchPattern = "\\b" + Pattern.quote(searchPattern) + "\\b";
 			}
 
-			java.util.regex.Pattern regexPattern;
+			Pattern regexPattern;
 			if (wholeWord) {
-				regexPattern = caseSensitive ? java.util.regex.Pattern.compile(searchPattern)
-						: java.util.regex.Pattern.compile(searchPattern, java.util.regex.Pattern.CASE_INSENSITIVE);
+				regexPattern = caseSensitive ? Pattern.compile(searchPattern)
+						: Pattern.compile(searchPattern, Pattern.CASE_INSENSITIVE);
 			}
 			else {
 				regexPattern = caseSensitive
-						? java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(searchPattern))
-						: java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(searchPattern),
-								java.util.regex.Pattern.CASE_INSENSITIVE);
+						? Pattern.compile(Pattern.quote(searchPattern))
+						: Pattern.compile(Pattern.quote(searchPattern),
+								Pattern.CASE_INSENSITIVE);
 			}
 
 			StringBuilder result = new StringBuilder();

@@ -15,9 +15,10 @@
  */
 package com.wangliang.agentj.tools.browser;
 
-import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
-import com.alibaba.cloud.ai.lynxe.tool.filesystem.UnifiedDirectoryManager;
-import com.alibaba.cloud.ai.lynxe.tool.innerStorage.SmartContentSavingService;
+
+import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
+import com.wangliang.agentj.tools.innerStorage.SmartContentSavingService;
 
 /**
  * Chrome driver service interface providing browser driver management functions

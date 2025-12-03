@@ -13,23 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.cron.controller;
+package com.wangliang.agentj.cron.controller;
 
+import com.wangliang.agentj.cron.service.CronService;
+import com.wangliang.agentj.cron.vo.CronConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.alibaba.cloud.ai.lynxe.cron.service.CronService;
-import com.alibaba.cloud.ai.lynxe.cron.vo.CronConfig;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 

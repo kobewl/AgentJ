@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.cron.repository;
+package com.wangliang.agentj.cron.repository;
 
+import com.wangliang.agentj.cron.entity.CronEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import com.alibaba.cloud.ai.lynxe.cron.entity.CronEntity;
 
 import java.util.List;
 

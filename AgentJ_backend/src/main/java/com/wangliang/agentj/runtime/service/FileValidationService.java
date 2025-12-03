@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.runtime.service;
 
-import com.alibaba.cloud.ai.lynxe.config.FileTypeConfiguration;
+import com.wangliang.agentj.config.FileTypeConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

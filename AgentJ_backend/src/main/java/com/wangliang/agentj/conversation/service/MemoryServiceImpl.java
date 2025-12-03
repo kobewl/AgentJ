@@ -15,9 +15,9 @@
  */
 package com.wangliang.agentj.conversation.service;
 
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.entity.po.MemoryEntity;
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.entity.vo.Memory;
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.repository.MemoryRepository;
+import com.wangliang.agentj.conversation.entity.po.MemoryEntity;
+import com.wangliang.agentj.conversation.entity.vo.Memory;
+import com.wangliang.agentj.conversation.repository.MemoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.memory.ChatMemory;

@@ -13,8 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.convertToMarkdown;
+package com.wangliang.agentj.tools.convertToMarkdown;
 
+import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.llm.LlmService;
+import com.wangliang.agentj.runtime.executor.ImageRecognitionExecutorPool;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.util.MimeTypeUtils;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,21 +36,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-
-import javax.imageio.ImageIO;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.prompt.ChatOptions;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.util.MimeTypeUtils;
-
-import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
-import com.alibaba.cloud.ai.lynxe.llm.LlmService;
-import com.alibaba.cloud.ai.lynxe.runtime.executor.ImageRecognitionExecutorPool;
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
-import com.alibaba.cloud.ai.lynxe.tool.filesystem.UnifiedDirectoryManager;
 
 /**
  * Image OCR Processor using OpenAI Image Model
@@ -62,7 +60,7 @@ public class ImageOcrProcessor {
 	private String imageFormatName = "JPEG";
 
 	public ImageOcrProcessor(UnifiedDirectoryManager directoryManager, LlmService llmService,
-			LynxeProperties lynxeProperties, ImageRecognitionExecutorPool imageRecognitionExecutorPool) {
+                             LynxeProperties lynxeProperties, ImageRecognitionExecutorPool imageRecognitionExecutorPool) {
 		this.directoryManager = directoryManager;
 		this.llmService = llmService;
 		this.lynxeProperties = lynxeProperties;

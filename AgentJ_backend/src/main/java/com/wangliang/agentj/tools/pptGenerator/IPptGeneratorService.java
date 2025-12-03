@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.pptGenerator;
+package com.wangliang.agentj.tools.pptGenerator;
+
+
+import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.tools.textOperator.FileState;
 
 import java.io.IOException;
-
-import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
-import com.alibaba.cloud.ai.lynxe.tool.textOperator.FileState;
 
 /**
  * PPT generator service interface, providing PPT file operation management functions

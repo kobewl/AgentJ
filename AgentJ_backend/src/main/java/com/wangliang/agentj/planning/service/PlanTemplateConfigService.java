@@ -15,13 +15,16 @@
  */
 package com.wangliang.agentj.planning.service;
 
-import com.alibaba.cloud.ai.lynxe.planning.exception.PlanTemplateConfigException;
-import com.alibaba.cloud.ai.lynxe.planning.model.enums.PlanTemplateAccessLevel;
-import com.alibaba.cloud.ai.lynxe.planning.model.po.FuncAgentToolEntity;
-import com.alibaba.cloud.ai.lynxe.planning.model.vo.PlanTemplateConfigVO;
-import com.alibaba.cloud.ai.lynxe.planning.repository.FuncAgentToolRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.planning.exception.PlanTemplateConfigException;
+import com.wangliang.agentj.planning.model.enums.PlanTemplateAccessLevel;
+import com.wangliang.agentj.planning.model.po.FuncAgentToolEntity;
+import com.wangliang.agentj.planning.model.vo.PlanTemplateConfigVO;
+import com.wangliang.agentj.planning.repository.FuncAgentToolRepository;
+import com.wangliang.agentj.planning.repository.PlanTemplateVersionRepository;
+import com.wangliang.agentj.runtime.entity.vo.ExecutionStep;
+import com.wangliang.agentj.runtime.entity.vo.PlanInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +56,7 @@ public class PlanTemplateConfigService {
 	private ObjectMapper objectMapper;
 
 	@Autowired(required = false)
-	private com.alibaba.cloud.ai.lynxe.planning.repository.PlanTemplateVersionRepository planTemplateVersionRepository;
+	private PlanTemplateVersionRepository planTemplateVersionRepository;
 
 	/**
 	 * Prepare PlanTemplateConfigVO with toolConfig This method ensures toolConfig is
@@ -870,8 +873,8 @@ public class PlanTemplateConfigService {
 
 				try {
 					// Parse plan JSON to PlanInterface
-					com.alibaba.cloud.ai.lynxe.runtime.entity.vo.PlanInterface planInterface = objectMapper
-						.readValue(planJson, com.alibaba.cloud.ai.lynxe.runtime.entity.vo.PlanInterface.class);
+					PlanInterface planInterface = objectMapper
+						.readValue(planJson, PlanInterface.class);
 
 					// Create PlanTemplateConfigVO from plan template and plan JSON
 					PlanTemplateConfigVO configVO = new PlanTemplateConfigVO();
@@ -885,7 +888,7 @@ public class PlanTemplateConfigService {
 					// Convert ExecutionStep list to StepConfig list
 					if (planInterface.getAllSteps() != null) {
 						List<PlanTemplateConfigVO.StepConfig> stepConfigs = new ArrayList<>();
-						for (com.alibaba.cloud.ai.lynxe.runtime.entity.vo.ExecutionStep step : planInterface
+						for (ExecutionStep step : planInterface
 							.getAllSteps()) {
 							PlanTemplateConfigVO.StepConfig stepConfig = new PlanTemplateConfigVO.StepConfig();
 							stepConfig.setStepRequirement(step.getStepRequirement());

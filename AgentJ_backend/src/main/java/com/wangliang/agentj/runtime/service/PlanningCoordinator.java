@@ -15,16 +15,16 @@
  */
 package com.wangliang.agentj.runtime.service;
 
-import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
-import com.alibaba.cloud.ai.lynxe.planning.PlanningFactory;
-import com.alibaba.cloud.ai.lynxe.planning.service.PlanFinalizer;
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.ExecutionContext;
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.PlanExecutionResult;
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.PlanInterface;
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.RequestSource;
-import com.alibaba.cloud.ai.lynxe.runtime.executor.PlanExecutorInterface;
-import com.alibaba.cloud.ai.lynxe.runtime.executor.factory.PlanExecutorFactory;
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.service.MemoryService;
+import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.conversation.service.MemoryService;
+import com.wangliang.agentj.planning.PlanningFactory;
+import com.wangliang.agentj.planning.service.PlanFinalizer;
+import com.wangliang.agentj.runtime.entity.vo.ExecutionContext;
+import com.wangliang.agentj.runtime.entity.vo.PlanExecutionResult;
+import com.wangliang.agentj.runtime.entity.vo.PlanInterface;
+import com.wangliang.agentj.runtime.entity.vo.RequestSource;
+import com.wangliang.agentj.runtime.executor.PlanExecutorInterface;
+import com.wangliang.agentj.runtime.executor.factory.PlanExecutorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -49,7 +49,7 @@ public class PlanningCoordinator {
 	private final LynxeProperties lynxeProperties;
 
 	public PlanningCoordinator(PlanningFactory planningFactory, PlanExecutorFactory planExecutorFactory,
-			PlanFinalizer planFinalizer, MemoryService memoryService, LynxeProperties lynxeProperties) {
+                               PlanFinalizer planFinalizer, MemoryService memoryService, LynxeProperties lynxeProperties) {
 		this.planExecutorFactory = planExecutorFactory;
 		this.planFinalizer = planFinalizer;
 		this.memoryService = memoryService;
@@ -73,8 +73,8 @@ public class PlanningCoordinator {
 	 * @return A CompletableFuture that completes with the execution result
 	 */
 	public CompletableFuture<PlanExecutionResult> executeByPlan(PlanInterface plan, String rootPlanId,
-			String parentPlanId, String currentPlanId, String toolcallId, RequestSource requestSource, String uploadKey,
-			int planDepth, String conversationId) {
+                                                                String parentPlanId, String currentPlanId, String toolcallId, RequestSource requestSource, String uploadKey,
+                                                                int planDepth, String conversationId) {
 		try {
 			log.info("Starting direct plan execution for plan: {} at depth: {}", plan.getCurrentPlanId(), planDepth);
 

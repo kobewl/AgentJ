@@ -13,7 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.mapreduce;
+package com.wangliang.agentj.tools.mapreduce;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.planning.PlanningFactory;
+import com.wangliang.agentj.tools.AbstractBaseTool;
+import com.wangliang.agentj.tools.AsyncToolCallBiFunctionDef;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
+import com.wangliang.agentj.tools.i18n.ToolI18nService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.model.ToolContext;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,20 +38,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.model.ToolContext;
-
-import com.alibaba.cloud.ai.lynxe.planning.PlanningFactory.ToolCallBackContext;
-import com.alibaba.cloud.ai.lynxe.tool.AbstractBaseTool;
-import com.alibaba.cloud.ai.lynxe.tool.AsyncToolCallBiFunctionDef;
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
-import com.alibaba.cloud.ai.lynxe.tool.filesystem.UnifiedDirectoryManager;
-import com.alibaba.cloud.ai.lynxe.tool.i18n.ToolI18nService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * File-based parallel execution tool that reads JSON parameters from a file (JSON array)
@@ -54,7 +53,7 @@ public class FileBasedParallelExecutionTool extends AbstractBaseTool<FileBasedPa
 
 	private final ObjectMapper objectMapper;
 
-	private final Map<String, ToolCallBackContext> toolCallbackMap;
+	private final Map<String, PlanningFactory.ToolCallBackContext> toolCallbackMap;
 
 	private final UnifiedDirectoryManager directoryManager;
 
@@ -94,9 +93,9 @@ public class FileBasedParallelExecutionTool extends AbstractBaseTool<FileBasedPa
 
 	}
 
-	public FileBasedParallelExecutionTool(ObjectMapper objectMapper, Map<String, ToolCallBackContext> toolCallbackMap,
-			UnifiedDirectoryManager directoryManager, ParallelExecutionService parallelExecutionService,
-			ToolI18nService toolI18nService) {
+	public FileBasedParallelExecutionTool(ObjectMapper objectMapper, Map<String, PlanningFactory.ToolCallBackContext> toolCallbackMap,
+                                          UnifiedDirectoryManager directoryManager, ParallelExecutionService parallelExecutionService,
+                                          ToolI18nService toolI18nService) {
 		this.objectMapper = objectMapper;
 		this.toolCallbackMap = toolCallbackMap;
 		this.directoryManager = directoryManager;
@@ -107,7 +106,7 @@ public class FileBasedParallelExecutionTool extends AbstractBaseTool<FileBasedPa
 	/**
 	 * Set the tool callback map (used to look up actual tool implementations)
 	 */
-	public void setToolCallbackMap(Map<String, ToolCallBackContext> toolCallbackMap) {
+	public void setToolCallbackMap(Map<String, PlanningFactory.ToolCallBackContext> toolCallbackMap) {
 		this.toolCallbackMap.putAll(toolCallbackMap);
 	}
 

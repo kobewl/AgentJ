@@ -16,7 +16,13 @@
 package com.wangliang.agentj.planning.service;
 
 import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.conversation.service.MemoryService;
 import com.wangliang.agentj.llm.LlmService;
+import com.wangliang.agentj.llm.StreamingResponseHandler;
+import com.wangliang.agentj.recorder.service.PlanExecutionRecorder;
+import com.wangliang.agentj.runtime.entity.vo.ExecutionContext;
+import com.wangliang.agentj.runtime.entity.vo.PlanExecutionResult;
+import com.wangliang.agentj.runtime.service.TaskInterruptionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;

@@ -15,8 +15,8 @@
  */
 package com.wangliang.agentj.runtime.entity.vo;
 
-import com.alibaba.cloud.ai.lynxe.agent.AgentState;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.wangliang.agentj.agent.AgentState;
 
 import java.util.ArrayList;
 import java.util.List;

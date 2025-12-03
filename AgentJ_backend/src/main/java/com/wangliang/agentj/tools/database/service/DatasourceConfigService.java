@@ -13,25 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.database.service;
+package com.wangliang.agentj.tools.database.service;
+
+import com.wangliang.agentj.tools.database.DataSourceService;
+import com.wangliang.agentj.tools.database.model.po.DatasourceConfigEntity;
+import com.wangliang.agentj.tools.database.model.vo.DatasourceConfigVO;
+import com.wangliang.agentj.tools.database.repository.DatasourceConfigRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.alibaba.cloud.ai.lynxe.tool.database.DataSourceService;
-import com.alibaba.cloud.ai.lynxe.tool.database.model.po.DatasourceConfigEntity;
-import com.alibaba.cloud.ai.lynxe.tool.database.model.vo.DatasourceConfigVO;
-import com.alibaba.cloud.ai.lynxe.tool.database.repository.DatasourceConfigRepository;
-
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Service for managing datasource configurations

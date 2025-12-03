@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.llm;
+package com.wangliang.agentj.llm;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.wangliang.agentj.event.LynxeListener;
+import com.wangliang.agentj.event.ModelChangeEvent;
+import com.wangliang.agentj.model.entity.DynamicModelEntity;
+import com.wangliang.agentj.model.repository.DynamicModelRepository;
+import io.micrometer.observation.ObservationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -45,14 +44,13 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
-
-import com.alibaba.cloud.ai.lynxe.event.LynxeListener;
-import com.alibaba.cloud.ai.lynxe.event.ModelChangeEvent;
-import com.alibaba.cloud.ai.lynxe.model.entity.DynamicModelEntity;
-import com.alibaba.cloud.ai.lynxe.model.repository.DynamicModelRepository;
-
-import io.micrometer.observation.ObservationRegistry;
 import reactor.core.publisher.Flux;
+
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class LlmService implements LynxeListener<ModelChangeEvent> {

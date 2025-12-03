@@ -13,22 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.convertToMarkdown;
+package com.wangliang.agentj.tools.convertToMarkdown;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
-import com.alibaba.cloud.ai.lynxe.tool.filesystem.UnifiedDirectoryManager;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 /**
  * PDF to Markdown Processor
@@ -58,7 +57,7 @@ public class PdfToMarkdownProcessor {
 	 * @return ToolExecuteResult with OCR conversion status
 	 */
 	private ToolExecuteResult convertToMarkdownWithOcr(Path sourceFile, String additionalRequirement,
-			String currentPlanId) {
+                                                       String currentPlanId) {
 		try {
 			log.info("Converting PDF file to Markdown using OCR: {}", sourceFile.getFileName());
 

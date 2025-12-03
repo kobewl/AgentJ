@@ -13,27 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.mapreduce;
+package com.wangliang.agentj.tools.mapreduce;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.planning.PlanningFactory;
+import com.wangliang.agentj.runtime.executor.LevelBasedExecutorPool;
+import com.wangliang.agentj.runtime.service.PlanIdDispatcher;
+import com.wangliang.agentj.runtime.service.ServiceGroupIndexService;
+import com.wangliang.agentj.tools.AsyncToolCallBiFunctionDef;
+import com.wangliang.agentj.tools.ToolCallBiFunctionDef;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.model.ToolContext;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.model.ToolContext;
-import org.springframework.stereotype.Service;
-
-import com.alibaba.cloud.ai.lynxe.planning.PlanningFactory.ToolCallBackContext;
-import com.alibaba.cloud.ai.lynxe.runtime.executor.LevelBasedExecutorPool;
-import com.alibaba.cloud.ai.lynxe.runtime.service.PlanIdDispatcher;
-import com.alibaba.cloud.ai.lynxe.runtime.service.ServiceGroupIndexService;
-import com.alibaba.cloud.ai.lynxe.tool.AsyncToolCallBiFunctionDef;
-import com.alibaba.cloud.ai.lynxe.tool.ToolCallBiFunctionDef;
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Common service for parallel execution of tools. Handles the execution logic shared
@@ -68,7 +67,7 @@ public class ParallelExecutionService {
 	 * @param toolCallbackMap Map of tool callbacks
 	 * @return ToolCallBackContext if found, null otherwise
 	 */
-	public ToolCallBackContext lookupToolContext(String toolName, Map<String, ToolCallBackContext> toolCallbackMap) {
+	public PlanningFactory.ToolCallBackContext lookupToolContext(String toolName, Map<String, PlanningFactory.ToolCallBackContext> toolCallbackMap) {
 		// Convert tool name to qualified key format (toolName*index*) if needed
 		// This handles the case where tools are registered with qualified keys based on
 		// serviceGroup
@@ -87,7 +86,7 @@ public class ParallelExecutionService {
 		}
 
 		// Try lookup with converted key first, then fallback to original toolName
-		ToolCallBackContext toolContext = toolCallbackMap.get(lookupKey);
+		PlanningFactory.ToolCallBackContext toolContext = toolCallbackMap.get(lookupKey);
 		if (toolContext == null && !lookupKey.equals(toolName)) {
 			// Fallback to original toolName if converted key lookup failed
 			toolContext = toolCallbackMap.get(toolName);
@@ -110,9 +109,9 @@ public class ParallelExecutionService {
 	 * @return CompletableFuture that completes with execution result
 	 */
 	public CompletableFuture<Map<String, Object>> executeTool(String toolName, Map<String, Object> params,
-			Map<String, ToolCallBackContext> toolCallbackMap, ToolContext toolContext, Integer index) {
+                                                              Map<String, PlanningFactory.ToolCallBackContext> toolCallbackMap, ToolContext toolContext, Integer index) {
 		// Use common lookup method
-		ToolCallBackContext toolContextBackend = lookupToolContext(toolName, toolCallbackMap);
+		PlanningFactory.ToolCallBackContext toolContextBackend = lookupToolContext(toolName, toolCallbackMap);
 
 		if (toolContextBackend == null) {
 			Map<String, Object> errorResult = new HashMap<>();
@@ -219,7 +218,7 @@ public class ParallelExecutionService {
 				return levelBasedExecutorPool.submitTask(depthLevel, () -> {
 					try {
 						@SuppressWarnings("unchecked")
-						ToolExecuteResult result = ((ToolCallBiFunctionDef<Object>) functionInstance)
+                        ToolExecuteResult result = ((ToolCallBiFunctionDef<Object>) functionInstance)
 							.apply(convertedInput, executionContext);
 						Map<String, Object> resultMap = new HashMap<>();
 						if (index != null) {
@@ -303,7 +302,7 @@ public class ParallelExecutionService {
 	 * @return CompletableFuture that completes with all results
 	 */
 	public CompletableFuture<List<Map<String, Object>>> executeToolsInParallel(
-			List<ParallelExecutionRequest> executions, Map<String, ToolCallBackContext> toolCallbackMap,
+			List<ParallelExecutionRequest> executions, Map<String, PlanningFactory.ToolCallBackContext> toolCallbackMap,
 			ToolContext toolContext) {
 		List<CompletableFuture<Map<String, Object>>> futures = new ArrayList<>();
 

@@ -19,9 +19,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.PlaywrightException;
 import com.microsoft.playwright.TimeoutError;
+import com.wangliang.agentj.config.LynxeProperties;
 import com.wangliang.agentj.tools.AbstractBaseTool;
-import com.wangliang.agentj.tools.browser.actions.BrowserRequestVO;
+import com.wangliang.agentj.tools.browser.actions.*;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.i18n.ToolI18nService;
 import com.wangliang.agentj.tools.innerStorage.SmartContentSavingService;
+import com.wangliang.agentj.tools.shortUrl.ShortUrlService;
 import com.wangliang.agentj.tools.textOperator.TextFileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,14 +44,14 @@ public class BrowserUseTool extends AbstractBaseTool<BrowserRequestVO> {
 
 	private final ObjectMapper objectMapper;
 
-	private final com.alibaba.cloud.ai.lynxe.tool.shortUrl.ShortUrlService shortUrlService;
+	private final ShortUrlService shortUrlService;
 
 	private final TextFileService textFileService;
 
 	private final ToolI18nService toolI18nService;
 
 	public BrowserUseTool(ChromeDriverService chromeDriverService, SmartContentSavingService innerStorageService,
-			ObjectMapper objectMapper, com.alibaba.cloud.ai.lynxe.tool.shortUrl.ShortUrlService shortUrlService,
+			ObjectMapper objectMapper, ShortUrlService shortUrlService,
 			TextFileService textFileService, ToolI18nService toolI18nService) {
 		this.chromeDriverService = chromeDriverService;
 		this.innerStorageService = innerStorageService;
@@ -87,7 +91,7 @@ public class BrowserUseTool extends AbstractBaseTool<BrowserRequestVO> {
 
 	public static synchronized BrowserUseTool getInstance(ChromeDriverService chromeDriverService,
 			SmartContentSavingService innerStorageService, ObjectMapper objectMapper,
-			com.alibaba.cloud.ai.lynxe.tool.shortUrl.ShortUrlService shortUrlService, TextFileService textFileService,
+			ShortUrlService shortUrlService, TextFileService textFileService,
 			ToolI18nService toolI18nService) {
 		BrowserUseTool instance = new BrowserUseTool(chromeDriverService, innerStorageService, objectMapper,
 				shortUrlService, textFileService, toolI18nService);
@@ -98,7 +102,7 @@ public class BrowserUseTool extends AbstractBaseTool<BrowserRequestVO> {
 	 * Get ShortUrlService instance
 	 * @return ShortUrlService
 	 */
-	public com.alibaba.cloud.ai.lynxe.tool.shortUrl.ShortUrlService getShortUrlService() {
+	public ShortUrlService getShortUrlService() {
 		return shortUrlService;
 	}
 

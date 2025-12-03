@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.pptGenerator;
+package com.wangliang.agentj.tools.pptGenerator;
 
-import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
-import com.alibaba.cloud.ai.lynxe.tool.filesystem.UnifiedDirectoryManager;
-import com.alibaba.cloud.ai.lynxe.tool.pptGenerator.PptInput.SlideContent;
-import com.alibaba.cloud.ai.lynxe.tool.textOperator.FileState;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
+import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
+import com.wangliang.agentj.tools.textOperator.FileState;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.xslf.usermodel.*;
@@ -34,22 +32,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import org.apache.poi.xslf.usermodel.XMLSlideShow;
-import org.apache.poi.xslf.usermodel.XSLFSlide;
-import org.apache.poi.xslf.usermodel.XSLFTextShape;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -137,10 +128,10 @@ public class PptGeneratorService implements IPptGeneratorService {
 					throw new IllegalStateException("PPT template is missing the required layout (TITLE_AND_CONTENT)");
 				}
 
-				List<SlideContent> slideContents = pptInput.getSlideContents();
+				List<PptInput.SlideContent> slideContents = pptInput.getSlideContents();
 				if (slideContents != null && !slideContents.isEmpty()) {
 					for (int i = 0; i < slideContents.size(); i++) {
-						SlideContent slideContent = slideContents.get(i);
+						PptInput.SlideContent slideContent = slideContents.get(i);
 						// Validate slide content.
 						if (slideContent == null || (StringUtils.isBlank(slideContent.getTitle())
 								&& StringUtils.isBlank(slideContent.getContent()))) {

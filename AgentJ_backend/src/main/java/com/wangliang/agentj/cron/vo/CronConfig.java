@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.cron.vo;
-
-import java.time.LocalDateTime;
+package com.wangliang.agentj.cron.vo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import java.time.LocalDateTime;
 
 /**
  * Cron task configuration VO class

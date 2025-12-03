@@ -13,29 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.mapreduce;
+package com.wangliang.agentj.tools.mapreduce;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.planning.PlanningFactory;
+import com.wangliang.agentj.runtime.executor.LevelBasedExecutorPool;
+import com.wangliang.agentj.runtime.service.PlanIdDispatcher;
+import com.wangliang.agentj.runtime.service.ServiceGroupIndexService;
+import com.wangliang.agentj.tools.AbstractBaseTool;
+import com.wangliang.agentj.tools.AsyncToolCallBiFunctionDef;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.i18n.ToolI18nService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.model.ToolContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.model.ToolContext;
-
-import com.alibaba.cloud.ai.lynxe.planning.PlanningFactory.ToolCallBackContext;
-import com.alibaba.cloud.ai.lynxe.runtime.executor.LevelBasedExecutorPool;
-import com.alibaba.cloud.ai.lynxe.runtime.service.PlanIdDispatcher;
-import com.alibaba.cloud.ai.lynxe.runtime.service.ServiceGroupIndexService;
-import com.alibaba.cloud.ai.lynxe.tool.AbstractBaseTool;
-import com.alibaba.cloud.ai.lynxe.tool.AsyncToolCallBiFunctionDef;
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
-import com.alibaba.cloud.ai.lynxe.tool.i18n.ToolI18nService;
-import com.alibaba.cloud.ai.lynxe.tool.mapreduce.ParallelExecutionTool.RegisterBatchInput;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Parallel execution manager that follows DefaultToolCallingManager execution pattern
@@ -46,14 +44,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * Uses asynchronous non-blocking execution by default to prevent thread pool starvation.
  */
-public class ParallelExecutionTool extends AbstractBaseTool<RegisterBatchInput>
-		implements AsyncToolCallBiFunctionDef<RegisterBatchInput> {
+public class ParallelExecutionTool extends AbstractBaseTool<ParallelExecutionTool.RegisterBatchInput>
+		implements AsyncToolCallBiFunctionDef<ParallelExecutionTool.RegisterBatchInput> {
 
 	private static final Logger logger = LoggerFactory.getLogger(ParallelExecutionTool.class);
 
 	private final ObjectMapper objectMapper;
 
-	private final Map<String, ToolCallBackContext> toolCallbackMap;
+	private final Map<String, PlanningFactory.ToolCallBackContext> toolCallbackMap;
 
 	private final PlanIdDispatcher planIdDispatcher;
 
@@ -150,10 +148,10 @@ public class ParallelExecutionTool extends AbstractBaseTool<RegisterBatchInput>
 	// Store all function registries in a list (allows duplicates)
 	private final List<FunctionRegistry> functionRegistries = new ArrayList<>();
 
-	public ParallelExecutionTool(ObjectMapper objectMapper, Map<String, ToolCallBackContext> toolCallbackMap,
-			PlanIdDispatcher planIdDispatcher, LevelBasedExecutorPool levelBasedExecutorPool,
-			ToolI18nService toolI18nService, ServiceGroupIndexService serviceGroupIndexService,
-			ParallelExecutionService parallelExecutionService) {
+	public ParallelExecutionTool(ObjectMapper objectMapper, Map<String, PlanningFactory.ToolCallBackContext> toolCallbackMap,
+                                 PlanIdDispatcher planIdDispatcher, LevelBasedExecutorPool levelBasedExecutorPool,
+                                 ToolI18nService toolI18nService, ServiceGroupIndexService serviceGroupIndexService,
+                                 ParallelExecutionService parallelExecutionService) {
 		this.objectMapper = objectMapper;
 		this.toolCallbackMap = toolCallbackMap;
 		this.planIdDispatcher = planIdDispatcher;
@@ -165,7 +163,7 @@ public class ParallelExecutionTool extends AbstractBaseTool<RegisterBatchInput>
 	/**
 	 * Set the tool callback map (used to look up actual tool implementations)
 	 */
-	public void setToolCallbackMap(Map<String, ToolCallBackContext> toolCallbackMap) {
+	public void setToolCallbackMap(Map<String, PlanningFactory.ToolCallBackContext> toolCallbackMap) {
 		this.toolCallbackMap.putAll(toolCallbackMap);
 	}
 
@@ -340,7 +338,7 @@ public class ParallelExecutionTool extends AbstractBaseTool<RegisterBatchInput>
 
 				// Check if tool exists before adding to execution list
 				String toolName = function.getToolName();
-				ToolCallBackContext toolContext = parallelExecutionService.lookupToolContext(toolName, toolCallbackMap);
+				PlanningFactory.ToolCallBackContext toolContext = parallelExecutionService.lookupToolContext(toolName, toolCallbackMap);
 
 				if (toolContext == null) {
 					logger.warn("Tool not found in callback map: {} (async)", toolName);

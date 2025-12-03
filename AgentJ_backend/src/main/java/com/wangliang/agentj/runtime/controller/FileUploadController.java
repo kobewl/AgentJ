@@ -15,9 +15,9 @@
  */
 package com.wangliang.agentj.runtime.controller;
 
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.FileUploadResult;
-import com.alibaba.cloud.ai.lynxe.runtime.service.FileUploadService;
-import com.alibaba.cloud.ai.lynxe.runtime.service.FileValidationService;
+import com.wangliang.agentj.runtime.entity.vo.FileUploadResult;
+import com.wangliang.agentj.runtime.service.FileUploadService;
+import com.wangliang.agentj.runtime.service.FileValidationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

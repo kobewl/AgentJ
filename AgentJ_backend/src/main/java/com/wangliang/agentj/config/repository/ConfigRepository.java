@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.config.repository;
 
-import com.alibaba.cloud.ai.lynxe.config.entity.ConfigEntity;
+import com.wangliang.agentj.config.entity.ConfigEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

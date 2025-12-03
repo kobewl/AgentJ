@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.cron.service;
+package com.wangliang.agentj.cron.service;
+
+
+import com.wangliang.agentj.cron.vo.CronConfig;
 
 import java.util.List;
-
-import com.alibaba.cloud.ai.lynxe.cron.vo.CronConfig;
 
 public interface CronService {
 

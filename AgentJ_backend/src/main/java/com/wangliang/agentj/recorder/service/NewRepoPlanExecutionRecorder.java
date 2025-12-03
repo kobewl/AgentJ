@@ -16,12 +16,17 @@
 
 package com.wangliang.agentj.recorder.service;
 
-import com.wangliang.agentj.recorder.entity.po.AgentExecutionRecordEntity;
-import com.wangliang.agentj.recorder.entity.po.PlanExecutionRecordEntity;
+import com.wangliang.agentj.agent.AgentState;
+import com.wangliang.agentj.recorder.entity.po.*;
+import com.wangliang.agentj.recorder.entity.vo.ActToolInfo;
+import com.wangliang.agentj.recorder.entity.vo.AgentExecutionRecord;
+import com.wangliang.agentj.recorder.entity.vo.ExecutionStatus;
+import com.wangliang.agentj.recorder.entity.vo.ThinkActRecord;
 import com.wangliang.agentj.recorder.repository.ActToolInfoRepository;
 import com.wangliang.agentj.recorder.repository.AgentExecutionRecordRepository;
 import com.wangliang.agentj.recorder.repository.PlanExecutionRecordRepository;
 import com.wangliang.agentj.recorder.repository.ThinkActRecordRepository;
+import com.wangliang.agentj.runtime.entity.vo.ExecutionStep;
 import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

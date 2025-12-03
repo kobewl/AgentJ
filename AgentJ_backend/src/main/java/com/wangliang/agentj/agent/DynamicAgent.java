@@ -15,24 +15,22 @@
  */
 package com.wangliang.agentj.agent;
 
-import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
-import com.alibaba.cloud.ai.lynxe.event.LynxeEventPublisher;
-import com.alibaba.cloud.ai.lynxe.event.PlanExceptionClearedEvent;
-import com.alibaba.cloud.ai.lynxe.llm.ConversationMemoryLimitService;
-import com.alibaba.cloud.ai.lynxe.llm.LlmService;
-import com.alibaba.cloud.ai.lynxe.llm.StreamingResponseHandler;
-import com.alibaba.cloud.ai.lynxe.planning.PlanningFactory.ToolCallBackContext;
-import com.alibaba.cloud.ai.lynxe.recorder.service.PlanExecutionRecorder;
-import com.alibaba.cloud.ai.lynxe.recorder.service.PlanExecutionRecorder.ActToolParam;
-import com.alibaba.cloud.ai.lynxe.recorder.service.PlanExecutionRecorder.ThinkActRecordParams;
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.ExecutionStep;
-import com.alibaba.cloud.ai.lynxe.runtime.executor.AbstractPlanExecutor;
-import com.alibaba.cloud.ai.lynxe.runtime.service.*;
-import com.alibaba.cloud.ai.lynxe.tool.*;
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.service.MemoryService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.conversation.service.MemoryService;
+import com.wangliang.agentj.event.LynxeEventPublisher;
+import com.wangliang.agentj.event.PlanExceptionClearedEvent;
+import com.wangliang.agentj.llm.ConversationMemoryLimitService;
+import com.wangliang.agentj.llm.LlmService;
+import com.wangliang.agentj.llm.StreamingResponseHandler;
+import com.wangliang.agentj.planning.PlanningFactory;
+import com.wangliang.agentj.recorder.service.PlanExecutionRecorder;
+import com.wangliang.agentj.runtime.entity.vo.ExecutionStep;
+import com.wangliang.agentj.runtime.executor.AbstractPlanExecutor;
+import com.wangliang.agentj.runtime.service.*;
+import com.wangliang.agentj.tools.*;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
 import io.micrometer.common.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +80,7 @@ public class DynamicAgent extends ReActAgent {
 
 	private Prompt userPrompt;
 
-	private List<ActToolParam> actToolInfoList = new ArrayList<>();
+	private List<PlanExecutionRecorder.ActToolParam> actToolInfoList = new ArrayList<>();
 
 	private final ToolCallingManager toolCallingManager;
 
@@ -128,8 +126,8 @@ public class DynamicAgent extends ReActAgent {
 	private boolean userRequestSavedToConversationMemory = false;
 
 	public void clearUp(String planId) {
-		Map<String, ToolCallBackContext> toolCallBackContext = toolCallbackProvider.getToolCallBackContext();
-		for (ToolCallBackContext toolCallBack : toolCallBackContext.values()) {
+		Map<String, PlanningFactory.ToolCallBackContext> toolCallBackContext = toolCallbackProvider.getToolCallBackContext();
+		for (PlanningFactory.ToolCallBackContext toolCallBack : toolCallBackContext.values()) {
 			try {
 				toolCallBack.getFunctionInstance().cleanup(planId);
 			}
@@ -147,14 +145,14 @@ public class DynamicAgent extends ReActAgent {
 	}
 
 	public DynamicAgent(LlmService llmService, PlanExecutionRecorder planExecutionRecorder,
-			LynxeProperties lynxeProperties, String name, String description, String nextStepPrompt,
-			List<String> availableToolKeys, ToolCallingManager toolCallingManager,
-			Map<String, Object> initialAgentSetting, UserInputService userInputService, String modelName,
-			StreamingResponseHandler streamingResponseHandler, ExecutionStep step, PlanIdDispatcher planIdDispatcher,
-			LynxeEventPublisher lynxeEventPublisher, AgentInterruptionHelper agentInterruptionHelper,
-			ObjectMapper objectMapper, ParallelToolExecutionService parallelToolExecutionService,
-			MemoryService memoryService, ConversationMemoryLimitService conversationMemoryLimitService,
-			ServiceGroupIndexService serviceGroupIndexService) {
+                        LynxeProperties lynxeProperties, String name, String description, String nextStepPrompt,
+                        List<String> availableToolKeys, ToolCallingManager toolCallingManager,
+                        Map<String, Object> initialAgentSetting, UserInputService userInputService, String modelName,
+                        StreamingResponseHandler streamingResponseHandler, ExecutionStep step, PlanIdDispatcher planIdDispatcher,
+                        LynxeEventPublisher lynxeEventPublisher, AgentInterruptionHelper agentInterruptionHelper,
+                        ObjectMapper objectMapper, ParallelToolExecutionService parallelToolExecutionService,
+                        MemoryService memoryService, ConversationMemoryLimitService conversationMemoryLimitService,
+                        ServiceGroupIndexService serviceGroupIndexService) {
 		super(llmService, planExecutionRecorder, lynxeProperties, initialAgentSetting, step, planIdDispatcher);
 		this.objectMapper = objectMapper;
 		super.objectMapper = objectMapper; // Set parent's objectMapper as well
@@ -394,11 +392,11 @@ public class DynamicAgent extends ReActAgent {
 
 					actToolInfoList = new ArrayList<>();
 					for (ToolCall toolCall : toolCalls) {
-						ActToolParam actToolInfo = new ActToolParam(toolCall.name(), toolCall.arguments(), toolcallId);
+						PlanExecutionRecorder.ActToolParam actToolInfo = new PlanExecutionRecorder.ActToolParam(toolCall.name(), toolCall.arguments(), toolcallId);
 						actToolInfoList.add(actToolInfo);
 					}
 
-					ThinkActRecordParams paramsN = new ThinkActRecordParams(thinkActId, stepId, thinkInput,
+					PlanExecutionRecorder.ThinkActRecordParams paramsN = new PlanExecutionRecorder.ThinkActRecordParams(thinkActId, stepId, thinkInput,
 							responseByLLm, null, finalInputCharCount, finalOutputCharCount, actToolInfoList);
 					planExecutionRecorder.recordThinkingAndAction(step, paramsN);
 
@@ -659,10 +657,10 @@ public class DynamicAgent extends ReActAgent {
 			// Process single tool response
 			ToolResponseMessage.ToolResponse toolCallResponse = toolResponseMessage.getResponses().get(0);
 			String toolName = toolCall.name();
-			ActToolParam param = actToolInfoList.get(0);
+			PlanExecutionRecorder.ActToolParam param = actToolInfoList.get(0);
 
 			// Check if tool callback context exists
-			ToolCallBackContext toolCallBackContext = getToolCallBackContext(toolName);
+			PlanningFactory.ToolCallBackContext toolCallBackContext = getToolCallBackContext(toolName);
 			if (toolCallBackContext == null) {
 				String errorMessage = String.format("Tool callback context not found for tool: %s", toolName);
 				log.error(errorMessage);
@@ -768,7 +766,7 @@ public class DynamicAgent extends ReActAgent {
 			List<String> restrictedToolNames = new ArrayList<>();
 			for (ToolCall toolCall : toolCalls) {
 				String toolName = toolCall.name();
-				ToolCallBackContext context = getToolCallBackContext(toolName);
+				PlanningFactory.ToolCallBackContext context = getToolCallBackContext(toolName);
 				if (context != null) {
 					ToolCallBiFunctionDef<?> toolInstance = context.getFunctionInstance();
 					if (toolInstance instanceof TerminableTool || toolInstance instanceof FormInputTool) {
@@ -794,7 +792,7 @@ public class DynamicAgent extends ReActAgent {
 				return new AgentExecResult("Parallel execution service is not available", AgentState.COMPLETED);
 			}
 
-			Map<String, ToolCallBackContext> toolCallbackMap = toolCallbackProvider.getToolCallBackContext();
+			Map<String, PlanningFactory.ToolCallBackContext> toolCallbackMap = toolCallbackProvider.getToolCallBackContext();
 			Map<String, Object> toolContextMap = new HashMap<>();
 			toolContextMap.put("toolcallId", planIdDispatcher.generateToolCallId());
 			toolContextMap.put("planDepth", getPlanDepth());
@@ -809,7 +807,7 @@ public class DynamicAgent extends ReActAgent {
 			for (int i = 0; i < toolCalls.size() && i < actToolInfoList.size(); i++) {
 				ToolCall toolCall = toolCalls.get(i);
 				String toolName = toolCall.name();
-				ActToolParam param = actToolInfoList.get(i);
+				PlanExecutionRecorder.ActToolParam param = actToolInfoList.get(i);
 
 				// Find corresponding result
 				String processedResult = null;
@@ -859,7 +857,7 @@ public class DynamicAgent extends ReActAgent {
 	/**
 	 * Handle FormInputTool specific logic with exclusive storage
 	 */
-	private AgentExecResult handleFormInputTool(FormInputTool formInputTool, ActToolParam param) {
+	private AgentExecResult handleFormInputTool(FormInputTool formInputTool, PlanExecutionRecorder.ActToolParam param) {
 		// Ensure the form input tool has the correct plan IDs set
 		formInputTool.setCurrentPlanId(getCurrentPlanId());
 		formInputTool.setRootPlanId(getRootPlanId());
@@ -1050,7 +1048,7 @@ public class DynamicAgent extends ReActAgent {
 	/**
 	 * Record action result with simplified parameters
 	 */
-	private void recordActionResult(List<ActToolParam> actToolInfoList) {
+	private void recordActionResult(List<PlanExecutionRecorder.ActToolParam> actToolInfoList) {
 		planExecutionRecorder.recordActionResult(actToolInfoList);
 	}
 
@@ -1063,7 +1061,7 @@ public class DynamicAgent extends ReActAgent {
 	 * @param actToolParams The action tool parameters
 	 */
 	private void executePostToolFlow(ToolCallBiFunctionDef<?> toolInstance,
-			ToolResponseMessage.ToolResponse toolCallResponse, String result, List<ActToolParam> actToolParams) {
+			ToolResponseMessage.ToolResponse toolCallResponse, String result, List<PlanExecutionRecorder.ActToolParam> actToolParams) {
 		// Record the result
 		recordActionResult(actToolParams);
 	}
@@ -1102,14 +1100,14 @@ public class DynamicAgent extends ReActAgent {
 	 * @param thinkOutput Description of what tool was called
 	 * @param errorMessage The actual error message
 	 */
-	private void recordErrorToolThinkingAndAction(ActToolParam param, String thinkInput, String thinkOutput,
-			String errorMessage) {
+	private void recordErrorToolThinkingAndAction(PlanExecutionRecorder.ActToolParam param, String thinkInput, String thinkOutput,
+                                                  String errorMessage) {
 		try {
 			String stepId = step.getStepId();
 			String thinkActId = planIdDispatcher.generateThinkActId();
 			String finalErrorMessage = step.getErrorMessage() != null ? step.getErrorMessage() : errorMessage;
 
-			ThinkActRecordParams errorParams = new ThinkActRecordParams(thinkActId, stepId, thinkInput, thinkOutput,
+			PlanExecutionRecorder.ThinkActRecordParams errorParams = new PlanExecutionRecorder.ThinkActRecordParams(thinkActId, stepId, thinkInput, thinkOutput,
 					finalErrorMessage, List.of(param));
 			planExecutionRecorder.recordThinkingAndAction(step, errorParams);
 			log.info("Recorded thinking and action for error tool, stepId: {}", stepId);
@@ -1161,7 +1159,7 @@ public class DynamicAgent extends ReActAgent {
 			// frontend
 			String toolCallId = planIdDispatcher.generateToolCallId();
 			String parametersJson = objectMapper.writeValueAsString(errorInput);
-			ActToolParam param = new ActToolParam(SystemErrorReportTool.name, parametersJson, toolResult.getOutput(),
+			PlanExecutionRecorder.ActToolParam param = new PlanExecutionRecorder.ActToolParam(SystemErrorReportTool.name, parametersJson, toolResult.getOutput(),
 					toolCallId);
 			String finalErrorMessage = step.getErrorMessage() != null ? step.getErrorMessage() : errorMessage;
 			recordErrorToolThinkingAndAction(param, "LLM timeout after 3 retries",
@@ -1189,7 +1187,7 @@ public class DynamicAgent extends ReActAgent {
 			try {
 				String toolCallId = planIdDispatcher.generateToolCallId();
 				String parametersJson = objectMapper.writeValueAsString(Map.of("errorMessage", errorMessage));
-				ActToolParam param = new ActToolParam(SystemErrorReportTool.name, parametersJson,
+				PlanExecutionRecorder.ActToolParam param = new PlanExecutionRecorder.ActToolParam(SystemErrorReportTool.name, parametersJson,
 						toolResult.getOutput(), toolCallId);
 
 				// Record the action result
@@ -1362,8 +1360,8 @@ public class DynamicAgent extends ReActAgent {
 		return stepEnvMessage;
 	}
 
-	public ToolCallBackContext getToolCallBackContext(String toolKey) {
-		Map<String, ToolCallBackContext> toolCallBackContext = toolCallbackProvider.getToolCallBackContext();
+	public PlanningFactory.ToolCallBackContext getToolCallBackContext(String toolKey) {
+		Map<String, PlanningFactory.ToolCallBackContext> toolCallBackContext = toolCallbackProvider.getToolCallBackContext();
 		if (toolCallBackContext.containsKey(toolKey)) {
 			return toolCallBackContext.get(toolKey);
 		}
@@ -1376,10 +1374,10 @@ public class DynamicAgent extends ReActAgent {
 	@Override
 	public List<ToolCallback> getToolCallList() {
 		List<ToolCallback> toolCallbacks = new ArrayList<>();
-		Map<String, ToolCallBackContext> toolCallBackContext = toolCallbackProvider.getToolCallBackContext();
+		Map<String, PlanningFactory.ToolCallBackContext> toolCallBackContext = toolCallbackProvider.getToolCallBackContext();
 		for (String toolKey : availableToolKeys) {
 			if (toolCallBackContext.containsKey(toolKey)) {
-				ToolCallBackContext toolCallback = toolCallBackContext.get(toolKey);
+				PlanningFactory.ToolCallBackContext toolCallback = toolCallBackContext.get(toolKey);
 				if (toolCallback != null) {
 					toolCallbacks.add(toolCallback.getToolCallback());
 				}
@@ -1405,7 +1403,7 @@ public class DynamicAgent extends ReActAgent {
 
 	protected String collectEnvData(String toolCallName) {
 		log.info("🔍 collectEnvData called for tool: {}", toolCallName);
-		Map<String, ToolCallBackContext> toolCallBackContext = toolCallbackProvider.getToolCallBackContext();
+		Map<String, PlanningFactory.ToolCallBackContext> toolCallBackContext = toolCallbackProvider.getToolCallBackContext();
 
 		// Convert serviceGroup.toolName format to toolName*index* format if needed
 		String lookupKey = toolCallName;
@@ -1420,7 +1418,7 @@ public class DynamicAgent extends ReActAgent {
 			log.debug("Failed to convert tool key '{}' in collectEnvData: {}", toolCallName, e.getMessage());
 		}
 
-		ToolCallBackContext context = toolCallBackContext.get(lookupKey);
+		PlanningFactory.ToolCallBackContext context = toolCallBackContext.get(lookupKey);
 		if (context != null) {
 			String envData = context.getFunctionInstance().getCurrentToolStateString();
 			return envData;

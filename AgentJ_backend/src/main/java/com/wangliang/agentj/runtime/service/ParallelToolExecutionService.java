@@ -15,10 +15,10 @@
  */
 package com.wangliang.agentj.runtime.service;
 
-import com.alibaba.cloud.ai.lynxe.planning.PlanningFactory.ToolCallBackContext;
-import com.alibaba.cloud.ai.lynxe.tool.AbstractBaseTool;
-import com.alibaba.cloud.ai.lynxe.tool.ToolCallBiFunctionDef;
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
+import com.wangliang.agentj.planning.PlanningFactory;
+import com.wangliang.agentj.tools.AbstractBaseTool;
+import com.wangliang.agentj.tools.ToolCallBiFunctionDef;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AssistantMessage.ToolCall;
@@ -81,8 +81,8 @@ public class ParallelToolExecutionService {
 	 * @return List of execution results for each tool
 	 */
 	public List<ToolExecutionResult> executeToolsInParallel(List<ToolCall> toolCalls,
-			Map<String, ToolCallBackContext> toolCallbackMap, PlanIdDispatcher planIdDispatcher,
-			ToolContext parentToolContext) {
+                                                            Map<String, PlanningFactory.ToolCallBackContext> toolCallbackMap, PlanIdDispatcher planIdDispatcher,
+                                                            ToolContext parentToolContext) {
 		if (toolCalls == null || toolCalls.isEmpty()) {
 			log.warn("No tool calls provided for parallel execution");
 			return new ArrayList<>();
@@ -99,7 +99,7 @@ public class ParallelToolExecutionService {
 		// Create parallel execution tasks
 		for (ToolCall toolCall : toolCalls) {
 			String toolName = toolCall.name();
-			ToolCallBackContext toolContext = toolCallbackMap.get(toolName);
+			PlanningFactory.ToolCallBackContext toolContext = toolCallbackMap.get(toolName);
 
 			if (toolContext == null) {
 				log.warn("Tool not found in callback map: {}", toolName);

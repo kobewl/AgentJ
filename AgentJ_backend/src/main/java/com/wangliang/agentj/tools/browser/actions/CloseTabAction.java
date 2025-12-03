@@ -15,10 +15,10 @@
  */
 package com.wangliang.agentj.tools.browser.actions;
 
-import com.alibaba.cloud.ai.lynxe.tool.browser.BrowserUseTool;
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.PlaywrightException;
+import com.wangliang.agentj.tools.browser.BrowserUseTool;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.subplan.templates;
+package com.wangliang.agentj.subplan.templates;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -64,7 +64,6 @@ import java.util.*;
  * </ul>
  *
  * @see AgentState
- * @see LlmService
  */
 public abstract class BaseAgent {
 

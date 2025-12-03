@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.model.service;
+package com.wangliang.agentj.model.service;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
+import cn.hutool.core.util.StrUtil;
+import com.wangliang.agentj.event.LynxeEventPublisher;
+import com.wangliang.agentj.event.ModelChangeEvent;
+import com.wangliang.agentj.llm.LlmService;
+import com.wangliang.agentj.model.entity.DynamicModelEntity;
+import com.wangliang.agentj.model.exception.AuthenticationException;
+import com.wangliang.agentj.model.exception.NetworkException;
+import com.wangliang.agentj.model.exception.RateLimitException;
+import com.wangliang.agentj.model.model.vo.AvailableModel;
+import com.wangliang.agentj.model.model.vo.ModelConfig;
+import com.wangliang.agentj.model.model.vo.ValidationResult;
+import com.wangliang.agentj.model.repository.DynamicModelRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,19 +39,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.alibaba.cloud.ai.lynxe.event.LynxeEventPublisher;
-import com.alibaba.cloud.ai.lynxe.event.ModelChangeEvent;
-import com.alibaba.cloud.ai.lynxe.llm.LlmService;
-import com.alibaba.cloud.ai.lynxe.model.entity.DynamicModelEntity;
-import com.alibaba.cloud.ai.lynxe.model.exception.AuthenticationException;
-import com.alibaba.cloud.ai.lynxe.model.exception.NetworkException;
-import com.alibaba.cloud.ai.lynxe.model.exception.RateLimitException;
-import com.alibaba.cloud.ai.lynxe.model.model.vo.AvailableModel;
-import com.alibaba.cloud.ai.lynxe.model.model.vo.ModelConfig;
-import com.alibaba.cloud.ai.lynxe.model.model.vo.ValidationResult;
-import com.alibaba.cloud.ai.lynxe.model.repository.DynamicModelRepository;
-
-import cn.hutool.core.util.StrUtil;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class ModelServiceImpl implements ModelService {

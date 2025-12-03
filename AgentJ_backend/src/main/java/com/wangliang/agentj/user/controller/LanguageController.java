@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.user.controller;
 
-import com.alibaba.cloud.ai.lynxe.user.service.UserService;
+import com.wangliang.agentj.user.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

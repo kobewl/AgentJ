@@ -14,31 +14,25 @@
  * limitations under the License.
  */
 
-package com.alibaba.cloud.ai.lynxe.tool.database.action;
+package com.wangliang.agentj.tools.database.action;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.database.DataSourceService;
+import com.wangliang.agentj.tools.database.DatabaseRequest;
+import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
-import com.alibaba.cloud.ai.lynxe.tool.database.DataSourceService;
-import com.alibaba.cloud.ai.lynxe.tool.database.DatabaseRequest;
-import com.alibaba.cloud.ai.lynxe.tool.filesystem.UnifiedDirectoryManager;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Action to execute SQL query and save results to JSON file

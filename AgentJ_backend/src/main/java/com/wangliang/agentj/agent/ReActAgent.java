@@ -15,11 +15,13 @@
  */
 package com.wangliang.agentj.agent;
 
-import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
-import com.alibaba.cloud.ai.lynxe.llm.LlmService;
-import com.alibaba.cloud.ai.lynxe.recorder.service.PlanExecutionRecorder;
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.ExecutionStep;
-import com.alibaba.cloud.ai.lynxe.runtime.service.PlanIdDispatcher;
+
+import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.llm.LlmService;
+import com.wangliang.agentj.recorder.service.PlanExecutionRecorder;
+import com.wangliang.agentj.runtime.entity.vo.ExecutionStep;
+import com.wangliang.agentj.runtime.service.PlanIdDispatcher;
+import com.wangliang.agentj.runtime.service.TaskInterruptionCheckerService;
 
 import java.util.Map;
 
@@ -38,8 +40,8 @@ public abstract class ReActAgent extends BaseAgent {
 	 */
 
 	public ReActAgent(LlmService llmService, PlanExecutionRecorder planExecutionRecorder,
-			LynxeProperties lynxeProperties, Map<String, Object> initialAgentSetting, ExecutionStep step,
-			PlanIdDispatcher planIdDispatcher) {
+                      LynxeProperties lynxeProperties, Map<String, Object> initialAgentSetting, ExecutionStep step,
+                      PlanIdDispatcher planIdDispatcher) {
 		super(llmService, planExecutionRecorder, lynxeProperties, initialAgentSetting, step, planIdDispatcher);
 	}
 
@@ -87,7 +89,7 @@ public abstract class ReActAgent extends BaseAgent {
 			}
 			return act();
 		}
-		catch (com.alibaba.cloud.ai.lynxe.runtime.service.TaskInterruptionCheckerService.TaskInterruptedException e) {
+		catch (TaskInterruptionCheckerService.TaskInterruptedException e) {
 			// Agent was interrupted, return INTERRUPTED state to stop execution
 			return new AgentExecResult("Agent execution interrupted: " + e.getMessage(), AgentState.INTERRUPTED);
 		}

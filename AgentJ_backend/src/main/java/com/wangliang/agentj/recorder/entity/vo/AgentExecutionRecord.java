@@ -15,7 +15,6 @@
  */
 package com.wangliang.agentj.recorder.entity.vo;
 
-import com.alibaba.cloud.ai.lynxe.agent.BaseAgent;
 import com.fasterxml.jackson.databind.JsonSerializable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -48,7 +47,6 @@ import java.util.List;
  * 3. Execution Result - result: execution result - errorMessage: error message (if any) -
  * modelName: actual calling model - subPlanExecutionRecords: sub-plan execution records
  *
- * @see BaseAgent
  * @see ThinkActRecord
  * @see JsonSerializable
  */

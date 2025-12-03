@@ -15,6 +15,9 @@
  */
 package com.wangliang.agentj.user.controller;
 
+import com.wangliang.agentj.user.model.vo.User;
+import com.wangliang.agentj.user.model.vo.UserResponse;
+import com.wangliang.agentj.user.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

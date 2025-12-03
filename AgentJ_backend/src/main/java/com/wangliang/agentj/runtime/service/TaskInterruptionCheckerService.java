@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.runtime.service;
 
-import com.alibaba.cloud.ai.lynxe.runtime.entity.po.RootTaskManagerEntity;
+import com.wangliang.agentj.runtime.entity.po.RootTaskManagerEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

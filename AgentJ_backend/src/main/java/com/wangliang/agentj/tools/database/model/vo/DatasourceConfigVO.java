@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.database.model.vo;
-
-import java.time.LocalDateTime;
+package com.wangliang.agentj.tools.database.model.vo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+
+import java.time.LocalDateTime;
 
 /**
  * Datasource configuration value object for API responses

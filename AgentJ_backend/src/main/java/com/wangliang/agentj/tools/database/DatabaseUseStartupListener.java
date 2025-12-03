@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.alibaba.cloud.ai.lynxe.tool.database;
+package com.wangliang.agentj.tools.database;
 
-import java.util.List;
-
+import com.wangliang.agentj.tools.database.model.po.DatasourceConfigEntity;
+import com.wangliang.agentj.tools.database.service.DatasourceConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +25,7 @@ import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
-import com.alibaba.cloud.ai.lynxe.tool.database.model.po.DatasourceConfigEntity;
-import com.alibaba.cloud.ai.lynxe.tool.database.service.DatasourceConfigService;
+import java.util.List;
 
 @Component
 public class DatabaseUseStartupListener implements ApplicationListener<ApplicationStartedEvent> {

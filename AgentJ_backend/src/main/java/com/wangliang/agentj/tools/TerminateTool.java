@@ -18,6 +18,7 @@ package com.wangliang.agentj.tools;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
 import com.wangliang.agentj.tools.i18n.ToolI18nService;
 import com.wangliang.agentj.tools.shortUrl.ShortUrlService;
 import org.slf4j.Logger;

@@ -13,19 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.cron.entity;
+package com.wangliang.agentj.cron.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.wangliang.agentj.cron.vo.CronConfig;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
-import com.alibaba.cloud.ai.lynxe.cron.vo.CronConfig;
 
 @Entity
 @Table(name = "cron_task")

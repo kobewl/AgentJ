@@ -15,9 +15,9 @@
  */
 package com.wangliang.agentj.planning.service;
 
-import com.alibaba.cloud.ai.lynxe.planning.exception.PlanTemplateConfigException;
-import com.alibaba.cloud.ai.lynxe.planning.model.vo.PlanTemplateConfigVO;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.planning.exception.PlanTemplateConfigException;
+import com.wangliang.agentj.planning.model.vo.PlanTemplateConfigVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

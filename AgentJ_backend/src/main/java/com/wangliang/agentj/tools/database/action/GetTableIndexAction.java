@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package com.alibaba.cloud.ai.lynxe.tool.database.action;
+package com.wangliang.agentj.tools.database.action;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.database.DataSourceService;
+import com.wangliang.agentj.tools.database.DatabaseRequest;
+import com.wangliang.agentj.tools.database.meta.IndexMeta;
+import com.wangliang.agentj.tools.database.sql.DatabaseSqlGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
-import com.alibaba.cloud.ai.lynxe.tool.database.DataSourceService;
-import com.alibaba.cloud.ai.lynxe.tool.database.DatabaseRequest;
-import com.alibaba.cloud.ai.lynxe.tool.database.meta.IndexMeta;
-import com.alibaba.cloud.ai.lynxe.tool.database.sql.DatabaseSqlGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class GetTableIndexAction extends AbstractDatabaseAction {
 

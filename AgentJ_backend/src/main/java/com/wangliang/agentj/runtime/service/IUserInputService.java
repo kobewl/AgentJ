@@ -15,8 +15,9 @@
  */
 package com.wangliang.agentj.runtime.service;
 
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.UserInputWaitState;
-import com.alibaba.cloud.ai.lynxe.tool.FormInputTool;
+
+import com.wangliang.agentj.runtime.entity.vo.UserInputWaitState;
+import com.wangliang.agentj.tools.FormInputTool;
 
 import java.util.Map;
 

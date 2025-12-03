@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.conversation.repository;
 
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.entity.po.MemoryEntity;
+import com.wangliang.agentj.conversation.entity.po.MemoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

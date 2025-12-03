@@ -15,15 +15,15 @@
  */
 package com.wangliang.agentj.runtime.executor;
 
-import com.alibaba.cloud.ai.lynxe.agent.AgentState;
-import com.alibaba.cloud.ai.lynxe.agent.BaseAgent;
-import com.alibaba.cloud.ai.lynxe.agent.entity.DynamicAgentEntity;
-import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
-import com.alibaba.cloud.ai.lynxe.llm.LlmService;
-import com.alibaba.cloud.ai.lynxe.recorder.service.PlanExecutionRecorder;
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.*;
-import com.alibaba.cloud.ai.lynxe.runtime.service.AgentInterruptionHelper;
-import com.alibaba.cloud.ai.lynxe.runtime.service.FileUploadService;
+import com.wangliang.agentj.agent.AgentState;
+import com.wangliang.agentj.agent.BaseAgent;
+import com.wangliang.agentj.agent.entity.DynamicAgentEntity;
+import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.llm.LlmService;
+import com.wangliang.agentj.recorder.service.PlanExecutionRecorder;
+import com.wangliang.agentj.runtime.entity.vo.*;
+import com.wangliang.agentj.runtime.service.AgentInterruptionHelper;
+import com.wangliang.agentj.runtime.service.FileUploadService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,8 +72,8 @@ public abstract class AbstractPlanExecutor implements PlanExecutorInterface {
 	public static final String EXECUTION_ENV_STRING_KEY = "current_step_env_data";
 
 	public AbstractPlanExecutor(List<DynamicAgentEntity> agents, PlanExecutionRecorder recorder, LlmService llmService,
-			LynxeProperties lynxeProperties, LevelBasedExecutorPool levelBasedExecutorPool,
-			FileUploadService fileUploadService, AgentInterruptionHelper agentInterruptionHelper) {
+                                LynxeProperties lynxeProperties, LevelBasedExecutorPool levelBasedExecutorPool,
+                                FileUploadService fileUploadService, AgentInterruptionHelper agentInterruptionHelper) {
 		this.agents = agents;
 		this.recorder = recorder;
 		this.llmService = llmService;

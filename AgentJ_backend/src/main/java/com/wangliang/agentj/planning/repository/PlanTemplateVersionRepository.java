@@ -16,6 +16,7 @@
 package com.wangliang.agentj.planning.repository;
 
 import com.wangliang.agentj.planning.model.po.PlanTemplateVersion;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;

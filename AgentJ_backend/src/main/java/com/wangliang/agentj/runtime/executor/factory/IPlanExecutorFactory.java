@@ -15,8 +15,9 @@
  */
 package com.wangliang.agentj.runtime.executor.factory;
 
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.PlanInterface;
-import com.alibaba.cloud.ai.lynxe.runtime.executor.PlanExecutorInterface;
+
+import com.wangliang.agentj.runtime.entity.vo.PlanInterface;
+import com.wangliang.agentj.runtime.executor.PlanExecutorInterface;
 
 /**
  * Interface for plan executor factory that creates executors for different plan types

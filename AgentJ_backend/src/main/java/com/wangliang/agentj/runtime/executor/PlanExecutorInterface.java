@@ -15,8 +15,8 @@
  */
 package com.wangliang.agentj.runtime.executor;
 
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.ExecutionContext;
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.PlanExecutionResult;
+import com.wangliang.agentj.runtime.entity.vo.ExecutionContext;
+import com.wangliang.agentj.runtime.entity.vo.PlanExecutionResult;
 
 import java.util.concurrent.CompletableFuture;
 

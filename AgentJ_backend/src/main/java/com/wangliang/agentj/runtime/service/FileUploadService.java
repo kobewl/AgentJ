@@ -15,9 +15,9 @@
  */
 package com.wangliang.agentj.runtime.service;
 
-import com.alibaba.cloud.ai.lynxe.config.FileTypeConfiguration;
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.FileUploadResult;
-import com.alibaba.cloud.ai.lynxe.tool.filesystem.UnifiedDirectoryManager;
+import com.wangliang.agentj.config.FileTypeConfiguration;
+import com.wangliang.agentj.runtime.entity.vo.FileUploadResult;
+import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -141,7 +141,6 @@ public class FileUploadService {
 	 * Upload a single file
 	 * @param file The file to upload
 	 * @param uploadDirectory The target directory
-	 * @param uploadKey The upload key for this session
 	 * @return File information
 	 * @throws IOException if upload fails
 	 */
@@ -352,7 +351,6 @@ public class FileUploadService {
 	/**
 	 * Create file information
 	 * @param filePath The file path
-	 * @param uploadKey The upload key for this file
 	 * @return File information
 	 * @throws IOException if reading fails
 	 */

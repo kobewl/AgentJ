@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package com.alibaba.cloud.ai.lynxe.tool.database.action;
+package com.wangliang.agentj.tools.database.action;
 
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
-import com.alibaba.cloud.ai.lynxe.tool.database.DataSourceService;
-import com.alibaba.cloud.ai.lynxe.tool.database.DatabaseRequest;
+
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.database.DataSourceService;
+import com.wangliang.agentj.tools.database.DatabaseRequest;
 
 public abstract class AbstractDatabaseAction {
 

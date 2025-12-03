@@ -16,8 +16,8 @@
 
 package com.wangliang.agentj.planning.service;
 
-import com.alibaba.cloud.ai.lynxe.planning.exception.ParameterValidationException;
-import com.alibaba.cloud.ai.lynxe.planning.model.vo.ParameterValidationResult;
+import com.wangliang.agentj.planning.exception.ParameterValidationException;
+import com.wangliang.agentj.planning.model.vo.ParameterValidationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

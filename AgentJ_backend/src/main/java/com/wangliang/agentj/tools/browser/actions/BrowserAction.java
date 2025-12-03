@@ -15,10 +15,11 @@
  */
 package com.wangliang.agentj.tools.browser.actions;
 
-import com.alibaba.cloud.ai.lynxe.tool.browser.BrowserUseTool;
-import com.alibaba.cloud.ai.lynxe.tool.browser.DriverWrapper;
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
 import com.microsoft.playwright.*;
+import com.wangliang.agentj.tools.browser.BrowserUseTool;
+import com.wangliang.agentj.tools.browser.DriverWrapper;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.shortUrl.ShortUrlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,7 +100,7 @@ public abstract class BrowserAction {
 	 * Get ShortUrlService instance
 	 * @return ShortUrlService
 	 */
-	protected com.alibaba.cloud.ai.lynxe.tool.shortUrl.ShortUrlService getShortUrlService() {
+	protected ShortUrlService getShortUrlService() {
 		return browserUseTool.getShortUrlService();
 	}
 

@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.agent.entity;
 
-import com.alibaba.cloud.ai.lynxe.model.entity.DynamicModelEntity;
+import com.wangliang.agentj.model.entity.DynamicModelEntity;
 import jakarta.persistence.*;
 
 import java.util.List;

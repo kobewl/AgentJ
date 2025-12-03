@@ -15,9 +15,9 @@
  */
 package com.wangliang.agentj.config;
 
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.repository.H2ChatMemoryRepository;
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.repository.MysqlChatMemoryRepository;
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.repository.PostgresChatMemoryRepository;
+import com.wangliang.agentj.conversation.repository.H2ChatMemoryRepository;
+import com.wangliang.agentj.conversation.repository.MysqlChatMemoryRepository;
+import com.wangliang.agentj.conversation.repository.PostgresChatMemoryRepository;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;

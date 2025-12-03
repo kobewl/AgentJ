@@ -22,14 +22,11 @@ import java.util.Map;
  * Execution context class for passing and maintaining state information during the
  * creation, execution, and summarization of plans. This class serves as the core data
  * carrier in the plan execution process, passing between various stages of
- * {@link com.alibaba.cloud.ai.lynxe.runtime.service.PlanningCoordinator}.
  *
  * Main responsibilities: - Store plan ID and plan entity information - Save user original
  * request - Maintain plan execution status - Store execution result summary - Control
  * whether execution summary generation is needed
  *
- * @see com.alibaba.cloud.ai.lynxe.runtime.entity.vo.ExecutionPlan
- * @see com.alibaba.cloud.ai.lynxe.runtime.service.PlanningCoordinator
  */
 public class ExecutionContext {
 

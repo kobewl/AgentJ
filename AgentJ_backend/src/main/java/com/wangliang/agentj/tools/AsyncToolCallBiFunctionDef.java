@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package com.alibaba.cloud.ai.lynxe.tool;
+package com.wangliang.agentj.tools;
 
-import java.util.concurrent.CompletableFuture;
-
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
 import org.springframework.ai.chat.model.ToolContext;
 
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Async version of ToolCallBiFunctionDef that supports non-blocking execution. This

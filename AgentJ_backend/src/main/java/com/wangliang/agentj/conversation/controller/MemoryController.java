@@ -15,11 +15,11 @@
  */
 package com.wangliang.agentj.conversation.controller;
 
-import com.alibaba.cloud.ai.lynxe.recorder.entity.vo.PlanExecutionRecord;
-import com.alibaba.cloud.ai.lynxe.recorder.service.PlanHierarchyReaderService;
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.entity.vo.Memory;
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.entity.vo.MemoryResponse;
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.service.MemoryService;
+import com.wangliang.agentj.conversation.entity.vo.Memory;
+import com.wangliang.agentj.conversation.entity.vo.MemoryResponse;
+import com.wangliang.agentj.conversation.service.MemoryService;
+import com.wangliang.agentj.recorder.entity.vo.PlanExecutionRecord;
+import com.wangliang.agentj.recorder.service.PlanHierarchyReaderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

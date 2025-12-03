@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.recorder.repository;
 
-import com.alibaba.cloud.ai.lynxe.recorder.entity.po.ThinkActRecordEntity;
+import com.wangliang.agentj.recorder.entity.po.ThinkActRecordEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -16,6 +16,8 @@
 
 package com.wangliang.agentj.config;
 
+import com.wangliang.agentj.config.entity.ConfigEntity;
+import com.wangliang.agentj.config.entity.ConfigInputType;
 import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

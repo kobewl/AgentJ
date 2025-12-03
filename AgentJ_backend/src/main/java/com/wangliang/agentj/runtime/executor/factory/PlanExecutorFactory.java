@@ -15,21 +15,21 @@
  */
 package com.wangliang.agentj.runtime.executor.factory;
 
-import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
-import com.alibaba.cloud.ai.lynxe.event.LynxeEventPublisher;
-import com.alibaba.cloud.ai.lynxe.llm.ConversationMemoryLimitService;
-import com.alibaba.cloud.ai.lynxe.llm.LlmService;
-import com.alibaba.cloud.ai.lynxe.llm.StreamingResponseHandler;
-import com.alibaba.cloud.ai.lynxe.model.repository.DynamicModelRepository;
-import com.alibaba.cloud.ai.lynxe.planning.PlanningFactory;
-import com.alibaba.cloud.ai.lynxe.recorder.service.PlanExecutionRecorder;
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.PlanInterface;
-import com.alibaba.cloud.ai.lynxe.runtime.executor.DynamicToolPlanExecutor;
-import com.alibaba.cloud.ai.lynxe.runtime.executor.LevelBasedExecutorPool;
-import com.alibaba.cloud.ai.lynxe.runtime.executor.PlanExecutorInterface;
-import com.alibaba.cloud.ai.lynxe.runtime.service.*;
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.service.MemoryService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.conversation.service.MemoryService;
+import com.wangliang.agentj.event.LynxeEventPublisher;
+import com.wangliang.agentj.llm.ConversationMemoryLimitService;
+import com.wangliang.agentj.llm.LlmService;
+import com.wangliang.agentj.llm.StreamingResponseHandler;
+import com.wangliang.agentj.model.repository.DynamicModelRepository;
+import com.wangliang.agentj.planning.PlanningFactory;
+import com.wangliang.agentj.recorder.service.PlanExecutionRecorder;
+import com.wangliang.agentj.runtime.entity.vo.PlanInterface;
+import com.wangliang.agentj.runtime.executor.DynamicToolPlanExecutor;
+import com.wangliang.agentj.runtime.executor.LevelBasedExecutorPool;
+import com.wangliang.agentj.runtime.executor.PlanExecutorInterface;
+import com.wangliang.agentj.runtime.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.model.tool.ToolCallingManager;

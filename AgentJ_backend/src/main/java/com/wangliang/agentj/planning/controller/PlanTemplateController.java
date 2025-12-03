@@ -17,9 +17,14 @@ package com.wangliang.agentj.planning.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wangliang.agentj.planning.PlanningFactory;
+import com.wangliang.agentj.planning.exception.PlanTemplateConfigException;
+import com.wangliang.agentj.planning.model.vo.PlanTemplateConfigVO;
 import com.wangliang.agentj.planning.service.IPlanParameterMappingService;
 import com.wangliang.agentj.planning.service.PlanTemplateConfigService;
 import com.wangliang.agentj.planning.service.PlanTemplateService;
+import com.wangliang.agentj.runtime.entity.vo.ExecutionStep;
+import com.wangliang.agentj.runtime.entity.vo.PlanInterface;
+import com.wangliang.agentj.runtime.service.PlanIdDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +70,7 @@ public class PlanTemplateController {
 	 * @return Save result
 	 */
 	@Transactional
-	private PlanTemplateService.VersionSaveResult saveToVersionHistory(String planJson, String planId) {
+	protected PlanTemplateService.VersionSaveResult saveToVersionHistory(String planJson, String planId) {
 		try {
 			// Parse JSON to extract title
 			PlanInterface planData = objectMapper.readValue(planJson, PlanInterface.class);

@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.model.service;
+package com.wangliang.agentj.model.service;
+
+
+import com.wangliang.agentj.model.model.vo.ModelConfig;
+import com.wangliang.agentj.model.model.vo.ValidationResult;
 
 import java.util.List;
-
-import com.alibaba.cloud.ai.lynxe.model.model.vo.ModelConfig;
-import com.alibaba.cloud.ai.lynxe.model.model.vo.ValidationResult;
 
 public interface ModelService {
 

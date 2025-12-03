@@ -16,11 +16,11 @@
 
 package com.wangliang.agentj.recorder.entity.vo;
 
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.UserInputWaitState;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import com.wangliang.agentj.runtime.entity.vo.UserInputWaitState;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

@@ -15,7 +15,8 @@
  */
 package com.wangliang.agentj.agent;
 
-import com.alibaba.cloud.ai.lynxe.planning.PlanningFactory;
+
+import com.wangliang.agentj.planning.PlanningFactory;
 
 import java.util.Map;
 

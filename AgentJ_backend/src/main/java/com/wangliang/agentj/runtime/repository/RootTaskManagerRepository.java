@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.runtime.repository;
 
-import com.alibaba.cloud.ai.lynxe.runtime.entity.po.RootTaskManagerEntity;
+import com.wangliang.agentj.runtime.entity.po.RootTaskManagerEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

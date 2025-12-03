@@ -16,11 +16,55 @@
 
 package com.wangliang.agentj.planning;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.agent.ToolCallbackProvider;
+import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.conversation.service.MemoryService;
+import com.wangliang.agentj.cron.service.CronService;
+import com.wangliang.agentj.llm.LlmService;
+import com.wangliang.agentj.llm.StreamingResponseHandler;
+import com.wangliang.agentj.mcp.model.vo.McpServiceEntity;
+import com.wangliang.agentj.mcp.model.vo.McpTool;
+import com.wangliang.agentj.mcp.service.McpService;
+import com.wangliang.agentj.planning.service.PlanFinalizer;
+import com.wangliang.agentj.recorder.service.PlanExecutionRecorder;
+import com.wangliang.agentj.runtime.executor.ImageRecognitionExecutorPool;
+import com.wangliang.agentj.runtime.executor.LevelBasedExecutorPool;
+import com.wangliang.agentj.runtime.service.PlanIdDispatcher;
+import com.wangliang.agentj.runtime.service.ServiceGroupIndexService;
+import com.wangliang.agentj.runtime.service.TaskInterruptionManager;
+import com.wangliang.agentj.subplan.service.SubplanToolService;
+import com.wangliang.agentj.tools.DebugTool;
+import com.wangliang.agentj.tools.FormInputTool;
+import com.wangliang.agentj.tools.TerminateTool;
+import com.wangliang.agentj.tools.ToolCallBiFunctionDef;
+import com.wangliang.agentj.tools.browser.BrowserUseTool;
+import com.wangliang.agentj.tools.browser.ChromeDriverService;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.convertToMarkdown.ImageOcrProcessor;
+import com.wangliang.agentj.tools.convertToMarkdown.MarkdownConverterTool;
+import com.wangliang.agentj.tools.convertToMarkdown.PdfOcrProcessor;
+import com.wangliang.agentj.tools.cron.CronTool;
+import com.wangliang.agentj.tools.database.*;
+import com.wangliang.agentj.tools.dirOperator.DirectoryOperator;
+import com.wangliang.agentj.tools.excelProcessor.IExcelProcessingService;
 import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
+import com.wangliang.agentj.tools.i18n.ToolI18nService;
 import com.wangliang.agentj.tools.innerStorage.SmartContentSavingService;
+import com.wangliang.agentj.tools.jsxGenerator.JsxGeneratorOperator;
+import com.wangliang.agentj.tools.mapreduce.FileBasedParallelExecutionTool;
+import com.wangliang.agentj.tools.mapreduce.FileSplitterTool;
+import com.wangliang.agentj.tools.mapreduce.ParallelExecutionService;
+import com.wangliang.agentj.tools.mapreduce.ParallelExecutionTool;
+import com.wangliang.agentj.tools.pptGenerator.PptGeneratorOperator;
+import com.wangliang.agentj.tools.shortUrl.ShortUrlService;
+import com.wangliang.agentj.tools.tableProcessor.TableProcessingService;
+import com.wangliang.agentj.tools.textOperator.FileImportOperator;
 import com.wangliang.agentj.tools.textOperator.TextFileService;
+import org.apache.hc.core5.util.Timeout;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.model.tool.ToolCallingManager;
@@ -40,6 +84,7 @@ import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -124,7 +169,7 @@ public class PlanningFactory {
 	private LevelBasedExecutorPool levelBasedExecutorPool;
 
 	@Autowired
-	private com.alibaba.cloud.ai.lynxe.tool.shortUrl.ShortUrlService shortUrlService;
+	private ShortUrlService shortUrlService;
 
 	@Autowired
 	private ServiceGroupIndexService serviceGroupIndexService;
@@ -209,11 +254,9 @@ public class PlanningFactory {
 			toolDefinitions.add(new TerminateTool(planId, expectedReturnInfo, objectMapper, shortUrlService,
 					lynxeProperties, toolI18nService));
 			toolDefinitions.add(new DebugTool(toolI18nService));
-			toolDefinitions.add(new Bash(unifiedDirectoryManager, objectMapper, toolI18nService));
-			// toolDefinitions.add(new DocLoaderTool());
-
-			toolDefinitions.add(new GlobalFileOperator(textFileService, innerStorageService, objectMapper,
-					shortUrlService, toolI18nService));
+            toolDefinitions.add(DatabaseMetadataTool.getInstance(dataSourceService, objectMapper, toolI18nService));
+            toolDefinitions.add(DatabaseTableToExcelTool.getInstance(lynxeProperties, dataSourceService,
+                    excelProcessingService, unifiedDirectoryManager, toolI18nService));
 			toolDefinitions.add(new FileImportOperator(textFileService, null, toolI18nService));
 			toolDefinitions.add(new FileSplitterTool(textFileService, objectMapper, toolI18nService));
 			toolDefinitions.add(new DirectoryOperator(unifiedDirectoryManager, objectMapper, toolI18nService));
@@ -248,10 +291,10 @@ public class PlanningFactory {
 		for (McpServiceEntity toolCallback : functionCallbacks) {
 			String serviceGroup = toolCallback.getServiceGroup();
 			ToolCallback[] tCallbacks = toolCallback.getAsyncMcpToolCallbackProvider().getToolCallbacks();
-			for (ToolCallback tCallback : tCallbacks) {
-				// The serviceGroup is the name of the tool
-				toolDefinitions.add(new McpTool(tCallback, serviceGroup, planId, innerStorageService, objectMapper));
-			}
+            for (ToolCallback tCallback : tCallbacks) {
+                // The serviceGroup is the name of the tool
+                toolDefinitions.add(new McpTool(tCallback, serviceGroup, planId, innerStorageService, objectMapper));
+            }
 		}
 		// Create FunctionToolCallback for each tool
 		for (ToolCallBiFunctionDef<?> toolDefinition : toolDefinitions) {

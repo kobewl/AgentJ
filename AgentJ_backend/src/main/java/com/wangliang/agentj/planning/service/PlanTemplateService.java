@@ -15,10 +15,10 @@
  */
 package com.wangliang.agentj.planning.service;
 
-import com.alibaba.cloud.ai.lynxe.planning.model.po.PlanTemplateVersion;
-import com.alibaba.cloud.ai.lynxe.planning.repository.PlanTemplateVersionRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.planning.model.po.PlanTemplateVersion;
+import com.wangliang.agentj.planning.repository.PlanTemplateVersionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

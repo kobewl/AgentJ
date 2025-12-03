@@ -17,6 +17,7 @@ package com.wangliang.agentj.config;
 
 import com.wangliang.agentj.config.entity.ConfigEntity;
 import com.wangliang.agentj.model.entity.DynamicModelEntity;
+import com.wangliang.agentj.model.repository.DynamicModelRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

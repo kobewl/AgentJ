@@ -15,24 +15,23 @@
  */
 package com.wangliang.agentj.runtime.executor;
 
-import com.alibaba.cloud.ai.lynxe.agent.BaseAgent;
-import com.alibaba.cloud.ai.lynxe.agent.ConfigurableDynaAgent;
-import com.alibaba.cloud.ai.lynxe.agent.ToolCallbackProvider;
-import com.alibaba.cloud.ai.lynxe.agent.entity.DynamicAgentEntity;
-import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
-import com.alibaba.cloud.ai.lynxe.event.LynxeEventPublisher;
-import com.alibaba.cloud.ai.lynxe.llm.ConversationMemoryLimitService;
-import com.alibaba.cloud.ai.lynxe.llm.LlmService;
-import com.alibaba.cloud.ai.lynxe.llm.StreamingResponseHandler;
-import com.alibaba.cloud.ai.lynxe.model.repository.DynamicModelRepository;
-import com.alibaba.cloud.ai.lynxe.planning.PlanningFactory;
-import com.alibaba.cloud.ai.lynxe.planning.PlanningFactory.ToolCallBackContext;
-import com.alibaba.cloud.ai.lynxe.recorder.service.PlanExecutionRecorder;
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.ExecutionContext;
-import com.alibaba.cloud.ai.lynxe.runtime.entity.vo.ExecutionStep;
-import com.alibaba.cloud.ai.lynxe.runtime.service.*;
-import com.alibaba.cloud.ai.lynxe.workspace.conversation.service.MemoryService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.agent.BaseAgent;
+import com.wangliang.agentj.agent.ConfigurableDynaAgent;
+import com.wangliang.agentj.agent.ToolCallbackProvider;
+import com.wangliang.agentj.agent.entity.DynamicAgentEntity;
+import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.conversation.service.MemoryService;
+import com.wangliang.agentj.event.LynxeEventPublisher;
+import com.wangliang.agentj.llm.ConversationMemoryLimitService;
+import com.wangliang.agentj.llm.LlmService;
+import com.wangliang.agentj.llm.StreamingResponseHandler;
+import com.wangliang.agentj.model.repository.DynamicModelRepository;
+import com.wangliang.agentj.planning.PlanningFactory;
+import com.wangliang.agentj.recorder.service.PlanExecutionRecorder;
+import com.wangliang.agentj.runtime.entity.vo.ExecutionContext;
+import com.wangliang.agentj.runtime.entity.vo.ExecutionStep;
+import com.wangliang.agentj.runtime.service.*;
 import org.springframework.ai.model.tool.ToolCallingManager;
 
 import java.util.HashMap;
@@ -78,15 +77,15 @@ public class DynamicToolPlanExecutor extends AbstractPlanExecutor {
 	private final ServiceGroupIndexService serviceGroupIndexService;
 
 	public DynamicToolPlanExecutor(List<DynamicAgentEntity> agents, PlanExecutionRecorder recorder,
-			LlmService llmService, LynxeProperties lynxeProperties, LevelBasedExecutorPool levelBasedExecutorPool,
-			DynamicModelRepository dynamicModelRepository, FileUploadService fileUploadService,
-			AgentInterruptionHelper agentInterruptionHelper, PlanningFactory planningFactory,
-			ToolCallingManager toolCallingManager, UserInputService userInputService,
-			StreamingResponseHandler streamingResponseHandler, PlanIdDispatcher planIdDispatcher,
-			LynxeEventPublisher lynxeEventPublisher, ObjectMapper objectMapper,
-			ParallelToolExecutionService parallelToolExecutionService, MemoryService memoryService,
-			ConversationMemoryLimitService conversationMemoryLimitService,
-			ServiceGroupIndexService serviceGroupIndexService) {
+                                   LlmService llmService, LynxeProperties lynxeProperties, LevelBasedExecutorPool levelBasedExecutorPool,
+                                   DynamicModelRepository dynamicModelRepository, FileUploadService fileUploadService,
+                                   AgentInterruptionHelper agentInterruptionHelper, PlanningFactory planningFactory,
+                                   ToolCallingManager toolCallingManager, UserInputService userInputService,
+                                   StreamingResponseHandler streamingResponseHandler, PlanIdDispatcher planIdDispatcher,
+                                   LynxeEventPublisher lynxeEventPublisher, ObjectMapper objectMapper,
+                                   ParallelToolExecutionService parallelToolExecutionService, MemoryService memoryService,
+                                   ConversationMemoryLimitService conversationMemoryLimitService,
+                                   ServiceGroupIndexService serviceGroupIndexService) {
 		super(agents, recorder, llmService, lynxeProperties, levelBasedExecutorPool, fileUploadService,
 				agentInterruptionHelper);
 		this.planningFactory = planningFactory;
@@ -162,11 +161,11 @@ public class DynamicToolPlanExecutor extends AbstractPlanExecutor {
 			agent.setConversationId(conversationId);
 		}
 
-		Map<String, ToolCallBackContext> toolCallbackMap = planningFactory.toolCallbackMap(planId, rootPlanId,
+		Map<String, PlanningFactory.ToolCallBackContext> toolCallbackMap = planningFactory.toolCallbackMap(planId, rootPlanId,
 				expectedReturnInfo);
 		agent.setToolCallbackProvider(new ToolCallbackProvider() {
 			@Override
-			public Map<String, ToolCallBackContext> getToolCallBackContext() {
+			public Map<String, PlanningFactory.ToolCallBackContext> getToolCallBackContext() {
 				return toolCallbackMap;
 			}
 		});

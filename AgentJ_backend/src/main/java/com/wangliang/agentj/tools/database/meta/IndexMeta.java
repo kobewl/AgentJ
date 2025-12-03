@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.cloud.ai.lynxe.tool.database.meta;
+package com.wangliang.agentj.tools.database.meta;
 
 import java.util.List;
 

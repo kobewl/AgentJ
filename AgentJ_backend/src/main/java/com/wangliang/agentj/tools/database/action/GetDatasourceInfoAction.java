@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package com.alibaba.cloud.ai.lynxe.tool.database.action;
+package com.wangliang.agentj.tools.database.action;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.database.DataSourceService;
+import com.wangliang.agentj.tools.database.DatabaseRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
-import com.alibaba.cloud.ai.lynxe.tool.database.DataSourceService;
-import com.alibaba.cloud.ai.lynxe.tool.database.DatabaseRequest;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GetDatasourceInfoAction extends AbstractDatabaseAction {
 

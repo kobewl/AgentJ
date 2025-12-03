@@ -15,9 +15,9 @@
  */
 package com.wangliang.agentj.tools.browser.actions;
 
-import com.alibaba.cloud.ai.lynxe.tool.browser.BrowserUseTool;
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
 import com.microsoft.playwright.Locator;
+import com.wangliang.agentj.tools.browser.BrowserUseTool;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
 
 public class InputTextAction extends BrowserAction {
 

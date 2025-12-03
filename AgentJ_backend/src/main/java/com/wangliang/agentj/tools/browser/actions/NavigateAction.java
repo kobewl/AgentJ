@@ -15,12 +15,12 @@
  */
 package com.wangliang.agentj.tools.browser.actions;
 
-import com.alibaba.cloud.ai.lynxe.tool.browser.BrowserUseTool;
-import com.alibaba.cloud.ai.lynxe.tool.code.ToolExecuteResult;
-import com.alibaba.cloud.ai.lynxe.tool.shortUrl.ShortUrlService;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Page.WaitForLoadStateOptions;
 import com.microsoft.playwright.options.LoadState;
+import com.wangliang.agentj.tools.browser.BrowserUseTool;
+import com.wangliang.agentj.tools.code.ToolExecuteResult;
+import com.wangliang.agentj.tools.shortUrl.ShortUrlService;
 
 public class NavigateAction extends BrowserAction {
 

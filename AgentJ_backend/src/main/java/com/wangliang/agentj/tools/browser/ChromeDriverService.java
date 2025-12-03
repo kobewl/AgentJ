@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.ServiceWorkerPolicy;
+import com.wangliang.agentj.config.LynxeProperties;
 import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
 import com.wangliang.agentj.tools.innerStorage.SmartContentSavingService;
 import jakarta.annotation.PreDestroy;

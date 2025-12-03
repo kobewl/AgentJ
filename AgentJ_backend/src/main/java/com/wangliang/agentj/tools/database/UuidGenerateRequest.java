@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.lynxe.tool.database;
+package com.wangliang.agentj.tools.database;
 
 /**
  * UUID generation tool request object

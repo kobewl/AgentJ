@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.runtime.executor;
 
-import com.alibaba.cloud.ai.lynxe.config.LynxeProperties;
+import com.wangliang.agentj.config.LynxeProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
