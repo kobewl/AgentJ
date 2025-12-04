@@ -18,6 +18,7 @@ package com.wangliang.agentj.planning.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wangliang.agentj.planning.exception.PlanTemplateConfigException;
 import com.wangliang.agentj.planning.model.vo.PlanTemplateConfigVO;
+import com.wangliang.agentj.planning.model.vo.PlanTemplateConfigVO.ToolConfigVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,10 +97,11 @@ public class PlanTemplateInitializationService {
 						continue;
 					}
 
-					// Only process templates with toolConfig, throw error if missing
+					// Only process templates with toolConfig, create a default one if missing
 					if (configVO.getToolConfig() == null) {
-						throw new RuntimeException("Plan template " + planName + " (planTemplateId: " + planTemplateId
-								+ ") does not have toolConfig. toolConfig is required for startup initialization.");
+						log.warn("Plan template {} (planTemplateId: {}) missing toolConfig, using default.",
+								planName, planTemplateId);
+						configVO.setToolConfig(new ToolConfigVO());
 					}
 
 					// Create or update coordinator tool (this will also create
