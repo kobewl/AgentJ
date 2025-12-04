@@ -99,6 +99,7 @@ public class LlmService implements LynxeListener<ModelChangeEvent> {
 	private WebClient webClientWithDnsCache;
 
 	@Autowired(required = false)
+	@org.springframework.context.annotation.Lazy
 	private ConversationMemoryLimitService conversationMemoryLimitService;
 
 	public LlmService() {

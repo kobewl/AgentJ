@@ -38,7 +38,6 @@ public abstract class ReActAgent extends BaseAgent {
 	 * process
 	 * @param lynxeProperties Lynxe configuration properties
 	 */
-
 	public ReActAgent(LlmService llmService, PlanExecutionRecorder planExecutionRecorder,
                       LynxeProperties lynxeProperties, Map<String, Object> initialAgentSetting, ExecutionStep step,
                       PlanIdDispatcher planIdDispatcher) {

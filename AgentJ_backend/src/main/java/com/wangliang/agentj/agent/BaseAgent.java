@@ -1,18 +1,3 @@
-/*
- * Copyright 2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.wangliang.agentj.agent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,12 +54,10 @@ public abstract class BaseAgent {
 
 	private static final Logger log = LoggerFactory.getLogger(BaseAgent.class);
 
+	// 计划管理相关
 	private String currentPlanId = null;
-
 	private String rootPlanId = null;
-
 	private int planDepth = 0;
-
 	private String conversationId = null;
 
 	protected LlmService llmService;
@@ -83,12 +66,10 @@ public abstract class BaseAgent {
 
 	protected ObjectMapper objectMapper;
 
+	// 执行控制相关
 	protected final ExecutionStep step;
-
-	protected final PlanIdDispatcher planIdDispatcher;
-
+	protected final PlanIdDispatcher planIdDispatcher; // 计划ID转换器
 	private int maxSteps;
-
 	private int currentStep = 0;
 
 	// Change the data map to an immutable object and initialize it properly

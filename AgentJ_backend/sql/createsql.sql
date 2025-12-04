@@ -33,3 +33,20 @@ CREATE TABLE `mcp_config` (
                               PRIMARY KEY (`id`),
                               UNIQUE KEY `uk_mcp_server_name` (`mcp_server_name`) COMMENT 'MCP服务器名称唯一索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='MCP配置表';
+
+CREATE TABLE `dynamic_models` (
+                                  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                                  `base_url` varchar(255) NOT NULL COMMENT '模型基础请求URL',
+                                  `api_key` varchar(255) NOT NULL COMMENT '模型调用密钥（存储原始值，展示时脱敏）',
+                                  `headers` varchar(2048) DEFAULT NULL COMMENT '请求头信息（JSON格式字符串存储）',
+                                  `model_name` varchar(255) NOT NULL COMMENT '模型名称',
+                                  `model_description` varchar(1000) NOT NULL COMMENT '模型描述',
+                                  `type` varchar(50) NOT NULL COMMENT '模型类型（如：openai、anthropic等）',
+                                  `is_default` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否为默认模型（0-否，1-是）',
+                                  `temperature` double DEFAULT NULL COMMENT '温度参数（控制生成随机性）',
+                                  `top_p` double DEFAULT NULL COMMENT '核采样参数',
+                                  `completions_path` varchar(255) DEFAULT NULL COMMENT '补全接口路径（如：/v1/chat/completions）',
+                                  PRIMARY KEY (`id`),
+                                  KEY `idx_dynamic_models_type` (`type`),
+                                  KEY `idx_dynamic_models_is_default` (`is_default`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='动态模型配置表';

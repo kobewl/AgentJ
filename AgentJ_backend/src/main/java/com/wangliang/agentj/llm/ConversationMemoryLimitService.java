@@ -51,8 +51,12 @@ public class ConversationMemoryLimitService {
 	@Autowired
 	private LynxeProperties lynxeProperties;
 
-	@Autowired
 	private LlmService llmService;
+
+	@Autowired
+	public void setLlmService(LlmService llmService) {
+		this.llmService = llmService;
+	}
 
 	/**
 	 * Check and limit conversation memory size for a given conversation ID. Maintains
