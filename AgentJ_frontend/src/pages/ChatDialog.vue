@@ -72,7 +72,11 @@
                 <span class="time">正在生成...</span>
               </div>
               <div class="bubble-body">
-                <div class="text">{{ streamingText }}<span class="cursor">▍</span></div>
+                <div
+                  class="text markdown-body live-markdown"
+                  v-html="streamingHtml"
+                ></div>
+                <span class="cursor">▍</span>
               </div>
             </div>
           </div>
@@ -208,6 +212,7 @@ const input = ref('');
 const messages = ref<ChatMessage[]>([]);
 const conversationId = ref('');
 const streamingText = ref('');
+const streamingHtml = computed(() => renderMarkdown(streamingText.value || ''));
 const sending = ref(false);
 const selectedFile = ref<File | null>(null);
 const messagesContainer = ref<HTMLElement>();
@@ -547,7 +552,7 @@ watch(streamingText, () => {
 .message-row {
   display: flex;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
   animation: messageSlideIn 0.3s ease-out;
   align-items: flex-start;
   max-width: 100%;
@@ -584,7 +589,7 @@ watch(streamingText, () => {
   max-width: 85%;
   background: white;
   border: 1px solid #e2e8f0;
-  padding: 14px 18px;
+  padding: 10px 14px;
   border-radius: 18px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   position: relative;
@@ -641,11 +646,26 @@ watch(streamingText, () => {
 }
 
 .bubble-body .text {
-  line-height: 1.6;
+  line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
-  font-size: 15px;
+  font-size: 14px;
   color: #1e293b;
+}
+
+.bubble-body .text.markdown-body {
+  white-space: normal;
+}
+
+.streaming .bubble-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.live-markdown {
+  flex: 1;
+  padding: 0;
 }
 
 .message-row.user .bubble-body .text {
@@ -969,9 +989,9 @@ watch(streamingText, () => {
 
 /* 改进聊天面板高度 */
 .chat-panel {
-  padding: 24px 32px;
+  padding: 16px 24px;
   background: #fafbfc;
-  max-height: calc(100vh - 320px);
+  max-height: calc(100vh - 280px);
   overflow: hidden;
 }
 
@@ -1010,9 +1030,18 @@ watch(streamingText, () => {
 /* GitHub风格的Markdown样式 */
 .markdown-body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.45;
   word-wrap: break-word;
+}
+
+.markdown-body > * {
+  margin-top: 0;
+  margin-bottom: 6px;
+}
+
+.markdown-body > *:last-child {
+  margin-bottom: 0;
 }
 
 .markdown-body h1,
@@ -1021,8 +1050,8 @@ watch(streamingText, () => {
 .markdown-body h4,
 .markdown-body h5,
 .markdown-body h6 {
-  margin-top: 24px;
-  margin-bottom: 16px;
+  margin-top: 8px;
+  margin-bottom: 6px;
   font-weight: 600;
   line-height: 1.25;
   color: #2d3748;
@@ -1030,18 +1059,18 @@ watch(streamingText, () => {
 
 .markdown-body h1 {
   padding-bottom: 0.3em;
-  font-size: 2em;
+  font-size: 1.4em;
   border-bottom: 1px solid #e2e8f0;
 }
 
 .markdown-body h2 {
   padding-bottom: 0.3em;
-  font-size: 1.5em;
+  font-size: 1.18em;
   border-bottom: 1px solid #e2e8f0;
 }
 
 .markdown-body h3 {
-  font-size: 1.25em;
+  font-size: 1.02em;
 }
 
 .markdown-body h4 {
@@ -1058,22 +1087,21 @@ watch(streamingText, () => {
 }
 
 .markdown-body p {
-  margin-top: 0;
-  margin-bottom: 16px;
+  margin: 0 0 6px;
 }
 
 .markdown-body blockquote {
   padding: 0 1em;
   color: #718096;
   border-left: 0.25em solid #e2e8f0;
-  margin: 0 0 16px 0;
+  margin: 0 0 6px 0;
 }
 
 .markdown-body ul,
 .markdown-body ol {
-  padding-left: 2em;
+  padding-left: 1.2em;
   margin-top: 0;
-  margin-bottom: 16px;
+  margin-bottom: 6px;
 }
 
 .markdown-body ul ul,
@@ -1085,15 +1113,15 @@ watch(streamingText, () => {
 }
 
 .markdown-body li {
-  margin-bottom: 0.25em;
+  margin-bottom: 0.15em;
 }
 
 .markdown-body li > p {
-  margin-top: 16px;
+  margin-top: 2px;
 }
 
 .markdown-body li + li {
-  margin-top: 0.25em;
+  margin-top: 0.15em;
 }
 
 .markdown-body code {
@@ -1109,10 +1137,10 @@ watch(streamingText, () => {
   word-wrap: normal;
   background-color: #f6f8fa;
   border-radius: 6px;
-  padding: 16px;
+  padding: 8px;
   overflow: auto;
   margin-top: 0;
-  margin-bottom: 16px;
+  margin-bottom: 6px;
 }
 
 .markdown-body pre code {
@@ -1136,7 +1164,7 @@ watch(streamingText, () => {
   width: 100%;
   overflow: auto;
   margin-top: 0;
-  margin-bottom: 16px;
+  margin-bottom: 6px;
 }
 
 .markdown-body table th {
@@ -1164,13 +1192,13 @@ watch(streamingText, () => {
   box-sizing: content-box;
   background-color: #ffffff;
   border-radius: 4px;
-  margin: 16px 0;
+  margin: 6px 0;
 }
 
 .markdown-body hr {
   height: 0.25em;
   padding: 0;
-  margin: 24px 0;
+  margin: 8px 0;
   background-color: #e2e8f0;
   border: 0;
 }
