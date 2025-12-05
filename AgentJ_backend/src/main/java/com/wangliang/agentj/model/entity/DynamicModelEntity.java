@@ -53,7 +53,8 @@ public class DynamicModelEntity {
 	@Column
 	private Double temperature;
 
-	@Column
+	// Explicit column name to match DB schema (top_p)
+	@Column(name = "top_p")
 	private Double topP;
 
 	@Column

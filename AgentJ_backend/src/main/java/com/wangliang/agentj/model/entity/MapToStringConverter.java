@@ -19,6 +19,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +33,15 @@ import java.util.Map;
 @Converter
 public class MapToStringConverter implements AttributeConverter<Map<String, String>, String> {
 
+	private static final Logger log = LoggerFactory.getLogger(MapToStringConverter.class);
+
 	private final ObjectMapper objectMapper;
+
+	public MapToStringConverter() {
+		// Fallback ObjectMapper to keep converter usable even if dependency injection
+		// does not kick in.
+		this.objectMapper = new ObjectMapper();
+	}
 
 	public MapToStringConverter(ObjectMapper objectMapper) {
 		this.objectMapper = objectMapper;
@@ -39,6 +50,9 @@ public class MapToStringConverter implements AttributeConverter<Map<String, Stri
 	@Override
 	public String convertToDatabaseColumn(Map<String, String> attribute) {
 		try {
+			if (attribute == null || attribute.isEmpty()) {
+				return "{}";
+			}
 			return objectMapper.writeValueAsString(attribute);
 		}
 		catch (Exception e) {
@@ -48,9 +62,7 @@ public class MapToStringConverter implements AttributeConverter<Map<String, Stri
 
 	@Override
 	public Map<String, String> convertToEntityAttribute(String dbData) {
-		// Add null or empty string check
-		if (dbData == null || dbData.isEmpty()) {
-			// Return empty Map or null, depending on business logic
+		if (!StringUtils.hasText(dbData) || "{}".equals(dbData.trim())) {
 			return new HashMap<>();
 		}
 		try {
@@ -58,7 +70,9 @@ public class MapToStringConverter implements AttributeConverter<Map<String, Stri
 			});
 		}
 		catch (Exception e) {
-			throw new IllegalArgumentException("Error converting string to map", e);
+			// Be forgiving with malformed data to avoid breaking the app
+			log.warn("Failed to parse headers JSON from DB, returning empty map. Raw: {}", dbData, e);
+			return new HashMap<>();
 		}
 	}
 

@@ -1,62 +1,64 @@
 <template>
-  <el-card shadow="never">
-    <template #header>
-      <div class="card-toolbar">
-        <span>定时任务</span>
-        <div class="flex-row">
-          <el-button type="primary" @click="openEdit()">新建</el-button>
-          <el-button @click="load">刷新</el-button>
-        </div>
-      </div>
-    </template>
-
-    <el-table :data="items" v-loading="loading" border style="width: 100%">
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="name" label="任务名" min-width="160" />
-      <el-table-column prop="cronExpression" label="Cron" min-width="160" />
-      <el-table-column prop="status" label="状态" width="100">
-        <template #default="scope">
-          <el-tag :type="scope.row.status === 1 ? 'success' : 'info'">{{ scope.row.status === 1 ? '启用' : '停用' }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="description" label="描述" min-width="200" />
-      <el-table-column label="操作" width="260">
-        <template #default="scope">
-          <div class="table-actions">
-            <el-button size="small" @click="openEdit(scope.row)">编辑</el-button>
-            <el-button size="small" type="success" @click="changeStatus(scope.row, 1)">启用</el-button>
-            <el-button size="small" type="warning" @click="changeStatus(scope.row, 0)">停用</el-button>
-            <el-button size="small" type="info" @click="execute(scope.row)">执行一次</el-button>
-            <el-popconfirm title="确认删除?" @confirm="remove(scope.row)">
-              <template #reference>
-                <el-button size="small" type="danger" plain>删除</el-button>
-              </template>
-            </el-popconfirm>
+  <div class="page-wrapper">
+    <el-card shadow="never">
+      <template #header>
+        <div class="card-toolbar">
+          <span>定时任务</span>
+          <div class="flex-row">
+            <el-button type="primary" @click="openEdit()">新建</el-button>
+            <el-button @click="load">刷新</el-button>
           </div>
-        </template>
-      </el-table-column>
-    </el-table>
-  </el-card>
+        </div>
+      </template>
 
-  <el-drawer v-model="drawer" title="任务配置" size="40%">
-    <el-form :model="form" label-width="120px">
-      <el-form-item label="任务名" required>
-        <el-input v-model="form.name" />
-      </el-form-item>
-      <el-form-item label="Cron 表达式" required>
-        <el-input v-model="form.cronExpression" placeholder="0 0/5 * * * ?" />
-      </el-form-item>
-      <el-form-item label="描述">
-        <el-input v-model="form.description" type="textarea" :rows="2" />
-      </el-form-item>
-      <el-form-item label="状态">
-        <el-switch v-model="form.status" :active-value="1" :inactive-value="0" />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="save">保存</el-button>
-      </el-form-item>
-    </el-form>
-  </el-drawer>
+      <el-table :data="items" v-loading="loading" border style="width: 100%">
+        <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column prop="name" label="任务名" min-width="160" />
+        <el-table-column prop="cronExpression" label="Cron" min-width="160" />
+        <el-table-column prop="status" label="状态" width="100">
+          <template #default="scope">
+            <el-tag :type="scope.row.status === 1 ? 'success' : 'info'">{{ scope.row.status === 1 ? '启用' : '停用' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="description" label="描述" min-width="200" />
+        <el-table-column label="操作" width="260">
+          <template #default="scope">
+            <div class="table-actions">
+              <el-button size="small" @click="openEdit(scope.row)">编辑</el-button>
+              <el-button size="small" type="success" @click="changeStatus(scope.row, 1)">启用</el-button>
+              <el-button size="small" type="warning" @click="changeStatus(scope.row, 0)">停用</el-button>
+              <el-button size="small" type="info" @click="execute(scope.row)">执行一次</el-button>
+              <el-popconfirm title="确认删除?" @confirm="remove(scope.row)">
+                <template #reference>
+                  <el-button size="small" type="danger" plain>删除</el-button>
+                </template>
+              </el-popconfirm>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+
+    <el-drawer v-model="drawer" title="任务配置" size="40%">
+      <el-form :model="form" label-width="120px">
+        <el-form-item label="任务名" required>
+          <el-input v-model="form.name" />
+        </el-form-item>
+        <el-form-item label="Cron 表达式" required>
+          <el-input v-model="form.cronExpression" placeholder="0 0/5 * * * ?" />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="form.description" type="textarea" :rows="2" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-switch v-model="form.status" :active-value="1" :inactive-value="0" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="save">保存</el-button>
+        </el-form-item>
+      </el-form>
+    </el-drawer>
+  </div>
 </template>
 
 <script setup lang="ts">

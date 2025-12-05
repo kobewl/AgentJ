@@ -1,44 +1,46 @@
 <template>
-  <el-card shadow="never">
-    <template #header>
-      <div class="card-toolbar">
-        <span>记忆列表</span>
-        <div class="flex-row">
-          <el-input v-model="newMemory.conversationId" placeholder="conversationId" style="width: 200px" />
-          <el-input v-model="newMemory.name" placeholder="名称" style="width: 200px" />
-          <el-button type="primary" @click="create">新建</el-button>
-          <el-button @click="load">刷新</el-button>
+  <div class="page-wrapper">
+    <el-card shadow="never">
+      <template #header>
+        <div class="card-toolbar">
+          <span>记忆列表</span>
+          <div class="flex-row">
+            <el-input v-model="newMemory.conversationId" placeholder="conversationId" style="width: 200px" />
+            <el-input v-model="newMemory.name" placeholder="名称" style="width: 200px" />
+            <el-button type="primary" @click="create">新建</el-button>
+            <el-button @click="load">刷新</el-button>
+          </div>
         </div>
-      </div>
-    </template>
+      </template>
 
-    <el-table :data="items" v-loading="loading" border style="width: 100%">
-      <el-table-column prop="conversationId" label="ConversationId" min-width="220" />
-      <el-table-column prop="name" label="名称" min-width="160" />
-      <el-table-column label="RootPlanIds" min-width="240">
-        <template #default="scope">{{ (scope.row.rootPlanIds || []).join(', ') || '-' }}</template>
-      </el-table-column>
-      <el-table-column label="操作" width="200">
-        <template #default="scope">
-          <el-button size="small" @click="viewHistory(scope.row.conversationId)">历史</el-button>
-          <el-popconfirm title="确认删除?" @confirm="remove(scope.row.conversationId)">
-            <template #reference>
-              <el-button size="small" type="danger" plain>删除</el-button>
-            </template>
-          </el-popconfirm>
-        </template>
-      </el-table-column>
-    </el-table>
-  </el-card>
+      <el-table :data="items" v-loading="loading" border style="width: 100%">
+        <el-table-column prop="conversationId" label="ConversationId" min-width="220" />
+        <el-table-column prop="name" label="名称" min-width="160" />
+        <el-table-column label="RootPlanIds" min-width="240">
+          <template #default="scope">{{ (scope.row.rootPlanIds || []).join(', ') || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="200">
+          <template #default="scope">
+            <el-button size="small" @click="viewHistory(scope.row.conversationId)">历史</el-button>
+            <el-popconfirm title="确认删除?" @confirm="remove(scope.row.conversationId)">
+              <template #reference>
+                <el-button size="small" type="danger" plain>删除</el-button>
+              </template>
+            </el-popconfirm>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
 
-  <el-drawer v-model="historyVisible" title="会话历史" size="50%">
-    <el-empty v-if="history.length === 0" description="暂无记录" />
-    <el-collapse v-else>
-      <el-collapse-item v-for="(h, idx) in history" :key="idx" :title="h.rootPlanId || '记录'">
-        <pre>{{ JSON.stringify(h, null, 2) }}</pre>
-      </el-collapse-item>
-    </el-collapse>
-  </el-drawer>
+    <el-drawer v-model="historyVisible" title="会话历史" size="50%">
+      <el-empty v-if="history.length === 0" description="暂无记录" />
+      <el-collapse v-else>
+        <el-collapse-item v-for="(h, idx) in history" :key="idx" :title="h.rootPlanId || '记录'">
+          <pre>{{ JSON.stringify(h, null, 2) }}</pre>
+        </el-collapse-item>
+      </el-collapse>
+    </el-drawer>
+  </div>
 </template>
 
 <script setup lang="ts">
