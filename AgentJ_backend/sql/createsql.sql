@@ -171,3 +171,122 @@ CREATE TABLE `plan_template_version` (
     -- 普通索引：加速按模板ID查询所有版本、按创建时间排序
                                          KEY `idx_plan_template_id_create_time` (`plan_template_id`, `create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='计划模板版本记录表';
+
+CREATE TABLE `dynamic_memories` (
+                                    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                                    `conversation_id` varchar(64) NOT NULL COMMENT '对话ID（关联会话标识）',
+                                    `memory_name` varchar(255) NOT NULL COMMENT '记忆名称（对话名称）',
+                                    `create_time` datetime NOT NULL COMMENT '创建时间',
+                                    PRIMARY KEY (`id`),
+                                    UNIQUE KEY `uk_dynamic_memories_conversation_id` (`conversation_id`) COMMENT '对话ID唯一索引',
+                                    KEY `idx_create_time` (`create_time`) COMMENT '创建时间索引（匹配实体类注解）'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对话记忆主表（存储会话元数据）';
+
+CREATE TABLE `memory_plan_mappings` (
+                                        `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                                        `memory_id` bigint(20) NOT NULL COMMENT '关联的记忆主表ID',
+                                        `root_plan_id` varchar(64) NOT NULL COMMENT '根计划ID（对应对话轮次的计划执行记录）',
+                                        PRIMARY KEY (`id`),
+                                        UNIQUE KEY `uk_memory_plan_mapping` (`memory_id`, `root_plan_id`) COMMENT '同一记忆下的根计划ID唯一',
+                                        KEY `idx_memory_id` (`memory_id`) COMMENT '记忆ID关联索引',
+                                        CONSTRAINT `fk_memory_plan_mapping_memory` FOREIGN KEY (`memory_id`) REFERENCES `dynamic_memories` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='记忆-根计划ID映射表（一对多关联）';
+
+CREATE TABLE `root_task_manager` (
+                                     `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                                     `root_plan_id` varchar(255) NOT NULL COMMENT '根计划ID（任务层级的主标识，全局唯一）',
+                                     `desired_task_state` varchar(50) NOT NULL COMMENT '用户期望的任务状态（START/STOP/PAUSE/RESUME/CANCEL/WAIT）',
+                                     `task_result` text DEFAULT NULL COMMENT '任务执行结果（汇总+详情）',
+                                     `start_time` datetime DEFAULT NULL COMMENT '任务执行开始时间',
+                                     `end_time` datetime DEFAULT NULL COMMENT '任务执行结束时间',
+                                     `last_updated` datetime DEFAULT NULL COMMENT '任务最后更新时间',
+                                     `created_at` datetime NOT NULL COMMENT '任务创建时间',
+                                     `created_by` varchar(100) DEFAULT NULL COMMENT '任务创建人',
+                                     PRIMARY KEY (`id`),
+                                     UNIQUE KEY `uk_root_task_manager_root_plan_id` (`root_plan_id`) COMMENT '根计划ID唯一索引',
+                                     KEY `idx_desired_task_state` (`desired_task_state`) COMMENT '任务状态索引（用于筛选不同状态的任务）',
+                                     KEY `idx_created_at` (`created_at`) COMMENT '创建时间索引（用于按时间筛选任务）',
+                                     KEY `idx_last_updated` (`last_updated`) COMMENT '最后更新时间索引（用于追踪任务更新）'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='根任务管理表（核心任务协调器）';
+
+CREATE TABLE `plan_execution_record` (
+                                         `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '记录主键ID',
+                                         `current_plan_id` varchar(64) NOT NULL COMMENT '当前计划ID（全局唯一）',
+                                         `root_plan_id` varchar(64) DEFAULT NULL COMMENT '根计划ID（子计划关联主计划）',
+                                         `parent_plan_id` varchar(64) DEFAULT NULL COMMENT '父计划ID（子计划关联父计划）',
+                                         `title` varchar(255) DEFAULT NULL COMMENT '计划标题',
+                                         `user_request` longtext DEFAULT NULL COMMENT '用户原始请求（大文本）',
+                                         `start_time` datetime DEFAULT NULL COMMENT '执行开始时间',
+                                         `end_time` datetime DEFAULT NULL COMMENT '执行结束时间',
+                                         `current_step_index` int(11) DEFAULT NULL COMMENT '当前执行步骤索引',
+                                         `completed` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否执行完成（0-否，1-是）',
+                                         `summary` longtext DEFAULT NULL COMMENT '执行汇总结果（大文本）',
+                                         `tool_call_id` varchar(64) DEFAULT NULL COMMENT '触发当前计划的工具调用ID（子计划用）',
+                                         `model_name` varchar(100) DEFAULT NULL COMMENT '实际调用的模型名称',
+                                         PRIMARY KEY (`id`),
+                                         UNIQUE KEY `uk_plan_execution_current_plan_id` (`current_plan_id`) COMMENT '当前计划ID唯一索引',
+                                         KEY `idx_root_plan_id` (`root_plan_id`) COMMENT '根计划ID索引（查询主计划下所有子计划）',
+                                         KEY `idx_parent_plan_id` (`parent_plan_id`) COMMENT '父计划ID索引（查询父计划下所有子计划）',
+                                         KEY `idx_completed` (`completed`) COMMENT '执行状态索引（筛选完成/未完成计划）',
+                                         KEY `idx_start_time` (`start_time`) COMMENT '开始时间索引（按执行时间筛选）'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='计划执行记录表（核心执行轨迹）';
+
+CREATE TABLE `plan_execution_steps` (
+                                        `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '步骤记录ID',
+                                        `plan_execution_id` bigint(20) NOT NULL COMMENT '关联计划执行记录ID',
+                                        `step` longtext NOT NULL COMMENT '步骤内容（大文本）',
+                                        PRIMARY KEY (`id`),
+                                        KEY `idx_plan_execution_steps_execution_id` (`plan_execution_id`) COMMENT '计划执行记录关联索引',
+                                        CONSTRAINT `fk_plan_execution_steps_record` FOREIGN KEY (`plan_execution_id`) REFERENCES `plan_execution_record` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='计划执行步骤明细表';
+
+CREATE TABLE `agent_execution_record` (
+                                          `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '记录主键ID',
+                                          `step_id` varchar(64) DEFAULT NULL COMMENT '所属步骤ID（全局唯一）',
+                                          `agent_name` varchar(100) DEFAULT NULL COMMENT '智能体名称',
+                                          `agent_description` longtext DEFAULT NULL COMMENT '智能体描述（大文本）',
+                                          `start_time` datetime DEFAULT NULL COMMENT '执行开始时间',
+                                          `end_time` datetime DEFAULT NULL COMMENT '执行结束时间',
+                                          `max_steps` int(11) NOT NULL DEFAULT 0 COMMENT '最大允许执行步骤数',
+                                          `current_step` int(11) NOT NULL DEFAULT 0 COMMENT '当前执行步骤数',
+                                          `status` varchar(50) DEFAULT NULL COMMENT '执行状态（IDLE/RUNNING/FINISHED等）',
+                                          `agent_request` longtext DEFAULT NULL COMMENT '智能体执行请求内容（大文本）',
+                                          `result` longtext DEFAULT NULL COMMENT '执行结果（大文本）',
+                                          `error_message` longtext DEFAULT NULL COMMENT '错误信息（大文本）',
+                                          `model_name` varchar(100) DEFAULT NULL COMMENT '实际调用的模型名称',
+                                          PRIMARY KEY (`id`),
+                                          UNIQUE KEY `uk_agent_execution_step_id` (`step_id`) COMMENT '步骤ID唯一索引',
+                                          KEY `idx_step_id` (`step_id`) COMMENT '步骤ID索引（匹配实体类注解）',
+                                          KEY `idx_agent_name` (`agent_name`) COMMENT '智能体名称索引（按智能体筛选记录）',
+                                          KEY `idx_status` (`status`) COMMENT '执行状态索引（筛选不同状态的执行记录）',
+                                          KEY `idx_start_time` (`start_time`) COMMENT '开始时间索引（按执行时间筛选）'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='智能体执行记录表（Agent执行轨迹）';
+
+CREATE TABLE `think_act_record` (
+                                    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '记录主键ID',
+                                    `think_act_id` varchar(64) DEFAULT NULL COMMENT '思考-行动唯一标识ID',
+                                    `parent_execution_id` bigint(20) DEFAULT NULL COMMENT '关联的智能体执行记录ID（父级ID）',
+                                    `think_input` longtext DEFAULT NULL COMMENT '思考阶段输入内容（大文本）',
+                                    `think_output` longtext DEFAULT NULL COMMENT '思考阶段输出结果（大文本）',
+                                    `error_message` longtext DEFAULT NULL COMMENT '执行错误信息（大文本）',
+                                    `input_char_count` int(11) DEFAULT NULL COMMENT '输入字符数（发送给LLM的总字符数）',
+                                    `output_char_count` int(11) DEFAULT NULL COMMENT '输出字符数（LLM响应的总字符数）',
+                                    PRIMARY KEY (`id`),
+                                    KEY `idx_think_act_parent_execution_id` (`parent_execution_id`) COMMENT '父级智能体执行记录ID索引',
+                                    KEY `idx_think_act_id` (`think_act_id`) COMMENT '思考-行动ID索引（按标识查询）',
+                                    CONSTRAINT `fk_think_act_record_agent_execution` FOREIGN KEY (`parent_execution_id`) REFERENCES `agent_execution_record` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='智能体思考-行动记录表（Think-Act执行轨迹）';
+
+CREATE TABLE `act_tool_info` (
+                                 `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '工具调用记录主键ID',
+                                 `name` varchar(100) DEFAULT NULL COMMENT '工具名称',
+                                 `parameters` longtext DEFAULT NULL COMMENT '工具参数（序列化内容，大文本）',
+                                 `result` longtext DEFAULT NULL COMMENT '工具执行结果（大文本）',
+                                 `tool_call_id` varchar(64) DEFAULT NULL COMMENT '工具调用ID（唯一标识）',
+                                 `think_act_record_id` bigint(20) NOT NULL COMMENT '关联的思考-行动记录ID（外键）',
+                                 PRIMARY KEY (`id`),
+                                 KEY `idx_act_tool_think_act_id` (`think_act_record_id`) COMMENT '思考-行动记录关联索引',
+                                 KEY `idx_tool_call_id` (`tool_call_id`) COMMENT '工具调用ID索引（按调用ID查询）',
+                                 KEY `idx_tool_name` (`name`) COMMENT '工具名称索引（按工具筛选记录）',
+                                 CONSTRAINT `fk_act_tool_info_think_act` FOREIGN KEY (`think_act_record_id`) REFERENCES `think_act_record` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='行动工具信息表（记录工具调用详情）';

@@ -20,3 +20,6 @@ export const getExecutionDetails = (planId: string) => http.get<string>(`/api/ex
 export const stopTask = (planId: string) => http.post(`/api/executor/stopTask/${planId}`);
 
 export const getTaskStatus = (planId: string) => http.get(`/api/executor/taskStatus/${planId}`);
+
+export const submitUserInput = (planId: string, formData: Record<string, string>) =>
+  http.post(`/api/executor/submit-input/${planId}`, formData);

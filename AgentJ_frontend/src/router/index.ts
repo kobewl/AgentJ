@@ -8,6 +8,7 @@ import ChatDialog from '@/pages/ChatDialog.vue';
 import Memories from '@/pages/Memories.vue';
 import DatasourceConfigs from '@/pages/DatasourceConfigs.vue';
 import CronTasks from '@/pages/CronTasks.vue';
+import AgentTasks from '@/pages/AgentTasks.vue';
 
 export const menuRoutes: RouteRecordRaw[] = [
   {
@@ -39,6 +40,12 @@ export const menuRoutes: RouteRecordRaw[] = [
     name: 'Executor',
     component: Executor,
     meta: { title: '执行与任务', icon: 'Promotion' },
+  },
+  {
+    path: '/agents',
+    name: 'AgentTasks',
+    component: AgentTasks,
+    meta: { title: 'Agent 任务', icon: 'Cpu' },
   },
   {
     path: '/chat',

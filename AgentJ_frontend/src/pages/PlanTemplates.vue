@@ -4,21 +4,21 @@
       <template #header>
         <div class="card-toolbar">
           <span>计划模板列表</span>
-          <el-button type="primary" :loading="loading" @click="load">刷新</el-button>
+          <div class="actions">
+            <el-button @click="load" :loading="loading">刷新</el-button>
+            <el-button type="primary" @click="showCreate">新建模板</el-button>
+          </div>
         </div>
       </template>
       <el-table :data="items" v-loading="loading" border style="width: 100%">
         <el-table-column prop="planTemplateId" label="模板ID" min-width="200" />
-        <el-table-column prop="title" label="标题" min-width="180" />
+        <el-table-column prop="title" label="标题/工具名" min-width="200" />
         <el-table-column prop="planType" label="类型" width="120" />
         <el-table-column prop="serviceGroup" label="服务组" width="120" />
         <el-table-column prop="directResponse" label="直接响应" width="100">
           <template #default="scope">
             <el-tag :type="scope.row.directResponse ? 'success' : 'info'">{{ scope.row.directResponse ? '是' : '否' }}</el-tag>
           </template>
-        </el-table-column>
-        <el-table-column prop="toolConfig.toolName" label="工具名" min-width="160">
-          <template #default="scope">{{ scope.row.toolConfig?.toolName || '-' }}</template>
         </el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="scope">
@@ -65,13 +65,66 @@
         </el-table>
       </div>
     </el-drawer>
+
+    <el-dialog v-model="createVisible" title="新建计划模板" width="640px">
+      <el-form label-width="120px" :model="createForm">
+        <el-form-item label="模板ID" required>
+          <el-input v-model="createForm.planTemplateId" placeholder="唯一ID，如 my-tool-001" />
+        </el-form-item>
+        <el-form-item label="标题/工具名" required>
+          <el-select
+            v-model="createForm.title"
+            filterable
+            allow-create
+            default-first-option
+            placeholder="选择或输入工具名（title 同时作为 toolName）"
+            @change="handleToolSelect"
+          >
+            <el-option
+              v-for="opt in toolOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
+          <p class="form-hint">下拉展示后端已有的工具名（title），也可直接输入新名称。</p>
+        </el-form-item>
+        <el-form-item label="服务组">
+          <el-input v-model="createForm.serviceGroup" placeholder="默认为 ungrouped" />
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-input v-model="createForm.planType" placeholder="dynamic_agent" />
+        </el-form-item>
+        <el-form-item label="直接响应">
+          <el-switch v-model="createForm.directResponse" />
+        </el-form-item>
+        <el-form-item label="工具描述">
+          <el-input v-model="createForm.toolDescription" placeholder="可选，描述这个工具/计划" />
+        </el-form-item>
+        <el-form-item label="planJson (steps)" required>
+          <el-input
+            v-model="createForm.planJson"
+            type="textarea"
+            :rows="10"
+            placeholder='填写包含 steps 的 JSON，至少包含 stepRequirement/agentName 等'
+          />
+          <p class="form-hint">仅提取其中的 steps 字段用于计划执行；参数占位符从 steps 中自动分析。</p>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="createVisible = false">取消</el-button>
+          <el-button type="primary" :loading="creating" @click="submitCreate">保存</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { ElMessage } from 'element-plus';
-import { deletePlanTemplate, getParameterRequirements, getPlanTemplateConfig, listPlanTemplateConfigs } from '@/api/planTemplate';
+import { createOrUpdatePlanTemplateWithTool, deletePlanTemplate, getParameterRequirements, getPlanTemplateConfig, listPlanTemplateConfigs } from '@/api/planTemplate';
 import type { PlanTemplateConfigVO } from '@/api/types';
 
 const items = ref<PlanTemplateConfigVO[]>([]);
@@ -79,6 +132,30 @@ const loading = ref(false);
 const detailVisible = ref(false);
 const currentConfig = ref<PlanTemplateConfigVO>();
 const parameterReq = ref<any>();
+const createVisible = ref(false);
+const creating = ref(false);
+const createForm = ref({
+  planTemplateId: '',
+  title: '',
+  planType: 'dynamic_agent',
+  serviceGroup: 'ungrouped',
+  directResponse: false,
+  toolDescription: '',
+  planJson: `{
+  "title": "<<填写工具名/标题>>",
+  "planTemplateId": "<<唯一ID，例如 my-tool-001>>",
+  "planType": "dynamic_agent",
+  "directResponse": false,
+  "steps": [
+    {
+      "stepRequirement": "<<input>>",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": ""
+    }
+  ]
+}`
+});
 
 const load = async () => {
   loading.value = true;
@@ -91,6 +168,24 @@ const load = async () => {
     loading.value = false;
   }
 };
+
+const toolOptions = computed(() => {
+  const seen = new Set<string>();
+  return items.value
+    .filter((tpl) => tpl.title)
+    .map((tpl) => {
+      const val = tpl.title || '';
+      if (seen.has(val)) return null;
+      seen.add(val);
+      return {
+        label: `${tpl.title}${tpl.serviceGroup ? ` · ${tpl.serviceGroup}` : ''}`,
+        value: tpl.title || '',
+        planTemplateId: tpl.planTemplateId,
+        serviceGroup: tpl.serviceGroup,
+      };
+    })
+    .filter(Boolean) as { label: string; value: string; planTemplateId?: string; serviceGroup?: string }[];
+});
 
 const viewDetail = async (id: string) => {
   try {
@@ -116,5 +211,92 @@ const remove = async (id: string) => {
   }
 };
 
+const showCreate = () => {
+  createVisible.value = true;
+};
+
+const handleToolSelect = (value: string) => {
+  const found = toolOptions.value.find((o) => o.value === value);
+  if (found) {
+    createForm.value.planTemplateId = found.planTemplateId || createForm.value.planTemplateId;
+    createForm.value.serviceGroup = found.serviceGroup || createForm.value.serviceGroup || 'ungrouped';
+  }
+};
+
+const submitCreate = async () => {
+  if (!createForm.value.planTemplateId || !createForm.value.title) {
+    ElMessage.warning('请填写模板ID和标题（即工具名）');
+    return;
+  }
+  creating.value = true;
+  try {
+    let steps: any[] = [];
+    try {
+      const parsed = JSON.parse(createForm.value.planJson);
+      steps = parsed.steps || [];
+    } catch (err) {
+      ElMessage.error('planJson 不是合法的 JSON');
+      creating.value = false;
+      return;
+    }
+
+    const payload: any = {
+      planTemplateId: createForm.value.planTemplateId,
+      title: createForm.value.title,
+      planType: createForm.value.planType || 'dynamic_agent',
+      serviceGroup: createForm.value.serviceGroup || 'ungrouped',
+      directResponse: !!createForm.value.directResponse,
+      steps,
+      toolConfig: {
+        toolDescription: createForm.value.toolDescription || createForm.value.title,
+        enableInternalToolcall: true,
+        enableHttpService: false,
+        enableInConversation: false,
+        publishStatus: 'PUBLISHED',
+        inputSchema: [],
+      },
+    };
+
+    await createOrUpdatePlanTemplateWithTool(payload);
+    ElMessage.success('已创建/更新模板');
+    createVisible.value = false;
+    load();
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.error || '创建失败');
+  } finally {
+    creating.value = false;
+  }
+};
+
 onMounted(load);
 </script>
+
+<style scoped>
+.card-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.form-hint {
+  margin: 4px 0 0;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+</style>

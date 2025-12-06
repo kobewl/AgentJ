@@ -21,3 +21,6 @@ export const getParameterRequirements = (planTemplateId: string) =>
   http.get<{ parameters: string[]; hasParameters: boolean; requirements: any }>(
     `/api/plan-template/${planTemplateId}/parameters`,
   );
+
+export const createOrUpdatePlanTemplateWithTool = (config: any) =>
+  http.post('/api/plan-template/create-or-update-with-tool', config);
