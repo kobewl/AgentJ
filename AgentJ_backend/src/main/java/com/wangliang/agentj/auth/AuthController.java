@@ -42,8 +42,8 @@ public class AuthController {
 				usernameOrEmail = body.get("email");
 			}
 			String password = body.get("password");
-			String token = authService.login(usernameOrEmail, password);
-			return ResponseEntity.ok(Map.of("token", token));
+			LoginResponse loginResponse = authService.loginWithUserInfo(usernameOrEmail, password);
+			return ResponseEntity.ok(loginResponse);
 		}
 		catch (Exception e) {
 			log.warn("Login failed: {}", e.getMessage());

@@ -16,6 +16,7 @@
 package com.wangliang.agentj.auth;
 
 import com.wangliang.agentj.user.model.po.UserEntity;
+import com.wangliang.agentj.user.model.vo.User;
 import com.wangliang.agentj.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +66,43 @@ public class AuthService {
 		userRepository.save(user);
 
 		return tokenStore.generateToken(user.getId());
+	}
+
+	public LoginResponse loginWithUserInfo(String usernameOrEmail, String rawPassword) {
+		if (!StringUtils.hasText(usernameOrEmail) || !StringUtils.hasText(rawPassword)) {
+			throw new IllegalArgumentException("用户名/邮箱与密码不能为空");
+		}
+
+		Optional<UserEntity> userOpt = userRepository.findByUsername(usernameOrEmail);
+		if (userOpt.isEmpty()) {
+			userOpt = userRepository.findByEmail(usernameOrEmail);
+		}
+		if (userOpt.isEmpty()) {
+			throw new IllegalArgumentException("用户不存在");
+		}
+
+		UserEntity userEntity = userOpt.get();
+		if (!passwordEncoder.matches(rawPassword, userEntity.getPasswordHash())) {
+			throw new IllegalArgumentException("密码错误");
+		}
+
+		userEntity.setLastLogin(LocalDateTime.now());
+		userRepository.save(userEntity);
+
+		String token = tokenStore.generateToken(userEntity.getId());
+		
+		// Convert UserEntity to User VO
+		User user = new User();
+		user.setId(userEntity.getId());
+		user.setUsername(userEntity.getUsername());
+		user.setEmail(userEntity.getEmail());
+		user.setDisplayName(userEntity.getDisplayName());
+		user.setStatus(userEntity.getStatus());
+		user.setCreatedAt(userEntity.getCreatedAt());
+		user.setLastLogin(userEntity.getLastLogin());
+		user.setPreferences(userEntity.getPreferences());
+		
+		return new LoginResponse(token, user);
 	}
 
 	public String register(String username, String email, String displayName, String rawPassword) {

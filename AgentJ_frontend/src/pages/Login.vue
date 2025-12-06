@@ -52,7 +52,7 @@ import { useRouter } from 'vue-router';
 import { ElMessage, FormInstance, FormRules } from 'element-plus';
 import { Cpu } from '@element-plus/icons-vue';
 import http from '@/api/http';
-import { setToken } from '@/utils/auth';
+import { setToken, setUser, type User } from '@/utils/auth';
 
 const router = useRouter();
 const loading = ref(false);
@@ -113,10 +113,12 @@ const handleLogin = () => {
         password: form.password,
       });
       const token = resp.data.token;
-      if (!token) {
-        throw new Error('未获取到登录令牌');
+      const user = resp.data.user;
+      if (!token || !user) {
+        throw new Error('未获取到登录令牌或用户信息');
       }
       setToken(token);
+      setUser(user as User);
       ElMessage.success('登录成功');
       router.replace('/');
     } catch (e: any) {
@@ -140,10 +142,12 @@ const handleRegister = () => {
         password: registerForm.password,
       });
       const token = resp.data.token;
-      if (!token) {
-        throw new Error('未获取到登录令牌');
+      const user = resp.data.user;
+      if (!token || !user) {
+        throw new Error('未获取到登录令牌或用户信息');
       }
       setToken(token);
+      setUser(user as User);
       ElMessage.success('注册并登录成功');
       router.replace('/');
     } catch (e: any) {

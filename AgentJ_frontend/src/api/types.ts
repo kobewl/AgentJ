@@ -97,6 +97,21 @@ export interface MemoryItem {
   createTime?: string;
 }
 
+export interface UserPersonalMemoryItem {
+  id?: number;
+  userId: number;
+  memoryKey: string;
+  title?: string;
+  contentJson: string;
+  source?: 'AI' | 'MANUAL';
+  confidence?: number;
+  importance?: number;
+  tags?: string;
+  lastUsedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface MemoryResponse<T = unknown> {
   success: boolean;
   message?: string;

@@ -6,6 +6,7 @@ import PlanTemplates from '@/pages/PlanTemplates.vue';
 import Executor from '@/pages/Executor.vue';
 import ChatDialog from '@/pages/ChatDialog.vue';
 import Memories from '@/pages/Memories.vue';
+import UserPersonalMemories from '@/pages/UserPersonalMemories.vue';
 import DatasourceConfigs from '@/pages/DatasourceConfigs.vue';
 import CronTasks from '@/pages/CronTasks.vue';
 import AgentTasks from '@/pages/AgentTasks.vue';
@@ -61,6 +62,12 @@ export const menuRoutes: RouteRecordRaw[] = [
     name: 'Memories',
     component: Memories,
     meta: { title: '记忆管理', icon: 'Memo' },
+  },
+  {
+    path: '/user-personal-memories',
+    name: 'UserPersonalMemories',
+    component: UserPersonalMemories,
+    meta: { title: '个人记忆管理', icon: 'UserFilled' },
   },
   {
     path: '/datasource',

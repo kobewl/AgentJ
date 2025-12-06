@@ -5,9 +5,20 @@
         <div class="card-toolbar">
           <span>个人记忆管理</span>
           <div class="flex-row">
-            <div v-if="currentUser" style="margin-right: 10px; padding: 5px 10px; background: #f5f7fa; border-radius: 4px;">
-              <span style="color: #606266;">当前用户: {{ currentUser.displayName || currentUser.username }}</span>
-            </div>
+            <el-select 
+              v-model="selectedUserId" 
+              placeholder="选择用户" 
+              style="width: 200px; margin-right: 10px"
+              filterable
+              @change="handleUserChange"
+            >
+              <el-option
+                v-for="user in users"
+                :key="user.id"
+                :label="user.username"
+                :value="user.id"
+              />
+            </el-select>
             <el-button type="primary" @click="showAddDialog = true" :disabled="!selectedUserId">
               <el-icon><Plus /></el-icon>
               新增记忆
@@ -64,11 +75,6 @@
         <el-table-column type="selection" width="55" />
         <el-table-column prop="memoryKey" label="记忆键" min-width="150" show-overflow-tooltip />
         <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="contentJson" label="内容预览" min-width="300" show-overflow-tooltip>
-          <template #default="scope">
-            <span>{{ getContentPreview(scope.row.contentJson) }}</span>
-          </template>
-        </el-table-column>
         <el-table-column prop="source" label="来源" width="100">
           <template #default="scope">
             <el-tag :type="scope.row.source === 'AI' ? 'info' : 'success'">
@@ -297,7 +303,6 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
-import { getUser } from '@/utils/auth';
 import {
   getUserPersonalMemories,
   saveUserPersonalMemory,
@@ -315,8 +320,11 @@ import {
 } from '@element-plus/icons-vue';
 
 // 用户相关
-const currentUser = ref(getUser());
-const selectedUserId = computed(() => currentUser.value?.id || null);
+const users = ref([
+  { id: 1, username: '系统管理员' },
+  { id: 2, username: '测试用户' },
+]);
+const selectedUserId = ref<number | null>(null);
 
 // 数据相关
 const memories = ref<UserPersonalMemoryItem[]>([]);
@@ -420,25 +428,25 @@ const filteredMemories = computed(() => {
 });
 
 // 方法
-// 移除了handleUserChange函数，因为现在使用当前登录用户
+const handleUserChange = () => {
+  if (selectedUserId.value) {
+    loadMemories();
+  }
+};
 
 const loadMemories = async () => {
   if (!selectedUserId.value) {
-    ElMessage.warning('请先登录');
+    ElMessage.warning('请先选择用户');
     return;
   }
 
   loading.value = true;
   try {
     const response = await getUserPersonalMemories(selectedUserId.value);
-    // 后端直接返回数组，不是标准响应格式
-    if (Array.isArray(response.data)) {
-      memories.value = response.data;
-    } else if (response.data.success && Array.isArray(response.data.data)) {
-      memories.value = response.data.data;
+    if (response.data.success) {
+      memories.value = response.data.data || [];
     } else {
-      memories.value = [];
-      ElMessage.error('数据格式错误');
+      ElMessage.error(response.data.message || '加载失败');
     }
   } catch (error) {
     ElMessage.error('加载个人记忆失败');
@@ -483,16 +491,8 @@ const parseTags = (tags?: string): string[] => {
   }
 };
 
-const formatDate = (date?: string | number[]): string => {
+const formatDate = (date?: string): string => {
   if (!date) return '-';
-  
-  // 处理数组格式的日期 [2025, 12, 6, 22, 36, 9]
-  if (Array.isArray(date)) {
-    const [year, month, day, hour, minute, second] = date;
-    return new Date(year, month - 1, day, hour, minute, second).toLocaleString('zh-CN');
-  }
-  
-  // 处理字符串格式的日期
   return new Date(date).toLocaleString('zh-CN');
 };
 
@@ -503,28 +503,6 @@ const formatContentJson = (contentJson?: string): string => {
     return JSON.stringify(parsed, null, 2);
   } catch {
     return contentJson;
-  }
-};
-
-const getContentPreview = (contentJson?: string): string => {
-  if (!contentJson) return '-';
-  try {
-    const parsed = JSON.parse(contentJson);
-    // 如果解析成功，提取content字段或返回简化JSON
-    if (parsed.content) {
-      return String(parsed.content);
-    } else if (parsed.raw) {
-      // 如果存在raw字段，尝试解析其中的content
-      const rawData = JSON.parse(parsed.raw);
-      return rawData.content || String(parsed.raw);
-    } else {
-      // 返回JSON字符串的前100个字符
-      const jsonStr = JSON.stringify(parsed);
-      return jsonStr.length > 100 ? jsonStr.substring(0, 100) + '...' : jsonStr;
-    }
-  } catch {
-    // 如果不是有效的JSON，返回原字符串的前100个字符
-    return contentJson.length > 100 ? contentJson.substring(0, 100) + '...' : contentJson;
   }
 };
 
@@ -547,14 +525,11 @@ const deleteMemory = async (memoryKey: string) => {
 
   try {
     const response = await deleteUserPersonalMemory(selectedUserId.value, memoryKey);
-    // 适配不同的响应格式
-    if (response.data === null || response.data === undefined || 
-        (response.data && typeof response.data === 'object' && 'success' in response.data && response.data.success) ||
-        (response.data && typeof response.data === 'object' && response.data.success)) {
+    if (response.data.success) {
       ElMessage.success('删除成功');
       loadMemories();
     } else {
-      ElMessage.error('删除失败');
+      ElMessage.error(response.data.message || '删除失败');
     }
   } catch (error) {
     ElMessage.error('删除失败');
@@ -603,16 +578,13 @@ const submitForm = async () => {
       memoryForm.userId = selectedUserId.value;
       const response = await saveUserPersonalMemory(selectedUserId.value, memoryForm);
       
-      // 适配不同的响应格式
-      if (response.data === null || response.data === undefined || 
-          (response.data && typeof response.data === 'object' && 'success' in response.data && response.data.success) ||
-          (response.data && typeof response.data === 'object' && response.data.success)) {
+      if (response.data.success) {
         ElMessage.success(editingMemory.value ? '更新成功' : '创建成功');
         showAddDialog.value = false;
         resetForm();
         loadMemories();
       } else {
-        ElMessage.error('操作失败');
+        ElMessage.error(response.data.message || '操作失败');
       }
     } catch (error) {
       ElMessage.error('操作失败');
@@ -664,11 +636,10 @@ const removeTag = (tag: string) => {
 
 // 生命周期
 onMounted(() => {
-  // 使用当前登录用户
-  if (currentUser.value) {
+  // 默认选择第一个用户
+  if (users.value.length > 0) {
+    selectedUserId.value = users.value[0].id;
     loadMemories();
-  } else {
-    ElMessage.warning('请先登录');
   }
 });
 </script>
