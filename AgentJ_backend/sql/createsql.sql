@@ -293,3 +293,30 @@ CREATE TABLE `act_tool_info` (
                                  KEY `idx_tool_name` (`name`) COMMENT '工具名称索引（按工具筛选记录）',
                                  CONSTRAINT `fk_act_tool_info_think_act` FOREIGN KEY (`think_act_record_id`) REFERENCES `think_act_record` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='行动工具信息表（记录工具调用详情）';
+
+-- auto-generated definition
+create table user_personal_memories
+(
+    id           bigint auto_increment comment '主键'
+        primary key,
+    user_id      bigint                                          not null comment '关联 users.id',
+    memory_key   varchar(100)                                    not null comment '记忆键/类型，如 nickname/job/custom_instruction',
+    title        varchar(255)                                    null comment '可读标题，便于列表展示',
+    content_json json                                            not null comment '记忆内容，结构化存储',
+    source       enum ('AI', 'MANUAL') default 'AI'              not null comment 'AI 自动提炼 or 用户手动输入',
+    confidence   decimal(5, 2)                                   null comment 'AI 置信度，0-1或0-100都可',
+    importance   int                                             null comment '重要性/权重，数值越高越重要',
+    tags         json                                            null comment '标签数组，便于筛选',
+    last_used_at datetime                                        null comment '最近被引用时间',
+    created_at   datetime              default CURRENT_TIMESTAMP not null comment '创建时间',
+    updated_at   datetime              default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    constraint uk_upm_user_key
+        unique (user_id, memory_key),
+    constraint fk_upm_user
+        foreign key (user_id) references users (id)
+);
+
+create index idx_upm_user_used
+    on user_personal_memories (user_id, last_used_at);
+
+

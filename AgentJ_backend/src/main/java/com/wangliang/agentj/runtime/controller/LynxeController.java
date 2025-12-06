@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -123,6 +124,14 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 	@Autowired
 	@Lazy
 	private StreamingResponseHandler streamingResponseHandler;
+
+	@Autowired
+	@Lazy
+	private com.wangliang.agentj.user.service.UserService userService;
+
+	@Autowired
+	@Lazy
+	private com.wangliang.agentj.user.service.UserPersonalMemoryService userPersonalMemoryService;
 
 	public LynxeController(ObjectMapper objectMapper) {
 		this.objectMapper = objectMapper;
@@ -963,6 +972,62 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 	}
 
 	/**
+	 * Build a brief system prompt from user's personal memories to prime the LLM.
+	 * @param userId The user ID
+	 * @return System prompt content
+	 */
+	private String buildUserProfile(Long userId) {
+		try {
+			var memories = userPersonalMemoryService.listByUser(userId);
+			if (memories == null || memories.isEmpty()) {
+				return null;
+			}
+			StringBuilder sb = new StringBuilder();
+			sb.append("以下是该用户的长期记忆，请在回答中参考：\n");
+			for (var mem : memories) {
+				if (!StringUtils.hasText(mem.getMemoryKey())) {
+					continue;
+				}
+				String content = extractContent(mem.getContentJson());
+				if (!StringUtils.hasText(content)) {
+					continue;
+				}
+				sb.append("- ").append(mem.getMemoryKey()).append(": ").append(content);
+				if (StringUtils.hasText(mem.getTitle())) {
+					sb.append(" (").append(mem.getTitle()).append(")");
+				}
+				sb.append("\n");
+			}
+			return sb.toString();
+		}
+		catch (Exception e) {
+			logger.warn("Failed to build user profile for userId {}", userId, e);
+			return null;
+		}
+	}
+
+	/**
+	 * Extract "content" from stored JSON; fallback to original if parsing fails.
+	 */
+	private String extractContent(String contentJson) {
+		if (!StringUtils.hasText(contentJson)) {
+			return "";
+		}
+		try {
+			var node = objectMapper.readTree(contentJson);
+			var contentNode = node.get("content");
+			if (contentNode != null && contentNode.isTextual()) {
+				return contentNode.asText();
+			}
+			// fallback
+			return contentJson;
+		}
+		catch (Exception e) {
+			return contentJson;
+		}
+	}
+
+	/**
 	 * Simple chat endpoint for standard LLM chat without plan execution with SSE
 	 * streaming
 	 * @param request Request containing input message, conversationId (optional),
@@ -987,40 +1052,64 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 			return errorEmitter;
 		}
 
+		// Optional userId from frontend to support personal memory capture
+		Long userId = userService.resolveUserId(request.get("userId"));
+		if (userId == null) {
+			userId = userService.currentUserId();
+		}
+		if (userId == null) {
+			// Fallback to default user (ID 1) to avoid missing personal memory capture
+			userId = 1L;
+			logger.warn("userId not provided in chat request, fallback to default userId: {}", userId);
+		}
+
 		RequestSource requestSource = getRequestSource(request);
 		logger.info("📡 [{}] Received chat streaming request", requestSource.name());
 
 		// Create SSE emitter with 5 minute timeout
 		SseEmitter emitter = new SseEmitter(300000L);
 		StringBuilder accumulatedText = new StringBuilder();
+		final SseEmitter finalEmitter = emitter;
+		final StringBuilder finalAccumulatedText = accumulatedText;
+		final Long resolvedUserId = userId;
+		final RequestSource resolvedRequestSource = requestSource;
+		final String resolvedInput = input;
 
 		// Register timeout and error handlers before starting async task to avoid race
 		// condition
-		emitter.onTimeout(() -> {
-			logger.warn("SSE emitter timeout");
-			emitter.complete();
-		});
+				emitter.onTimeout(() -> {
+					logger.warn("SSE emitter timeout");
+					finalEmitter.complete();
+				});
 
-		emitter.onError((ex) -> {
-			logger.error("SSE emitter error", ex);
-			emitter.completeWithError(ex);
-		});
+				emitter.onError((ex) -> {
+					logger.error("SSE emitter error", ex);
+					finalEmitter.completeWithError(ex);
+				});
 
 		// Execute asynchronously
 		CompletableFuture.runAsync(() -> {
 			try {
 				// Validate or generate conversationId
 				String conversationId = validateOrGenerateConversationId((String) request.get("conversationId"),
-						requestSource);
+						resolvedRequestSource);
 
 				// Send initial event with conversationId
-				Map<String, Object> startData = new HashMap<>();
-				startData.put("type", "start");
-				startData.put("conversationId", conversationId);
-				emitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(startData)));
+					Map<String, Object> startData = new HashMap<>();
+					startData.put("type", "start");
+					startData.put("conversationId", conversationId);
+					finalEmitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(startData)));
 
 				// Build message list with conversation history
 				List<Message> messages = new java.util.ArrayList<>();
+
+				// Prepend user personal memories as system prompt
+				if (resolvedUserId != null && userPersonalMemoryService != null) {
+					String profile = buildUserProfile(resolvedUserId);
+					if (StringUtils.hasText(profile)) {
+						messages.add(new SystemMessage(profile));
+					}
+				}
 
 				// Retrieve conversation history if conversationId exists and conversation
 				// memory is enabled
@@ -1044,7 +1133,7 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 				}
 
 				// Add user message
-				UserMessage userMessage = new UserMessage(input);
+				UserMessage userMessage = new UserMessage(resolvedInput);
 				messages.add(userMessage);
 
 				// Save user message to conversation memory
@@ -1073,6 +1162,12 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 				}).sum();
 				logger.info("Chat input character count: {}", inputCharCount);
 
+				// Prepare effectively-final references for lambdas
+				final String finalConversationId = conversationId;
+
+				// Ensure userId is available to advisors via ThreadLocal during this request
+				com.wangliang.agentj.user.context.UserContextHolder.setUserId(resolvedUserId);
+
 				// Process streaming response and send chunks as they arrive
 				ChatClient.ChatClientRequestSpec requestSpec = chatClient.prompt(prompt);
 				Flux<ChatResponse> responseFlux = requestSpec.stream().chatResponse();
@@ -1083,13 +1178,13 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 						if (chatResponse.getResult() != null && chatResponse.getResult().getOutput() != null) {
 							String text = chatResponse.getResult().getOutput().getText();
 							if (text != null && !text.isEmpty()) {
-								accumulatedText.append(text);
+								finalAccumulatedText.append(text);
 
 								// Send chunk event
 								Map<String, Object> chunkData = new HashMap<>();
 								chunkData.put("type", "chunk");
 								chunkData.put("content", text);
-								emitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(chunkData)));
+								finalEmitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(chunkData)));
 							}
 						}
 					}
@@ -1098,40 +1193,40 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 					}
 				}).doOnComplete(() -> {
 					try {
-						String finalText = accumulatedText.toString();
+						String finalText = finalAccumulatedText.toString();
 						if (finalText == null || finalText.trim().isEmpty()) {
 							finalText = "No response generated";
 						}
 
 						// Save assistant response to conversation memory
 						if (lynxeProperties != null && lynxeProperties.getEnableConversationMemory()
-								&& conversationId != null && !conversationId.trim().isEmpty()) {
+								&& finalConversationId != null && !finalConversationId.trim().isEmpty()) {
 							try {
 								AssistantMessage assistantMessage = new AssistantMessage(finalText);
 								llmService.addToConversationMemoryWithLimit(lynxeProperties.getMaxMemory(),
-										conversationId, assistantMessage);
+										finalConversationId, assistantMessage);
 								logger.debug("Saved assistant response to conversation memory for conversationId: {}",
-										conversationId);
+										finalConversationId);
 							}
 							catch (Exception e) {
 								logger.warn(
 										"Failed to save assistant response to conversation memory for conversationId: {}",
-										conversationId, e);
+										finalConversationId, e);
 							}
 						}
 
 						// Send completion event
 						Map<String, Object> doneData = new HashMap<>();
 						doneData.put("type", "done");
-						emitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(doneData)));
-						emitter.complete();
+						finalEmitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(doneData)));
+						finalEmitter.complete();
 
 						logger.info("Chat streaming completed for conversationId: {}, response length: {}",
-								conversationId, finalText.length());
+								finalConversationId, finalText.length());
 					}
 					catch (Exception e) {
 						logger.error("Error completing SSE stream", e);
-						emitter.completeWithError(e);
+						finalEmitter.completeWithError(e);
 					}
 				}).doOnError(error -> {
 					logger.error("Error in chat streaming", error);
@@ -1140,12 +1235,15 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 						errorData.put("type", "error");
 						errorData.put("message",
 								error.getMessage() != null ? error.getMessage() : "Streaming error occurred");
-						emitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(errorData)));
-						emitter.completeWithError(error);
+						finalEmitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(errorData)));
+						finalEmitter.completeWithError(error);
 					}
 					catch (Exception e) {
-						emitter.completeWithError(e);
+						finalEmitter.completeWithError(e);
 					}
+				}).doFinally(signalType -> {
+					// Prevent ThreadLocal leakage
+					com.wangliang.agentj.user.context.UserContextHolder.clear();
 				}).subscribe();
 
 			}

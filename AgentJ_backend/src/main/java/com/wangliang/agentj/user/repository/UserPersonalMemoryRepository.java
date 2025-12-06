@@ -15,33 +15,20 @@
  */
 package com.wangliang.agentj.user.repository;
 
-import com.wangliang.agentj.user.model.po.UserEntity;
+import com.wangliang.agentj.user.model.po.UserPersonalMemoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<UserEntity, Long> {
+public interface UserPersonalMemoryRepository extends JpaRepository<UserPersonalMemoryEntity, Long> {
 
-	Optional<UserEntity> findByUsername(String username);
+	List<UserPersonalMemoryEntity> findByUserId(Long userId);
 
-	Optional<UserEntity> findByEmail(String email);
+	Optional<UserPersonalMemoryEntity> findByUserIdAndMemoryKey(Long userId, String memoryKey);
 
-	List<UserEntity> findByStatus(String status);
-
-	@Query("SELECT u FROM UserEntity u WHERE u.displayName LIKE %:displayName%")
-	List<UserEntity> findByDisplayNameContaining(String displayName);
-
-	@Query("SELECT COUNT(u) FROM UserEntity u WHERE u.status = :status")
-	long countByStatus(String status);
-
-	boolean existsByUsername(String username);
-
-	boolean existsByEmail(String email);
-
-	Optional<UserEntity> findByUsernameOrEmail(String username, String email);
+	void deleteByUserIdAndMemoryKey(Long userId, String memoryKey);
 
 }

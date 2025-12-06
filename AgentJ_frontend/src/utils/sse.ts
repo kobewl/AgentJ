@@ -1,4 +1,5 @@
 import { ElMessage } from 'element-plus';
+import { getToken, clearToken } from '@/utils/auth';
 
 export interface SseMessage {
   type: string;
@@ -24,15 +25,24 @@ export async function streamSse(
   signal?: AbortSignal
 ): Promise<void> {
   try {
+    const token = getToken();
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(payload),
       signal,
     });
+
+    if (response.status === 401) {
+      clearToken();
+      ElMessage.warning('登录已失效，请重新登录');
+      window.location.href = '/login';
+      return;
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

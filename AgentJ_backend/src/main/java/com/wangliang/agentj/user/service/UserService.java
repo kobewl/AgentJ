@@ -18,6 +18,7 @@ package com.wangliang.agentj.user.service;
 import com.wangliang.agentj.user.model.po.UserEntity;
 import com.wangliang.agentj.user.model.vo.User;
 import com.wangliang.agentj.user.repository.UserRepository;
+import com.wangliang.agentj.user.context.UserContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -204,6 +205,34 @@ public class UserService {
 	public boolean clearCurrentConversation(Long userId) {
 		logger.info("Clearing current conversation for user {}", userId);
 		return setCurrentConversation(userId, null);
+	}
+
+	/**
+	 * Resolve userId from various raw inputs (Number/String). Returns null if invalid.
+	 */
+	public Long resolveUserId(Object rawUserId) {
+		if (rawUserId == null) {
+			return null;
+		}
+		try {
+			if (rawUserId instanceof Number number) {
+				return number.longValue();
+			}
+			if (rawUserId instanceof String userIdStr && !userIdStr.trim().isEmpty()) {
+				return Long.parseLong(userIdStr.trim());
+			}
+		}
+		catch (Exception e) {
+			logger.warn("Failed to resolve userId from input: {}", rawUserId, e);
+		}
+		return null;
+	}
+
+	/**
+	 * Get current userId from ThreadLocal context (set by controller/advisor).
+	 */
+	public Long currentUserId() {
+		return UserContextHolder.getUserId();
 	}
 
 	/**

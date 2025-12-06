@@ -126,7 +126,7 @@
                   <el-icon><Setting /></el-icon>
                   系统设置
                 </el-dropdown-item>
-                <el-dropdown-item divided>
+                <el-dropdown-item divided @click="handleLogout">
                   <el-icon><SwitchButton /></el-icon>
                   退出登录
                 </el-dropdown-item>
@@ -150,7 +150,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
-import { useRoute, RouterView } from 'vue-router';
+import { useRoute, RouterView, useRouter } from 'vue-router';
 import { menuRoutes } from '@/router';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
@@ -162,14 +162,20 @@ import {
   Setting,
   SwitchButton,
 } from '@element-plus/icons-vue';
+import { clearToken } from '@/utils/auth';
 
 const route = useRoute();
+const router = useRouter();
 const isCollapsed = ref(false);
 const isMobile = ref(false);
 const isDark = ref(false);
 const connectionStatus = ref<'connected' | 'connecting' | 'disconnected'>('connecting');
 const appVersion = ref('0.0.1');
 const username = ref('管理员');
+const handleLogout = () => {
+  clearToken();
+  router.replace('/login');
+};
 
 // 响应式处理
 const checkMobile = () => {

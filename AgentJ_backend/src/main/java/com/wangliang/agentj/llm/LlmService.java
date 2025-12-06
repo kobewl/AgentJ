@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
@@ -87,6 +88,9 @@ public class LlmService implements LynxeListener<ModelChangeEvent> {
 	private ObjectProvider<ToolExecutionEligibilityPredicate> openAiToolExecutionEligibilityPredicate;
 
 	@Autowired
+	private ObjectProvider<com.wangliang.agentj.advisor.PersonalMemoryAdvisor> personalMemoryAdvisorProvider;
+
+	@Autowired
 	private DynamicModelRepository dynamicModelRepository;
 
 	@Autowired
@@ -115,8 +119,13 @@ public class LlmService implements LynxeListener<ModelChangeEvent> {
 		// Use the existing openAiChatModel method which calls openAiApi()
 		OpenAiChatModel chatModel = openAiChatModel(modelName, model, options);
 
+		var personalMemoryAdvisor = personalMemoryAdvisorProvider.getIfAvailable();
+		Advisor[] defaultAdvisors = personalMemoryAdvisor == null
+				? new Advisor[] { new SimpleLoggerAdvisor() }
+				: new Advisor[] { new SimpleLoggerAdvisor(), personalMemoryAdvisor };
+
 		return ChatClient.builder(chatModel)
-			.defaultAdvisors(new SimpleLoggerAdvisor())
+			.defaultAdvisors(defaultAdvisors)
 			.defaultOptions(OpenAiChatOptions.fromOptions(options))
 			.build();
 	}

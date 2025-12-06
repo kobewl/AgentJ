@@ -61,6 +61,9 @@ public class UserEntity {
 	@Column(name = "language")
 	private String language;
 
+	@Column(name = "password_hash", nullable = false)
+	private String passwordHash = "";
+
 	/**
 	 * Default constructor required by Hibernate/JPA
 	 */
@@ -154,6 +157,14 @@ public class UserEntity {
 
 	public void setLanguage(String language) {
 		this.language = language;
+	}
+
+	public String getPasswordHash() {
+		return passwordHash;
+	}
+
+	public void setPasswordHash(String passwordHash) {
+		this.passwordHash = passwordHash;
 	}
 
 	@Override

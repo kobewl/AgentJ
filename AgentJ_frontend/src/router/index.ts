@@ -9,6 +9,9 @@ import Memories from '@/pages/Memories.vue';
 import DatasourceConfigs from '@/pages/DatasourceConfigs.vue';
 import CronTasks from '@/pages/CronTasks.vue';
 import AgentTasks from '@/pages/AgentTasks.vue';
+import Login from '@/pages/Login.vue';
+import { isAuthenticated } from '@/utils/auth';
+import { ElMessage } from 'element-plus';
 
 export const menuRoutes: RouteRecordRaw[] = [
   {
@@ -77,9 +80,25 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', redirect: '/dashboard' },
+    { path: '/login', name: 'Login', component: Login, meta: { title: '登录', public: true } },
     ...menuRoutes,
     { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
   ],
+});
+
+router.beforeEach((to, from, next) => {
+  if (to.meta.public) {
+    next();
+    return;
+  }
+  if (isAuthenticated()) {
+    next();
+  } else {
+    if (to.path !== '/login') {
+      ElMessage.warning('请先登录');
+    }
+    next({ path: '/login', query: { redirect: to.fullPath } });
+  }
 });
 
 export default router;
