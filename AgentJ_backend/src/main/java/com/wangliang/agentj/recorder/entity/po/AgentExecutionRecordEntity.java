@@ -88,7 +88,7 @@ public class AgentExecutionRecordEntity {
 
 	// Record list of think-act steps, existing as sub-steps
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	@JoinColumn(name = "agent_execution_record_id")
+	@JoinColumn(name = "parent_execution_id") // align with DB column name in think_act_record
 	private List<ThinkActRecordEntity> thinkActSteps;
 
 	// Request content for agent execution

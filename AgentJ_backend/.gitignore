@@ -103,3 +103,4 @@ spring.log
 **/application-local.yml
 **/application-private.yml
 **/*.env
+/extensions/

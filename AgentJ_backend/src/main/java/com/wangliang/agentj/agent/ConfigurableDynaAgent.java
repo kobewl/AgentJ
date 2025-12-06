@@ -104,7 +104,7 @@ public class ConfigurableDynaAgent extends DynamicAgent {
         // Check if any TerminableTool is already included
         boolean hasTerminableTool = false;
         for (String toolKey : availableToolKeys) {
-            // Convert serviceGroup.toolName format to toolName*index* format if needed
+            // Convert serviceGroup.toolName format to toolName__index format if needed
             String lookupKey = convertServiceGroupToolNameToQualifiedKey(toolKey);
             if (lookupKey == null) {
                 lookupKey = toolKey; // Use original key if conversion failed or not
@@ -158,7 +158,7 @@ public class ConfigurableDynaAgent extends DynamicAgent {
         for (String toolKey : availableToolKeys) {
             PlanningFactory.ToolCallBackContext toolCallback = null;
 
-            // Convert serviceGroup.toolName format to toolName*index* format if needed
+            // Convert serviceGroup.toolName format to toolName__index format if needed
             String lookupKey = convertServiceGroupToolNameToQualifiedKey(toolKey);
             if (lookupKey == null) {
                 lookupKey = toolKey; // Use original key if conversion failed or not
@@ -188,11 +188,11 @@ public class ConfigurableDynaAgent extends DynamicAgent {
     }
 
     /**
-     * Convert serviceGroup.toolName format to toolName*index* format This method
+     * Convert serviceGroup.toolName format to toolName__index format This method
      * delegates to ServiceGroupIndexService for the conversion logic
      *
      * @param toolKey The tool key in serviceGroup.toolName format or other formats
-     * @return The converted key in toolName*index* format, or null if conversion is not
+     * @return The converted key in toolName__index format, or null if conversion is not
      * needed
      */
     private String convertServiceGroupToolNameToQualifiedKey(String toolKey) {
@@ -247,8 +247,8 @@ public class ConfigurableDynaAgent extends DynamicAgent {
         }
 
         // Fallback: Then try to find by matching the tool name part before the index
-        // bracket
-        // Format: toolName[index] or just toolName
+        // suffix
+        // Format: toolName__index or just toolName (legacy: toolName[index])
         for (Map.Entry<String, PlanningFactory.ToolCallBackContext> entry : toolCallBackContext.entrySet()) {
             String qualifiedKey = entry.getKey();
 
@@ -257,7 +257,13 @@ public class ConfigurableDynaAgent extends DynamicAgent {
                 return entry.getValue();
             }
 
-            // Check if the qualified key is in format "toolName[index]"
+            // Check if the qualified key is in format "toolName__index"
+            if (qualifiedKey.startsWith(unqualifiedName + "__")) {
+                log.debug("Matched unqualified tool '{}' to qualified key '{}'", unqualifiedName, qualifiedKey);
+                return entry.getValue();
+            }
+
+            // Legacy support: check if the qualified key is in format "toolName[index]"
             int bracketIndex = qualifiedKey.lastIndexOf('[');
             if (bracketIndex > 0) {
                 String toolNamePart = qualifiedKey.substring(0, bracketIndex);
@@ -298,7 +304,7 @@ public class ConfigurableDynaAgent extends DynamicAgent {
                         if (serviceGroup != null && !serviceGroup.isEmpty()) {
                             Integer index = serviceGroupIndexService.getOrAssignIndex(serviceGroup);
                             if (index != null) {
-                                String expectedQualifiedKey = actualToolName + "*" + index + "*";
+                                String expectedQualifiedKey = actualToolName + "__" + index;
                                 // Check if the constructed key matches the entry key
                                 if (entry.getKey().equals(expectedQualifiedKey)) {
                                     log.debug("Found tool '{}' with serviceGroup '{}' using ServiceGroupIndexService",

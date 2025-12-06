@@ -303,7 +303,8 @@ public class PlanningFactory {
 				toolDefinition.setCurrentPlanId(planId);
 				toolDefinition.setRootPlanId(rootPlanId);
 
-				// Use qualified key format: toolName[index]
+				// Use qualified key format: toolName__index (avoid special chars like '*'
+				// that LLMs may truncate)
 				String serviceGroup = toolDefinition.getServiceGroup();
 				String toolName = toolDefinition.getName();
 				String qualifiedKey;
@@ -312,7 +313,7 @@ public class PlanningFactory {
 					// Get or assign index for this serviceGroup using the service
 					Integer index = serviceGroupIndexService.getOrAssignIndex(serviceGroup);
 					if (index != null) {
-						qualifiedKey = toolName + "*" + index + "*";
+						qualifiedKey = toolName + "__" + index;
 					}
 					else {
 						qualifiedKey = toolName;

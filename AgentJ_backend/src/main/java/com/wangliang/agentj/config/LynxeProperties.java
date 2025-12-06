@@ -18,6 +18,7 @@ package com.wangliang.agentj.config;
 
 import com.wangliang.agentj.config.entity.ConfigInputType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -101,6 +102,7 @@ public class LynxeProperties {
 			inputType = ConfigInputType.CHECKBOX,
 			options = { @ConfigOption(value = "true", label = "lynxe.general.openBrowser.option.true"),
 					@ConfigOption(value = "false", label = "lynxe.general.openBrowser.option.false") })
+	@Value("${lynxe.general.openBrowser:true}")
 	private volatile Boolean openBrowserAuto;
 
 	public Boolean getOpenBrowserAuto() {
@@ -108,10 +110,6 @@ public class LynxeProperties {
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			openBrowserAuto = Boolean.valueOf(value);
-		}
-		// Default to true if not configured
-		if (openBrowserAuto == null) {
-			openBrowserAuto = true;
 		}
 		return openBrowserAuto;
 	}

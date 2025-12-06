@@ -65,3 +65,8 @@ agent:
 
 namespace:
   value: default
+
+# 禁用自动打开浏览器
+lynxe:
+  general:
+    openBrowser: false

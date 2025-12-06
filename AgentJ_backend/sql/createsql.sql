@@ -254,12 +254,15 @@ CREATE TABLE `agent_execution_record` (
                                           `result` longtext DEFAULT NULL COMMENT '执行结果（大文本）',
                                           `error_message` longtext DEFAULT NULL COMMENT '错误信息（大文本）',
                                           `model_name` varchar(100) DEFAULT NULL COMMENT '实际调用的模型名称',
+                                          `plan_execution_id` bigint(20) DEFAULT NULL COMMENT '关联计划执行记录ID',
                                           PRIMARY KEY (`id`),
                                           UNIQUE KEY `uk_agent_execution_step_id` (`step_id`) COMMENT '步骤ID唯一索引',
                                           KEY `idx_step_id` (`step_id`) COMMENT '步骤ID索引（匹配实体类注解）',
                                           KEY `idx_agent_name` (`agent_name`) COMMENT '智能体名称索引（按智能体筛选记录）',
                                           KEY `idx_status` (`status`) COMMENT '执行状态索引（筛选不同状态的执行记录）',
-                                          KEY `idx_start_time` (`start_time`) COMMENT '开始时间索引（按执行时间筛选）'
+                                          KEY `idx_start_time` (`start_time`) COMMENT '开始时间索引（按执行时间筛选）',
+                                          KEY `idx_agent_execution_plan_id` (`plan_execution_id`) COMMENT '计划执行记录关联索引',
+                                          CONSTRAINT `fk_agent_execution_plan` FOREIGN KEY (`plan_execution_id`) REFERENCES `plan_execution_record` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='智能体执行记录表（Agent执行轨迹）';
 
 CREATE TABLE `think_act_record` (
@@ -283,7 +286,7 @@ CREATE TABLE `act_tool_info` (
                                  `parameters` longtext DEFAULT NULL COMMENT '工具参数（序列化内容，大文本）',
                                  `result` longtext DEFAULT NULL COMMENT '工具执行结果（大文本）',
                                  `tool_call_id` varchar(64) DEFAULT NULL COMMENT '工具调用ID（唯一标识）',
-                                 `think_act_record_id` bigint(20) NOT NULL COMMENT '关联的思考-行动记录ID（外键）',
+                                 `think_act_record_id` bigint(20) DEFAULT NULL COMMENT '关联的思考-行动记录ID（外键，可为空用于独立记录）',
                                  PRIMARY KEY (`id`),
                                  KEY `idx_act_tool_think_act_id` (`think_act_record_id`) COMMENT '思考-行动记录关联索引',
                                  KEY `idx_tool_call_id` (`tool_call_id`) COMMENT '工具调用ID索引（按调用ID查询）',

@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Service for managing serviceGroup to index mapping with thread-safe caching. Provides
@@ -95,16 +97,31 @@ public class ServiceGroupIndexService {
 	}
 
 	/**
-	 * Convert serviceGroup.toolName format to toolName*index* format This method handles
-	 * the conversion from frontend format (serviceGroup.toolName) to backend execution
-	 * format (toolName*index*)
+	 * Convert tool key to the qualified format toolName__index
+	 *
+	 * - If input is serviceGroup.toolName, assigns an index per serviceGroup and returns
+	 * toolName__index
+	 * - If input is legacy toolName*index* (or toolName*index), convert to
+	 * toolName__index for backward compatibility
+	 * - Otherwise, returns the original key
 	 * @param toolKey The tool key in serviceGroup.toolName format or other formats
-	 * @return The converted key in toolName*index* format, or the original key if
+	 * @return The converted key in toolName__index format, or the original key if
 	 * conversion is not needed or failed
 	 */
 	public String convertToolKeyToQualifiedKey(String toolKey) {
 		if (toolKey == null || toolKey.isEmpty()) {
 			return toolKey;
+		}
+
+		// Backward compatibility: convert legacy toolName*index* format
+		Pattern legacyPattern = Pattern.compile("^(.+?)\\*(\\d+)\\*?$");
+		Matcher legacyMatcher = legacyPattern.matcher(toolKey);
+		if (legacyMatcher.matches()) {
+			String toolName = legacyMatcher.group(1);
+			String index = legacyMatcher.group(2);
+			String qualifiedKey = toolName + "__" + index;
+			log.debug("Converted legacy tool key from '{}' to '{}'", toolKey, qualifiedKey);
+			return qualifiedKey;
 		}
 
 		// Check if key is in serviceGroup.toolName format (contains a dot)
@@ -117,7 +134,7 @@ public class ServiceGroupIndexService {
 			// Get or assign index for this serviceGroup
 			Integer index = getOrAssignIndex(serviceGroup);
 			if (index != null) {
-				String qualifiedKey = toolName + "*" + index + "*";
+				String qualifiedKey = toolName + "__" + index;
 				log.debug("Converted tool key from '{}' to '{}'", toolKey, qualifiedKey);
 				return qualifiedKey;
 			}
