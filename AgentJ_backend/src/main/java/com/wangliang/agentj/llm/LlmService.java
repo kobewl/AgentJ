@@ -284,11 +284,38 @@ public class LlmService implements LynxeListener<ModelChangeEvent> {
 	 */
 	public void addToConversationMemoryWithLimit(Integer maxMessages, String conversationId,
 			org.springframework.ai.chat.messages.Message message) {
+		addToConversationMemoryWithLimit(maxMessages, conversationId, message,
+				com.wangliang.agentj.user.context.UserContextHolder.getUserId());
+	}
+
+	/**
+	 * Add message to conversation memory with explicit user context for persistence.
+	 * @param maxMessages Maximum number of messages for memory initialization
+	 * @param conversationId Conversation ID
+	 * @param message Message to add
+	 * @param userId User ID to bind into ThreadLocal during persistence
+	 */
+	public void addToConversationMemoryWithLimit(Integer maxMessages, String conversationId,
+			org.springframework.ai.chat.messages.Message message, Long userId) {
+		Long originalUser = com.wangliang.agentj.user.context.UserContextHolder.getUserId();
+		if (userId != null) {
+			com.wangliang.agentj.user.context.UserContextHolder.setUserId(userId);
+		}
 		ChatMemory memory = getConversationMemory(maxMessages);
-		memory.add(conversationId, message);
-		// Automatically check and limit after adding
-		if (conversationMemoryLimitService != null && conversationId != null && !conversationId.trim().isEmpty()) {
-			conversationMemoryLimitService.checkAndLimitMemory(memory, conversationId);
+		try {
+			memory.add(conversationId, message);
+			// Automatically check and limit after adding
+			if (conversationMemoryLimitService != null && conversationId != null && !conversationId.trim().isEmpty()) {
+				conversationMemoryLimitService.checkAndLimitMemory(memory, conversationId);
+			}
+		}
+		finally {
+			if (originalUser == null) {
+				com.wangliang.agentj.user.context.UserContextHolder.clear();
+			}
+			else {
+				com.wangliang.agentj.user.context.UserContextHolder.setUserId(originalUser);
+			}
 		}
 	}
 

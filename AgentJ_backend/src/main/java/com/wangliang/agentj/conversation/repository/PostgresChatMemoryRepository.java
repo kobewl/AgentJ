@@ -19,7 +19,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 public class PostgresChatMemoryRepository extends JdbcChatMemoryRepository {
 
-	private static final String POSTGRES_QUERY_ADD = "INSERT INTO ai_chat_memory (conversation_id, content, type, timestamp) VALUES (?, ?, ?, ?)";
+	private static final String POSTGRES_QUERY_ADD = "INSERT INTO ai_chat_memory (conversation_id, user_id, content, type, \"timestamp\") VALUES (?, ?, ?, ?, ?)";
 
 	private static final String POSTGRES_QUERY_GET = "SELECT content, type FROM ai_chat_memory WHERE conversation_id = ? ORDER BY timestamp";
 
@@ -56,8 +56,9 @@ public class PostgresChatMemoryRepository extends JdbcChatMemoryRepository {
 	protected String createTableSql(String tableName) {
 		return String.format(
 				"CREATE TABLE %s (id BIGSERIAL PRIMARY KEY, "
-						+ "conversation_id VARCHAR(256) NOT NULL, content TEXT NOT NULL, "
+						+ "conversation_id VARCHAR(256) NOT NULL, user_id BIGINT NULL, content TEXT NOT NULL, "
 						+ "type VARCHAR(100) NOT NULL, timestamp TIMESTAMP NOT NULL, "
+						+ "CONSTRAINT fk_ai_chat_memory_user FOREIGN KEY (user_id) REFERENCES users(id), "
 						+ "CONSTRAINT chk_message_type CHECK (type IN ('USER', 'ASSISTANT', 'SYSTEM', 'TOOL')))",
 				tableName);
 	}

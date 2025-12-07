@@ -1077,18 +1077,20 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 
 		// Register timeout and error handlers before starting async task to avoid race
 		// condition
-				emitter.onTimeout(() -> {
-					logger.warn("SSE emitter timeout");
-					finalEmitter.complete();
-				});
+		emitter.onTimeout(() -> {
+			logger.warn("SSE emitter timeout");
+			finalEmitter.complete();
+		});
 
-				emitter.onError((ex) -> {
-					logger.error("SSE emitter error", ex);
-					finalEmitter.completeWithError(ex);
-				});
+		emitter.onError((ex) -> {
+			logger.error("SSE emitter error", ex);
+			finalEmitter.completeWithError(ex);
+		});
 
 		// Execute asynchronously
 		CompletableFuture.runAsync(() -> {
+			// Ensure userId is bound to this async thread for the whole request lifecycle
+			com.wangliang.agentj.user.context.UserContextHolder.setUserId(resolvedUserId);
 			try {
 				// Validate or generate conversationId
 				String conversationId = validateOrGenerateConversationId((String) request.get("conversationId"),
@@ -1141,7 +1143,7 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 						&& !conversationId.trim().isEmpty()) {
 					try {
 						llmService.addToConversationMemoryWithLimit(lynxeProperties.getMaxMemory(), conversationId,
-								userMessage);
+								userMessage, resolvedUserId);
 						logger.debug("Saved user message to conversation memory for conversationId: {}",
 								conversationId);
 					}
@@ -1164,9 +1166,6 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 
 				// Prepare effectively-final references for lambdas
 				final String finalConversationId = conversationId;
-
-				// Ensure userId is available to advisors via ThreadLocal during this request
-				com.wangliang.agentj.user.context.UserContextHolder.setUserId(resolvedUserId);
 
 				// Process streaming response and send chunks as they arrive
 				ChatClient.ChatClientRequestSpec requestSpec = chatClient.prompt(prompt);
@@ -1204,7 +1203,7 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 							try {
 								AssistantMessage assistantMessage = new AssistantMessage(finalText);
 								llmService.addToConversationMemoryWithLimit(lynxeProperties.getMaxMemory(),
-										finalConversationId, assistantMessage);
+										finalConversationId, assistantMessage, resolvedUserId);
 								logger.debug("Saved assistant response to conversation memory for conversationId: {}",
 										finalConversationId);
 							}
@@ -1249,6 +1248,7 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 			}
 			catch (Exception e) {
 				logger.error("Failed to process chat streaming request", e);
+				com.wangliang.agentj.user.context.UserContextHolder.clear();
 				try {
 					Map<String, Object> errorData = new HashMap<>();
 					errorData.put("type", "error");

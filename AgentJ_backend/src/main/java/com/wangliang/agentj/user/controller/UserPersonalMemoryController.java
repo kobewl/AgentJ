@@ -17,13 +17,13 @@ package com.wangliang.agentj.user.controller;
 
 import com.wangliang.agentj.user.model.vo.UserPersonalMemory;
 import com.wangliang.agentj.user.service.UserPersonalMemoryService;
+import com.wangliang.agentj.user.model.vo.UserPersonalMemoryResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/personal-memories")
@@ -38,34 +38,39 @@ public class UserPersonalMemoryController {
 	}
 
 	@GetMapping("/{userId}")
-	public ResponseEntity<List<UserPersonalMemory>> list(@PathVariable Long userId) {
-		return ResponseEntity.ok(memoryService.listByUser(userId));
+	public ResponseEntity<UserPersonalMemoryResponse> list(@PathVariable Long userId) {
+		List<UserPersonalMemory> data = memoryService.listByUser(userId);
+		return ResponseEntity.ok(UserPersonalMemoryResponse.success(data));
 	}
 
 	@GetMapping("/{userId}/{memoryKey}")
-	public ResponseEntity<UserPersonalMemory> get(@PathVariable Long userId, @PathVariable String memoryKey) {
-		return memoryService.getByUserAndKey(userId, memoryKey).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+	public ResponseEntity<UserPersonalMemoryResponse> get(@PathVariable Long userId, @PathVariable String memoryKey) {
+		return memoryService.getByUserAndKey(userId, memoryKey)
+			.map(mem -> ResponseEntity.ok(UserPersonalMemoryResponse.success(mem)))
+			.orElse(ResponseEntity.ok(UserPersonalMemoryResponse.notFound()));
 	}
 
 	@PostMapping("/{userId}")
-	public ResponseEntity<UserPersonalMemory> save(@PathVariable Long userId,
+	public ResponseEntity<UserPersonalMemoryResponse> save(@PathVariable Long userId,
 			@RequestBody UserPersonalMemory memory) {
 		memory.setUserId(userId);
 		UserPersonalMemory saved = memoryService.saveOrUpdate(memory);
-		return ResponseEntity.ok(saved);
+		return ResponseEntity.ok(UserPersonalMemoryResponse.success(saved));
 	}
 
 	@DeleteMapping("/{userId}/{memoryKey}")
-	public ResponseEntity<Map<String, Object>> delete(@PathVariable Long userId, @PathVariable String memoryKey) {
+	public ResponseEntity<UserPersonalMemoryResponse> delete(@PathVariable Long userId,
+			@PathVariable String memoryKey) {
 		log.info("Deleting personal memory {} for user {}", memoryKey, userId);
 		memoryService.delete(userId, memoryKey);
-		return ResponseEntity.ok(Map.of("deleted", true));
+		return ResponseEntity.ok(UserPersonalMemoryResponse.deleted());
 	}
 
 	@PostMapping("/{userId}/mark-used/{memoryKey}")
-	public ResponseEntity<Map<String, Object>> markUsed(@PathVariable Long userId, @PathVariable String memoryKey) {
+	public ResponseEntity<UserPersonalMemoryResponse> markUsed(@PathVariable Long userId,
+			@PathVariable String memoryKey) {
 		memoryService.markUsed(userId, memoryKey);
-		return ResponseEntity.ok(Map.of("updated", true));
+		return ResponseEntity.ok(UserPersonalMemoryResponse.updated());
 	}
 
 }

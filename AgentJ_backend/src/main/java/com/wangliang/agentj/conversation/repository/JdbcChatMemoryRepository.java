@@ -15,6 +15,7 @@
  */
 package com.wangliang.agentj.conversation.repository;
 
+import com.wangliang.agentj.user.context.UserContextHolder;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.messages.*;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -26,6 +27,7 @@ import org.springframework.util.Assert;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -41,7 +43,7 @@ public abstract class JdbcChatMemoryRepository implements ChatMemoryRepository {
 			""";
 
 	private static final String QUERY_ADD = """
-			INSERT INTO ai_chat_memory (conversation_id, content, type, "timestamp") VALUES (?, ?, ?, ?)
+			INSERT INTO ai_chat_memory (conversation_id, user_id, content, type, "timestamp") VALUES (?, ?, ?, ?, ?)
 			""";
 
 	private static final String QUERY_GET = """
@@ -88,7 +90,8 @@ public abstract class JdbcChatMemoryRepository implements ChatMemoryRepository {
 		Assert.notNull(messages, "messages cannot be null");
 		Assert.noNullElements(messages, "messages cannot contain null elements");
 		this.deleteByConversationId(conversationId);
-		this.jdbcTemplate.batchUpdate(getAddSql(), new AddBatchPreparedStatement(conversationId, messages));
+		Long userId = UserContextHolder.getUserId();
+		this.jdbcTemplate.batchUpdate(getAddSql(), new AddBatchPreparedStatement(conversationId, userId, messages));
 	}
 
 	@Override
@@ -113,11 +116,11 @@ public abstract class JdbcChatMemoryRepository implements ChatMemoryRepository {
 		return QUERY_GET;
 	}
 
-	private record AddBatchPreparedStatement(String conversationId, List<Message> messages,
+	private record AddBatchPreparedStatement(String conversationId, Long userId, List<Message> messages,
 			AtomicLong instantSeq) implements BatchPreparedStatementSetter {
 
-		private AddBatchPreparedStatement(String conversationId, List<Message> messages) {
-			this(conversationId, messages, new AtomicLong(Instant.now().toEpochMilli()));
+		private AddBatchPreparedStatement(String conversationId, Long userId, List<Message> messages) {
+			this(conversationId, userId, messages, new AtomicLong(Instant.now().toEpochMilli()));
 		}
 
 		@Override
@@ -125,9 +128,15 @@ public abstract class JdbcChatMemoryRepository implements ChatMemoryRepository {
 			var message = this.messages.get(i);
 
 			ps.setString(1, this.conversationId);
-			ps.setString(2, message.getText());
-			ps.setString(3, message.getMessageType().name());
-			ps.setTimestamp(4, new Timestamp(instantSeq.getAndIncrement()));
+			if (this.userId == null) {
+				ps.setNull(2, Types.BIGINT);
+			}
+			else {
+				ps.setLong(2, this.userId);
+			}
+			ps.setString(3, message.getText());
+			ps.setString(4, message.getMessageType().name());
+			ps.setTimestamp(5, new Timestamp(instantSeq.getAndIncrement()));
 		}
 
 		@Override

@@ -69,6 +69,12 @@ public class UserPersonalMemoryService {
 		if (memory.getUserId() == null || !StringUtils.hasText(memory.getMemoryKey())) {
 			throw new IllegalArgumentException("userId and memoryKey are required");
 		}
+		// Ensure JSON columns always receive valid JSON payloads
+		memory.setContentJson(normalizeContentJson(memory.getContentJson()));
+		memory.setTags(normalizeTags(memory.getTags()));
+		if (!StringUtils.hasText(memory.getSource())) {
+			memory.setSource("MANUAL");
+		}
 		var entityOpt = repository.findByUserIdAndMemoryKey(memory.getUserId(), memory.getMemoryKey());
 		UserPersonalMemoryEntity entity = entityOpt.orElseGet(UserPersonalMemoryEntity::new);
 		BeanUtils.copyProperties(memory, entity, "id", "createdAt", "updatedAt");
@@ -170,6 +176,52 @@ public class UserPersonalMemoryService {
 		UserPersonalMemory vo = new UserPersonalMemory();
 		BeanUtils.copyProperties(entity, vo);
 		return vo;
+	}
+
+	/**
+	 * Normalize contentJson to always be valid JSON. If the caller provided plain text
+	 * instead of JSON, wrap it as {"content": "..."} to satisfy the DB json column.
+	 */
+	private String normalizeContentJson(String raw) {
+		try {
+			if (StringUtils.hasText(raw)) {
+				objectMapper.readTree(raw);
+				return raw;
+			}
+		}
+		catch (Exception ignored) {
+			// fall through to wrap as content
+		}
+		var node = objectMapper.createObjectNode();
+		node.put("content", raw == null ? "" : raw);
+		return node.toString();
+	}
+
+	/**
+	 * Normalize tags JSON column. Accepts JSON array string; otherwise splits by comma
+	 * and stores as JSON array. Returns null when no tags provided.
+	 */
+	private String normalizeTags(String raw) {
+		if (!StringUtils.hasText(raw)) {
+			return null;
+		}
+		try {
+			var node = objectMapper.readTree(raw);
+			if (node.isArray()) {
+				return objectMapper.writeValueAsString(node);
+			}
+		}
+		catch (Exception ignored) {
+			// will fall back to splitting
+		}
+		String[] parts = raw.split("[,，]");
+		var arr = objectMapper.createArrayNode();
+		for (String p : parts) {
+			if (StringUtils.hasText(p)) {
+				arr.add(p.trim());
+			}
+		}
+		return arr.size() == 0 ? null : arr.toString();
 	}
 
 }

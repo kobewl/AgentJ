@@ -378,7 +378,7 @@ public class PlanFinalizer {
 		try {
 			AssistantMessage assistantMessage = new AssistantMessage(result);
 			llmService.addToConversationMemoryWithLimit(lynxeProperties.getMaxMemory(), context.getConversationId(),
-					assistantMessage);
+					assistantMessage, com.wangliang.agentj.user.context.UserContextHolder.getUserId());
 			log.info("Saved agent execution result to conversation memory for conversationId: {}, result length: {}",
 					context.getConversationId(), result.length());
 		}

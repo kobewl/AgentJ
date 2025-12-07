@@ -49,12 +49,6 @@
           </el-input>
         </el-col>
         <el-col :span="6">
-          <el-select v-model="filterSource" placeholder="来源筛选" clearable @change="handleFilter">
-            <el-option label="AI生成" value="AI" />
-            <el-option label="手动输入" value="MANUAL" />
-          </el-select>
-        </el-col>
-        <el-col :span="6">
           <el-select v-model="sortBy" placeholder="排序方式" @change="handleSort">
             <el-option label="创建时间 ↓" value="createdAt_desc" />
             <el-option label="创建时间 ↑" value="createdAt_asc" />
@@ -75,13 +69,6 @@
         <el-table-column type="selection" width="55" />
         <el-table-column prop="memoryKey" label="记忆键" min-width="150" show-overflow-tooltip />
         <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="source" label="来源" width="100">
-          <template #default="scope">
-            <el-tag :type="scope.row.source === 'AI' ? 'info' : 'success'">
-              {{ scope.row.source === 'AI' ? 'AI生成' : '手动输入' }}
-            </el-tag>
-          </template>
-        </el-table-column>
         <el-table-column prop="confidence" label="置信度" width="100">
           <template #default="scope">
             <span v-if="scope.row.confidence">
@@ -196,12 +183,6 @@
             :rows="6"
             placeholder="记忆内容，可以是JSON格式"
           />
-        </el-form-item>
-        <el-form-item label="来源" prop="source">
-          <el-radio-group v-model="memoryForm.source">
-            <el-radio label="AI">AI生成</el-radio>
-            <el-radio label="MANUAL">手动输入</el-radio>
-          </el-radio-group>
         </el-form-item>
         <el-form-item label="置信度" prop="confidence">
           <el-slider
@@ -372,9 +353,6 @@ const formRules: FormRules = {
   ],
   contentJson: [
     { required: true, message: '请输入内容', trigger: 'blur' },
-  ],
-  source: [
-    { required: true, message: '请选择来源', trigger: 'change' },
   ],
 };
 
@@ -576,6 +554,8 @@ const submitForm = async () => {
     submitLoading.value = true;
     try {
       memoryForm.userId = selectedUserId.value;
+      memoryForm.source = 'MANUAL';
+      syncTagInputToTags();
       const response = await saveUserPersonalMemory(selectedUserId.value, memoryForm);
       
       if (response.data.success) {
@@ -623,6 +603,12 @@ const addTag = () => {
   }
   
   tagInput.value = '';
+};
+
+const syncTagInputToTags = () => {
+  if (tagInput.value && tagInput.value.trim()) {
+    addTag();
+  }
 };
 
 const removeTag = (tag: string) => {

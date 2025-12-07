@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+import org.springframework.core.env.Environment;
 
 @Component
 @ConfigurationProperties(prefix = "lynxe")
@@ -30,6 +31,9 @@ public class LynxeProperties {
 	@Lazy
 	@Autowired
 	private IConfigService configService;
+
+	@Autowired
+	private Environment environment;
 
 	// Browser Settings
 	// Begin-------------------------------------------------------------------------------------------
@@ -102,14 +106,23 @@ public class LynxeProperties {
 			inputType = ConfigInputType.CHECKBOX,
 			options = { @ConfigOption(value = "true", label = "lynxe.general.openBrowser.option.true"),
 					@ConfigOption(value = "false", label = "lynxe.general.openBrowser.option.false") })
-	@Value("${lynxe.general.openBrowser:true}")
+	@Value("${lynxe.general.openBrowser:#{null}}")
 	private volatile Boolean openBrowserAuto;
 
 	public Boolean getOpenBrowserAuto() {
+		// 如果配置文件/环境变量显式指定，优先使用
+		if (environment.containsProperty("lynxe.general.openBrowser")) {
+			return openBrowserAuto;
+		}
+
 		String configPath = "lynxe.general.openBrowser";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			openBrowserAuto = Boolean.valueOf(value);
+		}
+		// 配置中心也无值时，采用默认 true
+		if (openBrowserAuto == null) {
+			openBrowserAuto = true;
 		}
 		return openBrowserAuto;
 	}

@@ -1498,7 +1498,7 @@ public class DynamicAgent extends ReActAgent {
 		try {
 			UserMessage userMessage = new UserMessage(stepText);
 			llmService.addToConversationMemoryWithLimit(lynxeProperties.getMaxMemory(), getConversationId(),
-					userMessage);
+					userMessage, com.wangliang.agentj.user.context.UserContextHolder.getUserId());
 			userRequestSavedToConversationMemory = true; // Mark as saved
 			log.info("Saved user request to conversation memory for conversationId: {}, request length: {}",
 					getConversationId(), stepText.length());

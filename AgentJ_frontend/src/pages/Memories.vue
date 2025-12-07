@@ -38,12 +38,6 @@
           </el-input>
         </el-col>
         <el-col :span="6">
-          <el-select v-model="filterSource" placeholder="来源筛选" clearable @change="handleFilter">
-            <el-option label="AI生成" value="AI" />
-            <el-option label="手动输入" value="MANUAL" />
-          </el-select>
-        </el-col>
-        <el-col :span="6">
           <el-select v-model="sortBy" placeholder="排序方式" @change="handleSort">
             <el-option label="创建时间 ↓" value="createdAt_desc" />
             <el-option label="创建时间 ↑" value="createdAt_asc" />
@@ -67,13 +61,6 @@
         <el-table-column prop="contentJson" label="内容预览" min-width="300" show-overflow-tooltip>
           <template #default="scope">
             <span>{{ getContentPreview(scope.row.contentJson) }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="source" label="来源" width="100">
-          <template #default="scope">
-            <el-tag :type="scope.row.source === 'AI' ? 'info' : 'success'">
-              {{ scope.row.source === 'AI' ? 'AI生成' : '手动输入' }}
-            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="confidence" label="置信度" width="100">
@@ -325,7 +312,6 @@ const selectedMemories = ref<UserPersonalMemoryItem[]>([]);
 
 // 搜索和筛选
 const searchKey = ref('');
-const filterSource = ref('');
 const sortBy = ref('createdAt_desc');
 
 // 分页
@@ -365,9 +351,6 @@ const formRules: FormRules = {
   contentJson: [
     { required: true, message: '请输入内容', trigger: 'blur' },
   ],
-  source: [
-    { required: true, message: '请选择来源', trigger: 'change' },
-  ],
 };
 
 const tagInput = ref('');
@@ -390,11 +373,6 @@ const filteredMemories = computed(() => {
       memory.memoryKey.toLowerCase().includes(key) ||
       (memory.title && memory.title.toLowerCase().includes(key))
     );
-  }
-
-  // 来源筛选
-  if (filterSource.value) {
-    result = result.filter(memory => memory.source === filterSource.value);
   }
 
   // 排序
@@ -431,12 +409,24 @@ const loadMemories = async () => {
   loading.value = true;
   try {
     const response = await getUserPersonalMemories(selectedUserId.value);
-    // 后端直接返回数组，不是标准响应格式
-    if (Array.isArray(response.data)) {
-      memories.value = response.data;
-    } else if (response.data.success && Array.isArray(response.data.data)) {
-      memories.value = response.data.data;
-    } else {
+    const payload = response.data;
+    let list: any = null;
+    if (Array.isArray(payload)) {
+      list = payload;
+    }
+    else if (payload && Array.isArray(payload.data)) {
+      list = payload.data;
+    }
+    else if (payload && payload.data && Array.isArray(payload.data.list)) {
+      list = payload.data.list;
+    }
+    else if (payload && Array.isArray(payload.list)) {
+      list = payload.list;
+    }
+    if (list && Array.isArray(list)) {
+      memories.value = list as UserPersonalMemoryItem[];
+    }
+    else {
       memories.value = [];
       ElMessage.error('数据格式错误');
     }
@@ -449,10 +439,6 @@ const loadMemories = async () => {
 };
 
 const handleSearch = () => {
-  currentPage.value = 1;
-};
-
-const handleFilter = () => {
   currentPage.value = 1;
 };
 
@@ -601,6 +587,8 @@ const submitForm = async () => {
     submitLoading.value = true;
     try {
       memoryForm.userId = selectedUserId.value;
+      memoryForm.source = 'MANUAL';
+      syncTagInputToTags();
       const response = await saveUserPersonalMemory(selectedUserId.value, memoryForm);
       
       // 适配不同的响应格式
@@ -651,6 +639,12 @@ const addTag = () => {
   }
   
   tagInput.value = '';
+};
+
+const syncTagInputToTags = () => {
+  if (tagInput.value && tagInput.value.trim()) {
+    addTag();
+  }
 };
 
 const removeTag = (tag: string) => {
