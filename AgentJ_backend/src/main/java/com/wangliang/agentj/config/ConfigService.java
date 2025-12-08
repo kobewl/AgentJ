@@ -1,18 +1,3 @@
-/*
- * Copyright 2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.wangliang.agentj.config;
 
 import com.wangliang.agentj.config.entity.ConfigEntity;
@@ -59,6 +44,7 @@ public class ConfigService implements IConfigService, ApplicationListener<Contex
 		}
 	}
 
+    // 找到所有配置 Bean，并逐个初始化
 	private void init() {
 		// Only get beans with @ConfigurationProperties annotation
 		Map<String, Object> configBeans = applicationContext.getBeansWithAnnotation(ConfigurationProperties.class);
@@ -68,6 +54,7 @@ public class ConfigService implements IConfigService, ApplicationListener<Contex
 		configBeans.values().forEach(this::initializeConfig);
 	}
 
+    // init single bean
 	private void initializeConfig(Object bean) {
 		// Collect all valid config paths from the bean
 		Set<String> validConfigPaths = Arrays.stream(bean.getClass().getDeclaredFields())

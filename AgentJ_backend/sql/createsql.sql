@@ -319,4 +319,56 @@ create table user_personal_memories
 create index idx_upm_user_used
     on user_personal_memories (user_id, last_used_at);
 
+-- 会话与消息记录表
+CREATE TABLE `conversation_sessions` (
+                                `id` varchar(64) NOT NULL COMMENT '会话ID（UUID/ULID）',
+                                `user_id` bigint NOT NULL COMMENT '关联用户ID',
+                                `title` varchar(255) DEFAULT NULL COMMENT '会话标题',
+                                `model_name` varchar(100) DEFAULT 'LongCat-Flash-Chat' COMMENT '默认使用的模型名称',
+                                `summary` varchar(1000) DEFAULT NULL COMMENT '会话摘要/记忆片段',
+                                `last_message_at` datetime DEFAULT NULL COMMENT '最后一条消息时间（排序用）',
+                                `is_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '软删除标记：0-正常，1-删除',
+                                `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                PRIMARY KEY (`id`),
+                                KEY `idx_conversation_sessions_user` (`user_id`),
+                                KEY `idx_conversation_sessions_last_msg` (`last_message_at`),
+                                KEY `idx_conversation_sessions_deleted` (`is_deleted`),
+                                CONSTRAINT `fk_conversation_session_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户对话会话表';
 
+CREATE TABLE `conversation_messages` (
+                               `id` varchar(64) NOT NULL COMMENT '消息ID（UUID/ULID）',
+                               `conversation_id` varchar(64) NOT NULL COMMENT '关联会话ID',
+                               `user_id` bigint DEFAULT NULL COMMENT '关联用户ID，AI消息可为空',
+                               `role` varchar(50) NOT NULL COMMENT '消息角色（user/assistant/system等）',
+                               `content` longtext NOT NULL COMMENT '消息内容',
+                               `model_name` varchar(100) DEFAULT 'LongCat-Flash-Chat' COMMENT '生成使用的模型名称',
+                               `tokens_used` int DEFAULT 0 COMMENT '总消耗token',
+                               `input_tokens` int DEFAULT 0 COMMENT '输入token数',
+                               `completion_tokens` int DEFAULT 0 COMMENT '输出token数',
+                               `images` json DEFAULT NULL COMMENT '图片URL/ID列表（JSON数组）',
+                               `is_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '软删除标记：0-正常，1-删除',
+                               `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                               `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                               PRIMARY KEY (`id`),
+                               KEY `idx_msg_conversation_time` (`conversation_id`, `created_at`),
+                               KEY `idx_msg_user` (`user_id`),
+                               KEY `idx_msg_deleted` (`is_deleted`),
+                               FULLTEXT KEY `ft_msg_content` (`content`),
+                               CONSTRAINT `fk_msg_conversation` FOREIGN KEY (`conversation_id`) REFERENCES `conversation_sessions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+                               CONSTRAINT `fk_msg_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户与AI对话消息表';
+
+CREATE TABLE `ai_chat_memory` (
+                                  `id` bigint NOT NULL AUTO_INCREMENT,
+                                  `conversation_id` varchar(256) NOT NULL,
+                                  `user_id` bigint DEFAULT NULL COMMENT '关联 users.id，可能为空用于系统/未登录请求',
+                                  `content` longtext NOT NULL,
+                                  `type` varchar(100) NOT NULL,
+                                  `timestamp` timestamp NOT NULL,
+                                  PRIMARY KEY (`id`),
+                                  KEY `idx_ai_chat_memory_user_conv` (`user_id`,`conversation_id`),
+                                  CONSTRAINT `fk_ai_chat_memory_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+                                  CONSTRAINT `chk_message_type` CHECK ((`type` in (_utf8mb4'USER',_utf8mb4'ASSISTANT',_utf8mb4'SYSTEM',_utf8mb4'TOOL')))
+) ENGINE=InnoDB AUTO_INCREMENT=260 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci

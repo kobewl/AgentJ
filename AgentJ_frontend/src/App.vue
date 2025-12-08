@@ -11,3 +11,4 @@ import Login from './pages/Login.vue';
 const route = useRoute();
 const currentComponent = computed(() => (route.path === '/login' ? Login : AppLayout));
 </script>
+

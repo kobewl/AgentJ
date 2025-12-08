@@ -141,3 +141,4 @@ const remove = async (id?: number) => {
 
 onMounted(load);
 </script>
+

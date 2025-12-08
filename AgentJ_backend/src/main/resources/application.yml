@@ -9,35 +9,6 @@ spring:
       chat:
         options:
           model: qwen-flash
-  # Qdrant配置（用于QdrantConfig类）
-    vectorstore:
-      qdrant:
-        host: 127.0.0.1
-        port: 6334
-        collection-name: knowledge_base
-        use-tls: false
-        initialize-schema: true
-  # 数据源配置在 application-dev.yml 中
-
-# 阿里云百炼配置
-dashscope:
-  api-key: ${DASHSCOPE_API_KEY}
-  embedding:
-    model: ${DASHSCOPE_EMBEDDING_MODEL:text-embedding-v4}
-    dimension: ${DASHSCOPE_EMBEDDING_DIMENSION:1536}
-    # 重试配置
-    max-retries: ${DASHSCOPE_MAX_RETRIES:3}
-    retry-delay-millis: ${DASHSCOPE_RETRY_DELAY:1000}
-    concurrent-batches: ${DASHSCOPE_EMBEDDING_CONCURRENT_BATCHES:4}
-
-  # 嵌入存储配置
-  embedding-store:
-    # 存储类型: qdrant
-    type: qdrant
-    # 向量维度
-    dimension: 1536
-    # 相似度阈值
-    similarity-threshold: 0.7
 
 server:
   port: 8080

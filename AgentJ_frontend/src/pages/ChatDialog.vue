@@ -1,168 +1,225 @@
 <template>
   <div class="chat-page">
     <div class="chat-shell">
-      <header class="chat-hero">
-        <div class="hero-actions">
-          <el-button text size="small" @click="clearChat" :disabled="messages.length === 0">
-            <el-icon><Delete /></el-icon>
-            清空
-          </el-button>
-          <el-button type="primary" plain size="small" @click="exportChat" :disabled="messages.length === 0">
-            <el-icon><Download /></el-icon>
-            导出
-          </el-button>
-        </div>
-      </header>
-
-
-
-      <section class="chat-panel">
-        <div class="messages" ref="messagesContainer">
-          <div v-if="messages.length === 0 && !streamingText" class="empty-state">
-            <div class="empty-badge">
-              <el-icon size="20"><ChatDotRound /></el-icon>
-              即刻开聊
-            </div>
-            <h3>你好，我是你的 AI 工作台</h3>
-            <p>提问、改写、生成或审查代码，让对话自然流畅。</p>
+      <aside class="conversation-sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title">会话</div>
+          <div class="sidebar-actions">
+            <el-switch v-model="showDeletedConversations" size="small" active-text="含删除" />
+            <el-button text size="small" :loading="loadingConversations" @click="loadConversations(true)">
+              <el-icon><Refresh /></el-icon>
+            </el-button>
+            <el-button type="primary" size="small" @click="startNewConversation">新对话</el-button>
           </div>
-
-          <transition-group name="message" tag="div">
+        </div>
+        <div class="sidebar-body">
+          <el-scrollbar class="conversation-list">
             <div
-              v-for="(message, index) in messages"
-              :key="index"
-              :class="['message-row', message.role]"
+              v-for="item in conversations"
+              :key="item.id"
+              :class="['conversation-item', { active: item.id === conversationId, deleted: item.is_deleted }]"
+              @click="selectConversation(item)"
             >
-              <div class="avatar" :data-role="message.role">
-                <el-icon v-if="message.role === 'user'" size="20"><User /></el-icon>
-                <el-icon v-else size="20"><Cpu /></el-icon>
+              <div class="conversation-title">
+                <span class="title-text">{{ item.title || '未命名对话' }}</span>
+                <el-tag v-if="item.is_deleted" size="small" type="danger" effect="plain">已删除</el-tag>
               </div>
-              <div class="bubble">
-                <div class="bubble-head">
-                  <span class="who">{{ message.role === 'user' ? '我' : 'AI 助手' }}</span>
-                  <span class="time">{{ formatTime(message.timestamp) }}</span>
+              <div class="conversation-meta">
+                <span class="model">{{ item.model_name }}</span>
+                <span class="time">{{ formatShortTime(item.updated_at) }}</span>
+              </div>
+              <div class="conversation-actions">
+                <el-button
+                  text
+                  size="small"
+                  @click.stop="item.is_deleted ? restoreConversationItem(item) : deleteConversationItem(item)"
+                >
+                  <el-icon size="14">
+                    <Refresh v-if="item.is_deleted" />
+                    <Delete v-else />
+                  </el-icon>
+                </el-button>
+              </div>
+            </div>
+            <div v-if="!conversations.length" class="sidebar-empty">
+              {{ loadingConversations ? '加载中...' : '暂无会话' }}
+            </div>
+          </el-scrollbar>
+        </div>
+      </aside>
+
+      <div class="chat-main">
+        <header class="chat-hero">
+          <div class="hero-actions">
+            <el-button text size="small" @click="clearChat" :disabled="messages.length === 0">
+              <el-icon><Delete /></el-icon>
+              清空
+            </el-button>
+            <el-button type="primary" plain size="small" @click="exportChat" :disabled="messages.length === 0">
+              <el-icon><Download /></el-icon>
+              导出
+            </el-button>
+          </div>
+        </header>
+
+        <section class="chat-panel">
+          <div class="messages" ref="messagesContainer">
+            <div v-if="messages.length === 0 && !streamingText" class="empty-state">
+              <div class="empty-badge">
+                <el-icon size="20"><ChatDotRound /></el-icon>
+                即刻开聊
+              </div>
+              <h3>你好，我是你的 AI 工作台</h3>
+              <p>提问、改写、生成或审查代码，让对话自然流畅。</p>
+            </div>
+
+            <transition-group name="message" tag="div">
+              <div
+                v-for="(message, index) in messages"
+                :key="index"
+                :class="['message-row', message.role]"
+              >
+                <div class="avatar" :data-role="message.role">
+                  <el-icon v-if="message.role === 'user'" size="20"><User /></el-icon>
+                  <el-icon v-else size="20"><Cpu /></el-icon>
                 </div>
-                <div class="bubble-body">
-                  <div 
-                    class="text"
-                    v-if="message.role === 'user'"
-                  >{{ message.content }}</div>
-                  <div 
-                    class="text markdown-body"
-                    v-else
-                    v-html="renderMarkdown(message.content)"
-                  ></div>
-                  <div v-if="message.role === 'assistant'" class="bubble-actions">
-                    <el-button text size="small" @click="copyMessage(message.content)">
-                      <el-icon size="12"><CopyDocument /></el-icon> 复制
-                    </el-button>
+                <div class="bubble">
+                  <div class="bubble-head">
+                    <span class="who">{{ message.role === 'user' ? '我' : 'AI 助手' }}</span>
+                    <span class="time">{{ formatTime(message.timestamp) }}</span>
+                  </div>
+                  <div class="bubble-body">
+                    <div 
+                      class="text"
+                      v-if="message.role === 'user'"
+                    >{{ message.content }}</div>
+                    <div 
+                      class="text markdown-body"
+                      v-else
+                      v-html="renderMarkdown(message.content)"
+                    ></div>
+                    <div v-if="message.role === 'assistant'" class="bubble-actions">
+                      <el-button text size="small" @click="copyMessage(message.content)">
+                        <el-icon size="12"><CopyDocument /></el-icon> 复制
+                      </el-button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </transition-group>
+            </transition-group>
 
-          <div v-if="streamingText" class="message-row assistant streaming">
-            <div class="avatar" data-role="assistant">
-              <el-icon size="20"><Cpu /></el-icon>
-            </div>
-            <div class="bubble live">
-              <div class="bubble-head">
-                <span class="who">AI 助手</span>
-                <span class="time">正在生成...</span>
+            <div v-if="streamingText" class="message-row assistant streaming">
+              <div class="avatar" data-role="assistant">
+                <el-icon size="20"><Cpu /></el-icon>
               </div>
-              <div class="bubble-body">
-                <div
-                  class="text markdown-body live-markdown"
-                  v-html="streamingHtml"
-                ></div>
-                <span class="cursor">▍</span>
+              <div class="bubble live">
+                <div class="bubble-head">
+                  <span class="who">AI 助手</span>
+                  <span class="time">正在生成...</span>
+                </div>
+                <div class="bubble-body">
+                  <div
+                    class="text markdown-body live-markdown"
+                    v-html="streamingHtml"
+                  ></div>
+                  <span class="cursor">▍</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="input-panel">
-        <div class="input-container">
-          <el-upload
-            action="#"
-            :auto-upload="false"
-            :show-file-list="false"
-            :on-change="handleFileSelect"
-            accept=".txt,.pdf,.doc,.docx,.json,.csv"
-          >
-            <el-button 
-              text 
-              size="small" 
-              class="attach-btn"
+        <section class="input-panel">
+          <div class="input-container">
+            <el-upload
+              action="#"
+              :auto-upload="false"
+              :show-file-list="false"
+              :on-change="handleFileSelect"
+              accept=".txt,.pdf,.doc,.docx,.json,.csv"
             >
-              <el-icon><Paperclip /></el-icon>
-            </el-button>
-          </el-upload>
-          
-          <el-input
-            v-model="input"
-            type="textarea"
-            :rows="3"
-            placeholder="输入你的问题、需求或粘贴代码片段..."
-            :disabled="sending"
-            @keydown.enter.prevent="handleEnterKey"
-            class="main-input"
-          >
-          </el-input>
-          
-          <div class="send-area">
-            <el-button
-              v-if="sending"
-              circle
-              text
-              class="control-btn stop-btn"
-              @click="stop"
-              size="large"
+              <el-button 
+                text 
+                size="small" 
+                class="attach-btn"
+              >
+                <el-icon><Paperclip /></el-icon>
+              </el-button>
+            </el-upload>
+            
+            <el-input
+              v-model="input"
+              type="textarea"
+              :rows="3"
+              placeholder="输入你的问题、需求或粘贴代码片段..."
+              :disabled="sending"
+              @keydown.enter.prevent="handleEnterKey"
+              class="main-input"
             >
-              <el-icon size="20"><VideoPause /></el-icon>
-            </el-button>
-            <el-button
-              v-else
-              circle
-              type="primary"
-              class="control-btn send-btn"
-              @click="send"
-              :disabled="!input.trim()"
-              size="large"
-            >
-              <el-icon size="20"><Send /></el-icon>
-            </el-button>
+            </el-input>
+            
+            <div class="send-area">
+              <el-button
+                v-if="sending"
+                circle
+                text
+                class="control-btn stop-btn"
+                @click="stop"
+                size="large"
+              >
+                <el-icon size="20"><VideoPause /></el-icon>
+              </el-button>
+              <el-button
+                v-else
+                circle
+                type="primary"
+                class="control-btn send-btn"
+                @click="send"
+                :disabled="!input.trim()"
+                size="large"
+              >
+                <el-icon size="20"><Send /></el-icon>
+              </el-button>
+            </div>
           </div>
-        </div>
 
-        <div class="input-meta">
-          <div class="left-info">
-            <span class="status-indicator" :class="connectionStatusClass">
-              <span class="status-dot"></span>
-              {{ connectionStatusText }}
+          <div class="input-meta">
+            <div class="left-info">
+              <span class="status-indicator" :class="connectionStatusClass">
+                <span class="status-dot"></span>
+                {{ connectionStatusText }}
+              </span>
+              <el-tag size="small" type="info" round class="stream-tag">实时流式</el-tag>
+              <span class="shortcut-hint">Enter 发送 · Shift+Enter 换行</span>
+            </div>
+            <span v-if="selectedFile" class="file-pill">
+              <el-icon size="12"><Document /></el-icon>
+              {{ selectedFile.name }}
+              <el-button text size="small" @click="clearFile" class="remove-file-btn">
+                <el-icon size="10"><Close /></el-icon>
+              </el-button>
             </span>
-            <el-tag size="small" type="info" round class="stream-tag">实时流式</el-tag>
-            <span class="shortcut-hint">Enter 发送 · Shift+Enter 换行</span>
           </div>
-          <span v-if="selectedFile" class="file-pill">
-            <el-icon size="12"><Document /></el-icon>
-            {{ selectedFile.name }}
-            <el-button text size="small" @click="clearFile" class="remove-file-btn">
-              <el-icon size="10"><Close /></el-icon>
-            </el-button>
-          </span>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, watch } from 'vue';
+import { ref, computed, nextTick, watch, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { streamSse, type SseMessage } from '@/utils/sse';
+import {
+  listConversations,
+  createConversation,
+  deleteConversation,
+  restoreConversation,
+  listMessages,
+  createMessage as createMessageApi,
+  type ConversationSession,
+  type ConversationMessage,
+} from '@/api/conversation';
 import {
   ChatDotRound,
   ChatLineRound,
@@ -176,6 +233,7 @@ import {
   User,
   Cpu,
   CopyDocument,
+  Refresh,
 } from '@element-plus/icons-vue';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
@@ -206,11 +264,17 @@ interface ChatMessage {
   timestamp: Date;
 }
 
-
+type ConversationItem = ConversationSession;
 
 const input = ref('');
 const messages = ref<ChatMessage[]>([]);
+const conversations = ref<ConversationItem[]>([]);
 const conversationId = ref('');
+const loadingConversations = ref(false);
+const loadingMessages = ref(false);
+const showDeletedConversations = ref(false);
+const conversationPage = ref(1);
+const conversationPageSize = 20;
 const streamingText = ref('');
 const streamingHtml = computed(() => renderMarkdown(streamingText.value || ''));
 const sending = ref(false);
@@ -276,12 +340,116 @@ const formatTime = (date: Date) => {
   });
 };
 
+const formatShortTime = (value?: string) => {
+  if (!value) return '';
+  const date = new Date(value);
+  return date.toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
+const loadConversations = async (force = false) => {
+  try {
+    loadingConversations.value = true;
+    const resp = await listConversations({
+      page: conversationPage.value,
+      size: conversationPageSize,
+      includeDeleted: showDeletedConversations.value,
+    });
+    conversations.value = resp.data.data?.items || [];
+    if (!conversationId.value && conversations.value.length) {
+      conversationId.value = conversations.value[0].id;
+      await loadMessages(conversationId.value);
+    }
+  } catch (error) {
+    if (force) {
+      console.error(error);
+    }
+    ElMessage.error('加载会话失败');
+  } finally {
+    loadingConversations.value = false;
+  }
+};
+
+const loadMessages = async (convId: string) => {
+  if (!convId) {
+    messages.value = [];
+    return;
+  }
+  try {
+    loadingMessages.value = true;
+    const resp = await listMessages(convId, { page: 1, size: 200, includeDeleted: false });
+    messages.value = (resp.data.data?.items || []).map((m: ConversationMessage) => ({
+      role: (m.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+      content: m.content,
+      timestamp: new Date(m.created_at),
+    }));
+    await nextTick();
+    scrollToBottom();
+  } catch (error) {
+    console.error(error);
+    ElMessage.error('加载消息失败');
+  } finally {
+    loadingMessages.value = false;
+  }
+};
+
+const startNewConversation = async () => {
+  try {
+    const titleSeed = (input.value || '').trim().slice(0, 30) || '新的对话';
+    const resp = await createConversation({ title: titleSeed, model_name: 'LongCat-Flash-Chat' });
+    const created = resp.data.data as ConversationSession;
+    conversationId.value = created.id;
+    messages.value = [];
+    await loadConversations(true);
+  } catch (error) {
+    console.error(error);
+    ElMessage.error('创建会话失败');
+  }
+};
+
+const selectConversation = async (item: ConversationItem) => {
+  if (item.id === conversationId.value) return;
+  streamingText.value = '';
+  sending.value = false;
+  conversationId.value = item.id;
+  await loadMessages(item.id);
+};
+
+const deleteConversationItem = async (item: ConversationItem) => {
+  try {
+    await deleteConversation(item.id);
+    ElMessage.success('会话已删除');
+    if (conversationId.value === item.id) {
+      conversationId.value = '';
+      messages.value = [];
+    }
+    await loadConversations(true);
+  } catch (error) {
+    console.error(error);
+    ElMessage.error('删除会话失败');
+  }
+};
+
+const restoreConversationItem = async (item: ConversationItem) => {
+  try {
+    await restoreConversation(item.id);
+    ElMessage.success('会话已恢复');
+    await loadConversations(true);
+  } catch (error) {
+    console.error(error);
+    ElMessage.error('恢复会话失败');
+  }
+};
+
 // 处理SSE消息
 const handleSseMessage = (data: SseMessage) => {
   const type = data.type as string;
   
   if (type === 'start' && data.conversationId) {
-    conversationId.value = data.conversationId as string;
+    const newId = data.conversationId as string;
+    if (newId && conversationId.value !== newId) {
+      conversationId.value = newId;
+      loadConversations(true);
+    }
   }
   
   if (type === 'chunk' && typeof data.content === 'string') {
@@ -295,6 +463,16 @@ const handleSseMessage = (data: SseMessage) => {
         role: 'assistant', 
         content: streamingText.value,
         timestamp: new Date()
+      });
+      const savedContent = streamingText.value;
+      createMessageApi(conversationId.value, {
+        role: 'assistant',
+        content: savedContent,
+        model_name: 'LongCat-Flash-Chat',
+      }).catch(() => {
+        ElMessage.warning('AI 消息保存失败');
+      }).finally(() => {
+        loadConversations(true);
       });
       streamingText.value = '';
     }
@@ -317,17 +495,36 @@ const send = async () => {
     ElMessage.warning('请输入内容');
     return;
   }
+
+  // 确保有会话
+  if (!conversationId.value) {
+    await startNewConversation();
+  }
+  if (!conversationId.value) {
+    ElMessage.error('创建会话失败，请重试');
+    return;
+  }
+  const currentConversationId = conversationId.value;
+  const userInput = input.value;
   
   // 添加用户消息
   messages.value.push({ 
     role: 'user', 
-    content: input.value,
+    content: userInput,
     timestamp: new Date()
+  });
+
+  createMessageApi(currentConversationId, {
+    role: 'user',
+    content: userInput,
+    model_name: 'LongCat-Flash-Chat',
+  }).catch(() => {
+    ElMessage.warning('用户消息保存失败');
   });
   
   const payload = {
-    input: input.value,
-    conversationId: conversationId.value || undefined,
+    input: userInput,
+    conversationId: currentConversationId || undefined,
     requestSource: 'VUE_DIALOG',
   };
   
@@ -426,6 +623,14 @@ const clearFile = () => {
   selectedFile.value = null;
 };
 
+watch(showDeletedConversations, () => {
+  loadConversations(true);
+});
+
+onMounted(() => {
+  loadConversations();
+});
+
 // 监听消息变化
 watch(messages, () => {
   scrollToBottom();
@@ -449,12 +654,103 @@ watch(streamingText, () => {
   width: 100%;
   height: calc(100vh - 80px);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   overflow: hidden;
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border-radius: 8px;
   margin: 16px;
+}
+
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.conversation-sidebar {
+  width: 280px;
+  border-right: 1px solid #f1f5f9;
+  background: #f9fbff;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-title {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-body {
+  flex: 1;
+  overflow: hidden;
+}
+
+.conversation-list {
+  height: 100%;
+}
+
+.conversation-item {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.conversation-item.active {
+  background: #eef2ff;
+  border-left: 3px solid #667eea;
+}
+
+.conversation-item.deleted {
+  opacity: 0.6;
+}
+
+.conversation-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 6px;
+}
+
+.conversation-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.conversation-actions {
+  margin-top: 6px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.conversation-item:hover {
+  background: #f5f7ff;
+}
+
+.sidebar-empty {
+  padding: 20px;
+  text-align: center;
+  color: #94a3b8;
 }
 
 /* Smooth scrolling for messages */
@@ -1436,3 +1732,4 @@ watch(streamingText, () => {
   }
 }
 </style>
+

@@ -13,3 +13,4 @@ export const deleteMemory = (conversationId: string) => http.delete<MemoryRespon
 
 export const getConversationHistory = (conversationId: string) =>
   http.get(`/api/memories/${conversationId}/history`);
+

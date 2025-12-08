@@ -14,3 +14,4 @@ export const updateCronStatus = (id: string, status: number) => http.put(`/api/c
 export const executeCronTask = (id: string) => http.post(`/api/cron-tasks/${id}/execute`);
 
 export const deleteCronTask = (id: string) => http.delete(`/api/cron-tasks/${id}`);
+

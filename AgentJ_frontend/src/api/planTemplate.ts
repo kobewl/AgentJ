@@ -24,3 +24,4 @@ export const getParameterRequirements = (planTemplateId: string) =>
 
 export const createOrUpdatePlanTemplateWithTool = (config: any) =>
   http.post('/api/plan-template/create-or-update-with-tool', config);
+

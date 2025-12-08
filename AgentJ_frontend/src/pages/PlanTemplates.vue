@@ -300,3 +300,4 @@ onMounted(load);
   gap: 8px;
 }
 </style>
+

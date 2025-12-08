@@ -153,3 +153,4 @@ const remove = async (row: CronConfig) => {
 
 onMounted(load);
 </script>
+

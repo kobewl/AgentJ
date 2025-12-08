@@ -9,3 +9,4 @@ export const batchUpdateConfigs = (configs: ConfigEntity[]) => http.post('/api/c
 export const resetAllDefaults = () => http.post('/api/config/reset-all-defaults', {});
 
 export const getAvailableModels = () => http.get<{ options: ModelOption[]; total: number }>('/api/config/available-models');
+

@@ -13,3 +13,4 @@ export const updateDatasourceConfig = (id: number, data: DatasourceConfig) =>
 export const deleteDatasourceConfig = (id: number) => http.delete(`/api/datasource-configs/${id}`);
 
 export const testDatasourceConnection = (data: DatasourceConfig) => http.post('/api/datasource-configs/test-connection', data);
+

@@ -13,3 +13,4 @@ export interface InitConfigRequest {
 export const getInitStatus = () => http.get<InitStatus>('/api/init/status');
 
 export const saveInitConfig = (data: InitConfigRequest) => http.post('/api/init/save', data);
+
