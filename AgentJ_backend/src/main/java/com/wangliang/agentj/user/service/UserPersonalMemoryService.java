@@ -18,6 +18,7 @@ package com.wangliang.agentj.user.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.wangliang.agentj.advisor.PersonalMemoryAdvisor;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.user.model.po.UserPersonalMemoryEntity;
 import com.wangliang.agentj.user.model.vo.UserPersonalMemory;
@@ -145,10 +146,10 @@ public class UserPersonalMemoryService {
             ctx.put("assistant_replied", assistantText == null ? "" : assistantText);
 
             ChatClient chatClient = llmService.getDiaChatClient();
-            String raw = chatClient.prompt()
+            String raw = PersonalMemoryAdvisor.runWithoutCapture(() -> chatClient.prompt()
                     .messages(new SystemMessage(sysPrompt), new UserMessage(ctx.toPrettyString()))
                     .call()
-                    .content();
+                    .content());
             if (!StringUtils.hasText(raw)) {
                 return;
             }

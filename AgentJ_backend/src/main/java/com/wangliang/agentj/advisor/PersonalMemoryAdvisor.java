@@ -30,6 +30,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 
+import java.util.function.Supplier;
+
 /**
  * Advisor that inspects each dialog turn and lets AI decide whether to persist
  * user personal memory.
@@ -40,6 +42,12 @@ public class PersonalMemoryAdvisor implements CallAdvisor, StreamAdvisor {
 	private static final int MAX_CAPTURE_LENGTH = 2000;
 
 	private static final Logger log = LoggerFactory.getLogger(PersonalMemoryAdvisor.class);
+
+	/**
+	 * Reentrancy guard to avoid recursively triggering memory extraction when the
+	 * advisor wraps the internal "Memory Extractor" LLM call itself.
+	 */
+	private static final ThreadLocal<Boolean> CAPTURE_SUPPRESSED = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
 	private final UserPersonalMemoryService userPersonalMemoryService;
 
@@ -61,6 +69,9 @@ public class PersonalMemoryAdvisor implements CallAdvisor, StreamAdvisor {
 	@Override
 	public ChatClientResponse adviseCall(ChatClientRequest chatClientRequest, CallAdvisorChain callAdvisorChain) {
 		String userText = safeUserText(chatClientRequest);
+		if (isCaptureSuppressed()) {
+			return callAdvisorChain.nextCall(chatClientRequest);
+		}
 		ChatClientResponse response = callAdvisorChain.nextCall(chatClientRequest);
 		String assistantText = safeAssistantText(response);
 		triggerAutoCapture(userText, assistantText);
@@ -72,6 +83,9 @@ public class PersonalMemoryAdvisor implements CallAdvisor, StreamAdvisor {
 			StreamAdvisorChain streamAdvisorChain) {
 		String userText = safeUserText(chatClientRequest);
 		Flux<ChatClientResponse> respFlux = streamAdvisorChain.nextStream(chatClientRequest);
+		if (isCaptureSuppressed()) {
+			return respFlux;
+		}
 		return new ChatClientMessageAggregator().aggregateChatClientResponse(respFlux, aggregated -> {
 			String assistantText = safeAssistantText(aggregated);
 			triggerAutoCapture(userText, assistantText);
@@ -125,6 +139,24 @@ public class PersonalMemoryAdvisor implements CallAdvisor, StreamAdvisor {
 		}
 		// Keep tail part which通常包含最新信息
 		return text.substring(text.length() - MAX_CAPTURE_LENGTH);
+	}
+
+	private boolean isCaptureSuppressed() {
+		return Boolean.TRUE.equals(CAPTURE_SUPPRESSED.get());
+	}
+
+	/**
+	 * Execute a block while suppressing auto-capture to prevent recursive LLM calls.
+	 */
+	public static <T> T runWithoutCapture(Supplier<T> supplier) {
+		Boolean previous = CAPTURE_SUPPRESSED.get();
+		CAPTURE_SUPPRESSED.set(Boolean.TRUE);
+		try {
+			return supplier.get();
+		}
+		finally {
+			CAPTURE_SUPPRESSED.set(previous);
+		}
 	}
 
 }

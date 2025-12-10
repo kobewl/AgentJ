@@ -1,18 +1,3 @@
-/*
- * Copyright 2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.wangliang.agentj.conversation.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,6 +15,7 @@ import com.wangliang.agentj.llm.LlmService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -39,6 +25,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -65,14 +52,18 @@ public class ConversationRecordService {
 	}
 
 	public String generateTitle(Long userId, ConversationTitleRequest request) {
-		String userContent = request.getUserContent();
-		String assistantContent = request.getAssistantContent();
+		String userContent = truncateSafe(request.getUserContent(), 280);
+		String assistantContent = truncateSafe(request.getAssistantContent(), 280);
 		if (!StringUtils.hasText(userContent) && !StringUtils.hasText(assistantContent)) {
-			return "新的对话";
+			return "新对话";
 		}
 
 		String prompt = """
-				请根据以下对话生成一个中文标题，最多6个字，要求简洁且能概括主题，不要标点符号，不要输出解释。
+				根据最近一轮问答生成一个中文标题：
+				- 4~6 个字，优先 5~6 字
+				- 用名词短语概括核心主题，避免空泛词（如 对话、聊天、问答、助手、提问）
+				- 不要标点和引号，不要解释
+				- 保留关键技术/专有名词（如 RAG、Java）
 
 				用户: %s
 				助手: %s
@@ -83,12 +74,16 @@ public class ConversationRecordService {
 		try {
 			ChatClient chatClient = llmService.getDefaultDynamicAgentChatClient();
 			String title = chatClient.prompt()
-					.system("你是标题生成助手，输出不超过6个汉字的简洁标题，不要解释。")
+					.system("你是标题生成助手，只输出一个中文标题，突出主题名词，不要出现“对话/聊天/问答/助手”等空泛词。")
 					.user(prompt)
+					.options(OpenAiChatOptions.builder().temperature(0.25).build())
 					.call()
 					.content();
 
 			title = postProcessTitle(title);
+			if (isGenericTitle(title)) {
+				title = fallbackTitle(userContent, assistantContent);
+			}
 			return StringUtils.hasText(title) ? title : "新的对话";
 		} catch (Exception e) {
 			log.warn("生成会话标题失败，使用兜底: {}", e.getMessage());
@@ -107,7 +102,24 @@ public class ConversationRecordService {
 
 	private String fallbackTitle(String userContent, String assistantContent) {
 		String base = StringUtils.hasText(userContent) ? userContent : assistantContent;
-		return postProcessTitle(base);
+		String candidate = postProcessTitle(base);
+		return StringUtils.hasText(candidate) ? candidate : "新的对话";
+	}
+
+	private boolean isGenericTitle(String title) {
+		if (!StringUtils.hasText(title)) {
+			return true;
+		}
+		Set<String> bad = Set.of("对话", "聊天", "问答", "交流", "讨论", "新对话", "新的对话");
+		String normalized = title.strip();
+		return bad.contains(normalized) || normalized.length() < 2;
+	}
+
+	private String truncateSafe(String text, int maxLen) {
+		if (!StringUtils.hasText(text)) {
+			return "";
+		}
+		return text.length() <= maxLen ? text : text.substring(0, maxLen);
 	}
 
 	public ConversationSessionView createSession(Long userId, ConversationSessionRequest request) {
