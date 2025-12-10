@@ -3,26 +3,40 @@
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;
-  --primary-color: #3b82f6;
-  --primary-hover: #2563eb;
+  /* 品牌与功能色 */
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-weak: #e0e7ff;
+  --accent-color: #7c3aed;
   --success-color: #10b981;
   --warning-color: #f59e0b;
   --danger-color: #ef4444;
-  --info-color: #06b6d4;
+  --info-color: #0ea5e9;
+  /* 中性色阶 */
   --bg-primary: #ffffff;
   --bg-secondary: #f8fafc;
   --bg-tertiary: #f1f5f9;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
+  --bg-glass: rgba(255, 255, 255, 0.9);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
   --text-tertiary: #94a3b8;
   --border-color: #e2e8f0;
+  --border-strong: #cbd5e1;
   --border-hover: #cbd5e1;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
+  /* 阴影与圆角 */
+  --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.08);
+  --shadow-md: 0 8px 24px -6px rgb(15 23 42 / 0.16);
+  --shadow-lg: 0 16px 40px -10px rgb(15 23 42 / 0.18);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  /* 间距与动效 */
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -77,14 +91,26 @@ a {
 }
 
 .el-button--primary {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   border: none;
+  color: #fff;
 }
 
 .el-button--primary:hover {
   background: linear-gradient(135deg, var(--primary-hover), var(--primary-color));
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+}
+
+.el-button.is-text,
+.el-button.is-link {
+  color: var(--text-secondary);
+}
+
+.el-button.is-text:hover,
+.el-button.is-link:hover {
+  color: var(--primary-color);
+  background: rgb(37 99 235 / 0.08);
 }
 
 /* 输入框样式优化 */
@@ -104,6 +130,39 @@ a {
 .el-textarea__inner:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+}
+
+/* 表单与标签 */
+.el-form-item__label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.el-select .el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 3px rgb(124 58 237 / 0.12);
+}
+
+/* 表格样式 */
+.el-table {
+  --el-table-border: var(--border-color);
+  --el-table-header-bg-color: var(--bg-tertiary);
+  --el-table-row-hover-bg-color: rgb(37 99 235 / 0.06);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.el-table th {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.el-table td {
+  color: var(--text-primary);
+}
+
+.el-table__row:hover td {
+  background: rgb(37 99 235 / 0.04);
 }
 
 /* 标签样式 */
@@ -141,6 +200,12 @@ a {
   color: var(--text-primary);
 }
 
+.section-desc {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
 .card-toolbar {
   display: flex;
   justify-content: space-between;
@@ -161,6 +226,16 @@ a {
 .table-actions {
   display: flex;
   gap: 8px;
+}
+
+/* 空状态与占位 */
+.empty-block {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
 }
 
 /* 自定义滚动条 */
@@ -195,8 +270,13 @@ a {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* 响应式设计 */
@@ -204,12 +284,12 @@ a {
   .el-aside {
     width: 200px !important;
   }
-  
+
   .flex-row {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .grid {
     grid-template-columns: 1fr !important;
   }
@@ -225,11 +305,11 @@ a {
     transform: translateX(-100%);
     transition: transform 0.3s ease;
   }
-  
+
   .el-aside.mobile-open {
     transform: translateX(0);
   }
-  
+
   .main {
     padding: 12px !important;
   }
@@ -277,6 +357,21 @@ a {
   opacity: 0;
 }
 
+.el-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.el-button:focus-visible {
+  outline: 2px solid rgb(37 99 235 / 0.35);
+  outline-offset: 2px;
+}
+
+.el-switch__core {
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
 .slide-up-enter-active,
 .slide-up-leave-active {
   transition: all 0.3s ease;
@@ -286,4 +381,73 @@ a {
 .slide-up-leave-to {
   opacity: 0;
   transform: translateY(20px);
+}
+
+/* Dialog 与 Popover */
+.el-dialog {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.el-dialog__header {
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.el-dialog__body {
+  padding: 20px 24px;
+}
+
+.el-dialog__footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* 暗色主题变量 */
+.dark {
+  color-scheme: dark;
+  --bg-primary: #0f172a;
+  --bg-secondary: #0b1224;
+  --bg-tertiary: #11182b;
+  --bg-glass: rgba(17, 24, 43, 0.8);
+  --text-primary: #e2e8f0;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --border-color: #1f2937;
+  --border-strong: #334155;
+  --border-hover: #3b4257;
+  --shadow-sm: 0 1px 4px 0 rgb(0 0 0 / 0.35);
+  --shadow-md: 0 10px 30px -10px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 18px 50px -14px rgb(0 0 0 / 0.5);
+}
+
+.dark body {
+  background: var(--bg-secondary);
+}
+
+.dark .el-card {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.dark .el-table {
+  --el-table-border: var(--border-color);
+  --el-table-header-bg-color: #11182b;
+  --el-table-row-hover-bg-color: rgb(37 99 235 / 0.08);
+}
+
+.dark .el-input__wrapper,
+.dark .el-textarea__inner {
+  background: #0b1224;
+  border-color: var(--border-color);
+}
+
+.dark .el-dialog {
+  background: var(--bg-primary);
+}
+
+.dark .el-menu-item:hover {
+  background: rgb(37 99 235 / 0.12);
 }

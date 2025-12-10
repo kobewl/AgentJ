@@ -165,14 +165,17 @@ const handleRegister = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 20% 20%, #eef3ff, #f8f9fb 40%, #ffffff);
+  padding: 24px;
+  background: radial-gradient(circle at 20% 20%, rgb(37 99 235 / 0.06), transparent 35%), radial-gradient(circle at 80% 0%, rgb(124 58 237 / 0.07), transparent 45%), var(--bg-secondary);
 }
 .login-card {
   width: 360px;
-  padding: 32px;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.08);
+  padding: 32px 32px 28px;
+  border-radius: 18px;
+  background: var(--bg-glass);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(12px);
 }
 .brand {
   display: flex;
@@ -180,13 +183,13 @@ const handleRegister = () => {
   gap: 8px;
   font-weight: 700;
   font-size: 18px;
-  color: #409eff;
+  color: var(--primary-color);
   margin-bottom: 8px;
 }
 h2 {
   margin: 0 0 20px;
   font-size: 20px;
   font-weight: 600;
-  color: #1f2933;
+  color: var(--text-primary);
 }
 </style>

@@ -290,8 +290,8 @@ onMounted(() => {
 
 <style scoped>
 .dashboard {
-  padding: 20px;
-  background: var(--bg-secondary);
+  padding: 24px;
+  background: radial-gradient(circle at 20% 20%, rgb(37 99 235 / 0.04), transparent 35%), var(--bg-secondary);
   min-height: 100vh;
 }
 
@@ -303,10 +303,12 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--bg-primary);
+  background: var(--bg-glass);
   padding: 20px 24px;
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(12px);
 }
 
 .title-section {
@@ -341,10 +343,11 @@ onMounted(() => {
 }
 
 .stat-card {
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
-  border: none;
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
+  background: linear-gradient(145deg, var(--bg-primary), rgb(37 99 235 / 0.03));
 }
 
 .stat-card:hover {
@@ -424,9 +427,9 @@ onMounted(() => {
 .system-status,
 .chart-card,
 .recent-activity {
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: var(--shadow-sm);
-  border: none;
+  border: 1px solid var(--border-color);
 }
 
 .card-header {
@@ -516,8 +519,9 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-secondary);
-  border-radius: 8px;
+  background: linear-gradient(160deg, rgb(37 99 235 / 0.05), rgb(124 58 237 / 0.04));
+  border-radius: 12px;
+  border: 1px dashed var(--border-color);
 }
 
 .chart-placeholder {
@@ -541,13 +545,15 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: var(--bg-secondary);
-  border-radius: 8px;
+  background: var(--bg-primary);
+  border-radius: 12px;
   transition: all 0.3s ease;
+  border: 1px solid transparent;
 }
 
 .activity-item:hover {
-  background: var(--bg-tertiary);
+  background: rgb(37 99 235 / 0.06);
+  border-color: var(--border-color);
 }
 
 .activity-icon {
@@ -602,9 +608,9 @@ onMounted(() => {
 }
 
 .info-card {
-  border-radius: 12px;
+  border-radius: 14px;
   box-shadow: var(--shadow-sm);
-  border: none;
+  border: 1px solid var(--border-color);
 }
 
 .info-content {

@@ -9,7 +9,7 @@
     
     <!-- 侧边栏 -->
     <el-aside 
-      :width="isMobile ? '280px' : '260px'" 
+      :width="isMobile ? '240px' : '220px'" 
       class="aside"
       :class="{ 'mobile-open': isMobile && !isCollapsed }"
     >
@@ -66,7 +66,7 @@
 
     <el-container>
       <!-- 顶部导航栏 -->
-      <el-header class="header">
+      <el-header v-if="!isChatPage" class="header">
         <div class="header-left">
           <!-- 移动端菜单按钮 -->
           <el-button 
@@ -137,7 +137,7 @@
       </el-header>
       
       <!-- 主内容区域 -->
-      <el-main class="main">
+      <el-main :class="['main', { 'main--full': isChatPage }]">
         <RouterView v-slot="{ Component, route }">
           <transition name="fade" mode="out-in">
             <component v-if="Component" :is="Component" :key="route.fullPath" />
@@ -169,6 +169,7 @@ const router = useRouter();
 const isCollapsed = ref(false);
 const isMobile = ref(false);
 const isDark = ref(false);
+const isChatPage = computed(() => route.path === '/chat');
 const connectionStatus = ref<'connected' | 'connecting' | 'disconnected'>('connecting');
 const appVersion = ref('0.0.1');
 const username = ref('管理员');
@@ -284,14 +285,15 @@ watch(isDark, (newVal) => {
 
 <style scoped>
 .aside {
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   color: var(--text-primary);
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-strong);
   position: relative;
   overflow: hidden;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
 }
 
 .logo {
@@ -300,8 +302,8 @@ watch(isDark, (newVal) => {
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  backdrop-filter: blur(10px);
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
 }
 
 .logo-icon {
@@ -336,19 +338,20 @@ watch(isDark, (newVal) => {
   margin: 4px 12px;
   transition: all 0.3s ease;
   border-left: 3px solid transparent;
+  padding-inline: 12px;
 }
 
 .menu-item:hover {
-  background: rgba(59, 130, 246, 0.15);
+  background: rgb(37 99 235 / 0.12);
   border-left-color: var(--primary-color);
   transform: translateX(4px);
 }
 
 .menu-item.is-active {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   color: white !important;
-  border-left-color: #60a5fa;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  border-left-color: var(--accent-color);
+  box-shadow: 0 8px 24px rgb(37 99 235 / 0.25);
 }
 
 .menu-icon {
@@ -380,8 +383,8 @@ watch(isDark, (newVal) => {
 .aside-footer {
   padding: 16px;
   border-top: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  backdrop-filter: blur(10px);
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
 }
 
 .connection-status {
@@ -399,11 +402,12 @@ watch(isDark, (newVal) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--bg-primary);
+  height: 64px;
+  background: var(--bg-glass);
   border-bottom: 1px solid var(--border-color);
   padding: 0 24px;
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 12px rgb(15 23 42 / 0.06);
 }
 
 .header-left {
@@ -426,12 +430,13 @@ watch(isDark, (newVal) => {
 .breadcrumb {
   font-size: 14px;
   color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .theme-toggle,
@@ -439,12 +444,14 @@ watch(isDark, (newVal) => {
   padding: 8px;
   border-radius: 8px;
   transition: all 0.3s ease;
+  color: var(--text-secondary);
 }
 
 .theme-toggle:hover,
 .fullscreen-toggle:hover {
-  background: var(--bg-tertiary);
+  background: rgb(37 99 235 / 0.08);
   transform: scale(1.1);
+  color: var(--primary-color);
 }
 
 .user-menu {
@@ -454,10 +461,12 @@ watch(isDark, (newVal) => {
   padding: 8px 12px;
   border-radius: 8px;
   transition: all 0.3s ease;
+  color: var(--text-secondary);
 }
 
 .user-menu:hover {
-  background: var(--bg-tertiary);
+  background: rgb(37 99 235 / 0.08);
+  color: var(--primary-color);
 }
 
 .username {
@@ -468,7 +477,14 @@ watch(isDark, (newVal) => {
 .main {
   padding: 24px;
   background: var(--bg-secondary);
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - 64px);
+  transition: var(--transition);
+}
+
+.main--full {
+  padding: 0;
+  min-height: 100vh;
+  background: var(--bg-primary);
 }
 
 /* 移动端遮罩层 */
@@ -478,7 +494,7 @@ watch(isDark, (newVal) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.45);
   z-index: 999;
   backdrop-filter: blur(2px);
 }
@@ -497,12 +513,12 @@ watch(isDark, (newVal) => {
 
 .dark .aside {
   background: var(--bg-secondary);
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .dark .header {
-  background: rgba(15, 23, 42, 0.95);
-  border-bottom-color: #334155;
+  background: var(--bg-glass);
+  border-bottom-color: var(--border-color);
 }
 
 .dark .main {
@@ -537,7 +553,7 @@ watch(isDark, (newVal) => {
     z-index: 1000;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
-    width: 280px !important;
+  width: 240px !important;
   }
   
   .aside.mobile-open {
