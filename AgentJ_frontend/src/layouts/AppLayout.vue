@@ -291,7 +291,8 @@ watch(isDark, (newVal) => {
   flex-direction: column;
   border-right: 1px solid var(--border-strong);
   position: relative;
-  overflow: hidden;
+  overflow-y: auto; /* 允许侧栏自身滚动，保证底部信息可见 */
+  overflow-x: hidden;
   box-shadow: var(--shadow-md);
   transition: var(--transition);
 }
@@ -330,7 +331,10 @@ watch(isDark, (newVal) => {
   border-right: none;
   background: transparent;
   flex: 1;
+  min-height: 0; /* 允许内部滚动时正确计算高度 */
   padding: 8px 0;
+  overflow-y: auto; /* 菜单内容超出时可滚动，避免底部信息被挤掉 */
+  overflow-x: hidden;
 }
 
 .menu-item {
@@ -385,6 +389,9 @@ watch(isDark, (newVal) => {
   border-top: 1px solid var(--border-color);
   background: var(--bg-glass);
   backdrop-filter: blur(12px);
+  position: sticky; /* 底部固定展示 */
+  bottom: 0;
+  z-index: 1;
 }
 
 .connection-status {

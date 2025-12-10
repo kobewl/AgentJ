@@ -5,10 +5,6 @@
         <div class="sidebar-header">
           <div class="sidebar-title">会话</div>
           <div class="sidebar-actions">
-            <el-switch v-model="showDeletedConversations" size="small" active-text="含删除" />
-            <el-button text size="small" :loading="loadingConversations" @click="loadConversations(true)">
-              <el-icon><Refresh /></el-icon>
-            </el-button>
             <el-button type="primary" size="small" @click="startNewConversation">新对话</el-button>
           </div>
         </div>
@@ -20,29 +16,19 @@
               :class="['conversation-item', { active: item.id === conversationId, deleted: item.is_deleted }]"
               @click="selectConversation(item)"
             >
-              <div class="conversation-title">
-                <span class="title-text">{{ item.title || '未命名对话' }}</span>
-                <el-tag v-if="item.is_deleted" size="small" type="danger" effect="plain">已删除</el-tag>
-              </div>
-              <div class="conversation-meta">
-                <span class="model">{{ item.model_name }}</span>
-                <span class="time">{{ formatShortTime(item.updated_at) }}</span>
-              </div>
-              <div class="conversation-actions">
+              <div class="conversation-head">
+                <div class="conversation-title">
+                  <span class="title-text">{{ item.title || '未命名对话' }}</span>
+                </div>
                 <el-button
                   text
                   size="small"
-                  @click.stop="item.is_deleted ? restoreConversationItem(item) : deleteConversationItem(item)"
+                  class="conversation-delete"
+                  @click.stop="deleteConversationItem(item)"
                 >
-                  <el-icon size="14">
-                    <Refresh v-if="item.is_deleted" />
-                    <Delete v-else />
-                  </el-icon>
+                  <el-icon size="14"><Delete /></el-icon>
                 </el-button>
               </div>
-            </div>
-            <div v-if="!conversations.length" class="sidebar-empty">
-              {{ loadingConversations ? '加载中...' : '暂无会话' }}
             </div>
           </el-scrollbar>
         </div>
@@ -217,6 +203,8 @@ import {
   restoreConversation,
   listMessages,
   createMessage as createMessageApi,
+  generateConversationTitle,
+  updateConversation,
   type ConversationSession,
   type ConversationMessage,
 } from '@/api/conversation';
@@ -283,6 +271,8 @@ const streamingHtml = computed(() => renderMarkdown(streamingText.value || ''));
 const sending = ref(false);
 const selectedFile = ref<File | null>(null);
 const messagesContainer = ref<HTMLElement>();
+const autoTitling = ref(false);
+let lastUserPrompt = '';
 
 let abortController: AbortController | null = null;
 
@@ -349,6 +339,51 @@ const formatShortTime = (value?: string) => {
   return date.toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
+// 生成精简标题：优先用用户问题，其次助手回答，最多6字
+const sanitizeText = (text?: string) =>
+  (text || '')
+    .replace(/\s+/g, '')
+    .replace(/[`~!@#$%^&*()\-_=+\[\]{};:'",.<>/?\\|]/g, '')
+    .trim();
+
+const buildShortTitle = (userText?: string, assistantText?: string) => {
+  const primary = sanitizeText(userText);
+  const secondary = sanitizeText(assistantText);
+  const source = primary || secondary || '新对话';
+  return source.length > 6 ? source.slice(0, 6) : source;
+};
+
+const shouldAutoTitle = () => {
+  const current = conversations.value.find((c) => c.id === conversationId.value);
+  if (!current) return true;
+  const t = (current.title || '').trim();
+  return !t || t === '新对话';
+};
+
+const maybeAutoTitle = async (assistantText: string) => {
+  if (!conversationId.value || autoTitling.value) return;
+  if (messages.value.length > 2) return; // 仅首轮自动生成标题
+  if (!shouldAutoTitle()) return;
+  autoTitling.value = true;
+  let title = buildShortTitle(lastUserPrompt, assistantText);
+  try {
+    const resp = await generateConversationTitle({
+      userContent: lastUserPrompt,
+      assistantContent: assistantText,
+    });
+    title = resp.data.data?.title || title;
+    await updateConversation(conversationId.value, { title });
+    const target = conversations.value.find((c) => c.id === conversationId.value);
+    if (target) {
+      target.title = title;
+    }
+  } catch (error) {
+    console.error('自动标题生成失败', error);
+  } finally {
+    autoTitling.value = false;
+  }
+};
+
 const loadConversations = async (force = false) => {
   try {
     loadingConversations.value = true;
@@ -397,7 +432,7 @@ const loadMessages = async (convId: string) => {
 
 const startNewConversation = async () => {
   try {
-    const titleSeed = (input.value || '').trim().slice(0, 30) || '新的对话';
+    const titleSeed = (input.value || '').trim().slice(0, 30) || '新对话';
     const resp = await createConversation({ title: titleSeed, model_name: 'LongCat-Flash-Chat' });
     const created = resp.data.data as ConversationSession;
     conversationId.value = created.id;
@@ -477,6 +512,7 @@ const handleSseMessage = (data: SseMessage) => {
       }).finally(() => {
         loadConversations(true);
       });
+      void maybeAutoTitle(savedContent);
       streamingText.value = '';
     }
     sending.value = false;
@@ -511,6 +547,7 @@ const send = async () => {
   const userInput = input.value;
   
   // 添加用户消息
+  lastUserPrompt = userInput;
   messages.value.push({ 
     role: 'user', 
     content: userInput,
@@ -708,6 +745,7 @@ watch(streamingText, () => {
 .sidebar-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
 }
 
@@ -719,20 +757,52 @@ watch(streamingText, () => {
 .conversation-list {
   height: 100%;
   overflow-y: auto;
+  padding: 8px 10px 10px;
 }
 
 .conversation-item {
   padding: 12px 14px;
-  border-bottom: 1px solid var(--border-color);
+  border: 1px solid rgba(255, 255, 255, 0.04);
   cursor: pointer;
-  transition: var(--transition);
-  background: var(--bg-primary);
+  transition: all 0.18s ease;
+  background: linear-gradient(180deg, rgba(59, 72, 112, 0.55), rgba(25, 31, 51, 0.7));
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  margin-bottom: 10px;
+  color: #e8edf8;
+}
+
+.conversation-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.conversation-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.12);
+}
+
+.conversation-delete {
+  color: rgba(232, 237, 248, 0.75);
+  opacity: 0.8;
+  transition: all 0.18s ease;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.conversation-delete:hover {
+  color: #fca5a5;
+  background: rgba(252, 165, 165, 0.08);
+  opacity: 1;
 }
 
 .conversation-item.active {
   background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   border-left: 3px solid var(--accent-color);
   color: #fff;
+  box-shadow: 0 18px 42px rgba(37, 99, 235, 0.25);
 }
 
 .conversation-item.deleted {
@@ -744,10 +814,17 @@ watch(streamingText, () => {
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  color: #f5f5f7;
-  margin-bottom: 6px;
+  color: #e8edf8;
+  flex: 1;
+  min-width: 0;
 }
 
+.conversation-title .title-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .conversation-meta {
   display: flex;
   justify-content: space-between;

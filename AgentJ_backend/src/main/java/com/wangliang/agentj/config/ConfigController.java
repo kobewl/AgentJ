@@ -54,6 +54,16 @@ public class ConfigController {
 		return ResponseEntity.ok().build();
 	}
 
+	@GetMapping("/groups")
+	public ResponseEntity<List<String>> listConfigGroups() {
+		return ResponseEntity.ok(configService.listConfigGroups());
+	}
+
+	@GetMapping("/groups/{groupName}/sub-groups")
+	public ResponseEntity<List<String>> listConfigSubGroups(@PathVariable("groupName") String groupName) {
+		return ResponseEntity.ok(configService.listConfigSubGroups(groupName));
+	}
+
 	@GetMapping("/available-models")
 	public ResponseEntity<Map<String, Object>> getAvailableModels() {
 		List<DynamicModelEntity> models = dynamicModelRepository.findAll();

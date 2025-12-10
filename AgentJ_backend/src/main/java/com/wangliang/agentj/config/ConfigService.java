@@ -298,4 +298,17 @@ public class ConfigService implements IConfigService, ApplicationListener<Contex
 		}
 	}
 
+	@Override
+	public List<String> listConfigGroups() {
+		return configRepository.findAllGroups();
+	}
+
+	@Override
+	public List<String> listConfigSubGroups(String groupName) {
+		if (groupName == null || groupName.isBlank()) {
+			return Collections.emptyList();
+		}
+		return configRepository.findSubGroupsByGroup(groupName);
+	}
+
 }

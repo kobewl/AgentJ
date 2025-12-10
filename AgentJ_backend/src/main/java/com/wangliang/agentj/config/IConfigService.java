@@ -78,4 +78,17 @@ public interface IConfigService {
 	 */
 	void resetAllConfigsToDefaults();
 
+	/**
+	 * 获取所有配置分组
+	 * @return 分组列表
+	 */
+	List<String> listConfigGroups();
+
+	/**
+	 * 获取指定分组下的二级分组
+	 * @param groupName 分组名
+	 * @return 子分组列表
+	 */
+	List<String> listConfigSubGroups(String groupName);
+
 }

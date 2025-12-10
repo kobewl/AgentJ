@@ -2,6 +2,7 @@ package com.wangliang.agentj.controller;
 
 import com.wangliang.agentj.conversation.entity.dto.ConversationMessageRequest;
 import com.wangliang.agentj.conversation.entity.dto.ConversationSessionRequest;
+import com.wangliang.agentj.conversation.entity.dto.ConversationTitleRequest;
 import com.wangliang.agentj.conversation.entity.vo.ConversationMessageView;
 import com.wangliang.agentj.conversation.entity.vo.ConversationSessionView;
 import com.wangliang.agentj.conversation.entity.vo.PagedResult;
@@ -87,6 +88,16 @@ public class ConversationController {
 			return ResponseEntity.internalServerError()
 					.body(Map.of("success", false, "message", "更新失败：" + e.getMessage()));
 		}
+	}
+
+	/**
+	 * 生成会话标题（最多6个字）
+	 */
+	@PostMapping("/title/generate")
+	public ResponseEntity<?> generateTitle(@RequestBody ConversationTitleRequest request) {
+		Long userId = userService.currentUserId();
+		String title = conversationRecordService.generateTitle(userId, request);
+		return ResponseEntity.ok(Map.of("success", true, "data", Map.of("title", title)));
 	}
 
 	/**

@@ -25,8 +25,11 @@ import com.wangliang.agentj.conversation.entity.vo.ConversationSessionView;
 import com.wangliang.agentj.conversation.entity.vo.PagedResult;
 import com.wangliang.agentj.conversation.repository.ConversationMessageRepository;
 import com.wangliang.agentj.conversation.repository.ConversationSessionRepository;
+import com.wangliang.agentj.conversation.entity.dto.ConversationTitleRequest;
+import com.wangliang.agentj.llm.LlmService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -51,11 +54,60 @@ public class ConversationRecordService {
 
 	private final ObjectMapper objectMapper;
 
+	private final LlmService llmService;
+
 	public ConversationRecordService(ConversationSessionRepository sessionRepository,
-			ConversationMessageRepository messageRepository, ObjectMapper objectMapper) {
+			ConversationMessageRepository messageRepository, ObjectMapper objectMapper, LlmService llmService) {
 		this.sessionRepository = sessionRepository;
 		this.messageRepository = messageRepository;
 		this.objectMapper = objectMapper;
+		this.llmService = llmService;
+	}
+
+	public String generateTitle(Long userId, ConversationTitleRequest request) {
+		String userContent = request.getUserContent();
+		String assistantContent = request.getAssistantContent();
+		if (!StringUtils.hasText(userContent) && !StringUtils.hasText(assistantContent)) {
+			return "新的对话";
+		}
+
+		String prompt = """
+				请根据以下对话生成一个中文标题，最多6个字，要求简洁且能概括主题，不要标点符号，不要输出解释。
+
+				用户: %s
+				助手: %s
+				""".formatted(
+				StringUtils.hasText(userContent) ? userContent : "",
+				StringUtils.hasText(assistantContent) ? assistantContent : "");
+
+		try {
+			ChatClient chatClient = llmService.getDefaultDynamicAgentChatClient();
+			String title = chatClient.prompt()
+					.system("你是标题生成助手，输出不超过6个汉字的简洁标题，不要解释。")
+					.user(prompt)
+					.call()
+					.content();
+
+			title = postProcessTitle(title);
+			return StringUtils.hasText(title) ? title : "新的对话";
+		} catch (Exception e) {
+			log.warn("生成会话标题失败，使用兜底: {}", e.getMessage());
+			return fallbackTitle(userContent, assistantContent);
+		}
+	}
+
+	private String postProcessTitle(String raw) {
+		if (!StringUtils.hasText(raw)) {
+			return "";
+		}
+		String cleaned = raw.replaceAll("\\s+", "")
+				.replaceAll("[`~!@#$%^&*()\\-_=+\\[\\]{};:'\",.<>/?\\\\|]", "");
+		return cleaned.length() > 6 ? cleaned.substring(0, 6) : cleaned;
+	}
+
+	private String fallbackTitle(String userContent, String assistantContent) {
+		String base = StringUtils.hasText(userContent) ? userContent : assistantContent;
+		return postProcessTitle(base);
 	}
 
 	public ConversationSessionView createSession(Long userId, ConversationSessionRequest request) {

@@ -52,6 +52,9 @@ export const createConversation = (data: Partial<ConversationSession>) =>
 export const updateConversation = (id: string, data: Partial<ConversationSession>) =>
   http.put<{ data: ConversationSession; success: boolean }>(`/api/conversations/${id}`, data);
 
+export const generateConversationTitle = (data: { userContent?: string; assistantContent?: string }) =>
+  http.post<{ data: { title: string }; success: boolean }>('/api/conversations/title/generate', data);
+
 export const deleteConversation = (id: string) =>
   http.delete<{ success: boolean }>(`/api/conversations/${id}`);
 
@@ -84,3 +87,4 @@ export const searchMessages = (params: {
     '/api/conversations/messages/search',
     { params },
   );
+

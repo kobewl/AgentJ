@@ -166,4 +166,29 @@ public class ConfigServiceImpl implements IConfigService {
             configs.put(entry.getKey(), newConfig);
         }
     }
+
+    @Override
+    public List<String> listConfigGroups() {
+        Set<String> groups = new LinkedHashSet<>();
+        for (ConfigEntity config : configs.values()) {
+            if (config.getConfigGroup() != null) {
+                groups.add(config.getConfigGroup());
+            }
+        }
+        return new ArrayList<>(groups);
+    }
+
+    @Override
+    public List<String> listConfigSubGroups(String groupName) {
+        if (groupName == null) {
+            return Collections.emptyList();
+        }
+        Set<String> subGroups = new LinkedHashSet<>();
+        for (ConfigEntity config : configs.values()) {
+            if (groupName.equals(config.getConfigGroup()) && config.getConfigSubGroup() != null) {
+                subGroups.add(config.getConfigSubGroup());
+            }
+        }
+        return new ArrayList<>(subGroups);
+    }
 }
