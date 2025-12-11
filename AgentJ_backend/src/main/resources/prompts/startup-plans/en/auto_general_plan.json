@@ -1,0 +1,37 @@
+{
+  "title": "General Smart Execute",
+  "planTemplateId": "auto-general-plan",
+  "planType": "dynamic_agent",
+  "directResponse": false,
+  "serviceGroup": "ungrouped",
+  "steps": [
+    {
+      "stepRequirement": "[GENERAL_AGENT] Complete task: <<task>>. Optional context: <<context>>. Choose tools if needed; deliver actionable result/summary and call terminate when done.",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": ""
+    }
+  ],
+  "toolConfig": {
+    "toolName": "auto_general_exec",
+    "toolDescription": "General task execution; Agent chooses suitable tools or answers directly",
+    "enableInternalToolcall": true,
+    "enableHttpService": true,
+    "enableInConversation": false,
+    "publishStatus": "PUBLISHED",
+    "inputSchema": [
+      {
+        "name": "task",
+        "description": "Task / question description",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "context",
+        "description": "Optional context/constraints/output format",
+        "type": "string",
+        "required": false
+      }
+    ]
+  }
+}

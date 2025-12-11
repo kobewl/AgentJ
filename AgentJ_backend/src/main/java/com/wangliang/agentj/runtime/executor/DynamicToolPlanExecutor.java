@@ -103,7 +103,12 @@ public class DynamicToolPlanExecutor extends AbstractPlanExecutor {
 
 	protected String getStepFromStepReq(String stepRequirement) {
 		String stepType = super.getStepFromStepReq(stepRequirement);
-		if ("DEFAULT_AGENT".equals(stepType)) {
+		// Route common agent tags到 ConfigurableDynaAgent，避免因标签不匹配报错
+		if ("DEFAULT_AGENT".equals(stepType) || "GENERAL_AGENT".equals(stepType) || "BROWSER_AGENT".equals(stepType)) {
+			return "ConfigurableDynaAgent";
+		}
+		// 兜底：所有 *_AGENT 也统一走 ConfigurableDynaAgent
+		if (stepType != null && stepType.endsWith("_AGENT")) {
 			return "ConfigurableDynaAgent";
 		}
 		return stepType;

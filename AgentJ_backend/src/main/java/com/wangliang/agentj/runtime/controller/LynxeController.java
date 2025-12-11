@@ -31,6 +31,7 @@ import com.wangliang.agentj.exception.PlanException;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.llm.StreamingResponseHandler;
 import com.wangliang.agentj.planning.service.IPlanParameterMappingService;
+import com.wangliang.agentj.planning.model.vo.PlanTemplateConfigVO;
 import com.wangliang.agentj.planning.service.PlanTemplateConfigService;
 import com.wangliang.agentj.planning.service.PlanTemplateService;
 import com.wangliang.agentj.recorder.entity.vo.ActToolInfo;
@@ -67,6 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -180,7 +182,10 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 		// Get plan template ID from coordinator tool
 		String planTemplateId = getPlanTemplateIdFromTool(toolName, serviceGroup);
 		if (planTemplateId == null) {
-			return ResponseEntity.badRequest().body(Map.of("error", "Tool not found with name: " + toolName));
+			planTemplateId = ensureRuntimePlanTemplate(toolName, serviceGroup);
+			if (planTemplateId == null) {
+				return ResponseEntity.badRequest().body(Map.of("error", "Tool not found with name: " + toolName));
+			}
 		}
 		if (planTemplateId.trim().isEmpty()) {
 			return ResponseEntity.badRequest()
@@ -222,7 +227,10 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 		// Get plan template ID from coordinator tool
 		String planTemplateId = getPlanTemplateIdFromTool(toolName, serviceGroup);
 		if (planTemplateId == null) {
-			return ResponseEntity.badRequest().body(Map.of("error", "Tool not found with name: " + toolName));
+			planTemplateId = ensureRuntimePlanTemplate(toolName, serviceGroup);
+			if (planTemplateId == null) {
+				return ResponseEntity.badRequest().body(Map.of("error", "Tool not found with name: " + toolName));
+			}
 		}
 		if (planTemplateId.trim().isEmpty()) {
 			return ResponseEntity.badRequest()
@@ -367,52 +375,9 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 		if (planId == null || planId.trim().isEmpty()) {
 			return ResponseEntity.badRequest().body("Plan ID cannot be null or empty");
 		}
-		Throwable throwable = this.exceptionCache.getIfPresent(planId);
-		if (throwable != null) {
-			logger.error("Exception found in exception cache for planId: {}", planId, throwable);
-			logger.error("Invalidating exception cache for planId: {}", planId);
-			this.exceptionCache.invalidate(planId);
-			throw new PlanException(throwable);
-		}
-		PlanExecutionRecord planRecord = planHierarchyReaderService.readPlanTreeByRootId(planId);
-
+		PlanExecutionRecord planRecord = buildPlanExecutionView(planId);
 		if (planRecord == null) {
 			return ResponseEntity.notFound().build();
-		}
-
-		// Check for user input wait state and merge it into the plan record
-		// Since form input tools are now stored by root plan ID, check using the root
-		// plan ID
-		String rootPlanId = planRecord.getRootPlanId() != null ? planRecord.getRootPlanId() : planId;
-		UserInputWaitState waitState = userInputService.getWaitState(rootPlanId);
-		if (waitState != null && waitState.isWaiting()) {
-			// Set the planId in the wait state to the root plan ID for proper submission
-			// This ensures frontend submits to the correct plan ID where the form is
-			// stored
-			waitState.setPlanId(rootPlanId);
-			planRecord.setUserInputWaitState(waitState);
-			logger.info(
-					"Root plan {} is waiting for user input. Set waitState planId to rootPlanId for proper submission.",
-					rootPlanId);
-		}
-		else {
-			planRecord.setUserInputWaitState(null); // Clear if not waiting
-		}
-
-		// Set rootPlanId if it's null, using currentPlanId as default
-		if (planRecord.getRootPlanId() == null) {
-			planRecord.setRootPlanId(planRecord.getCurrentPlanId());
-			logger.info("Set rootPlanId to currentPlanId for plan: {}", planId);
-		}
-
-		// Extract the last tool call result when planRecord is not null and completed is
-		// true
-		if (planRecord != null && planRecord.isCompleted()) {
-			String lastToolCallResult = extractLastToolCallResult(planRecord);
-			if (lastToolCallResult != null) {
-				planRecord.setStructureResult(lastToolCallResult);
-				logger.info("Extracted last tool call result and set structureResult for completed plan: {}", planId);
-			}
 		}
 
 		try {
@@ -849,32 +814,7 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 		try {
 			logger.info("Getting task status for planId: {}", planId);
 
-			boolean isTaskRunning = taskInterruptionManager.isTaskRunning(planId);
-			Optional<RootTaskManagerEntity> taskEntity = rootTaskManagerService.getTaskByRootPlanId(planId);
-
-			Map<String, Object> response = new HashMap<>();
-			response.put("planId", planId);
-			response.put("isRunning", isTaskRunning);
-
-			if (taskEntity.isPresent()) {
-				RootTaskManagerEntity task = taskEntity.get();
-				response.put("desiredState", task.getDesiredTaskState());
-				response.put("startTime", task.getStartTime());
-				response.put("endTime", task.getEndTime());
-				response.put("lastUpdated", task.getLastUpdated());
-				response.put("taskResult", task.getTaskResult());
-				response.put("exists", true);
-			}
-			else {
-				response.put("exists", false);
-				response.put("desiredState", null);
-				response.put("startTime", null);
-				response.put("endTime", null);
-				response.put("lastUpdated", null);
-				response.put("taskResult", null);
-			}
-
-			return ResponseEntity.ok(response);
+			return ResponseEntity.ok(buildTaskStatus(planId));
 
 		}
 		catch (Exception e) {
@@ -882,6 +822,288 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 			return ResponseEntity.internalServerError()
 				.body(Map.of("error", "Failed to get task status: " + e.getMessage(), "planId", planId));
 		}
+	}
+
+	/**
+	 * Build execution view with wait-state and structure result enrichment.
+	 * @param planId The plan ID
+	 * @return The enriched plan record or null if not found
+	 */
+	private PlanExecutionRecord buildPlanExecutionView(String planId) {
+		Throwable throwable = this.exceptionCache.getIfPresent(planId);
+		if (throwable != null) {
+			logger.error("Exception found in exception cache for planId: {}", planId, throwable);
+			logger.error("Invalidating exception cache for planId: {}", planId);
+			this.exceptionCache.invalidate(planId);
+			throw new PlanException(throwable);
+		}
+
+		PlanExecutionRecord planRecord = planHierarchyReaderService.readPlanTreeByRootId(planId);
+		if (planRecord == null) {
+			return null;
+		}
+
+		// Check for user input wait state and merge it into the plan record
+		String rootPlanId = planRecord.getRootPlanId() != null ? planRecord.getRootPlanId() : planId;
+		UserInputWaitState waitState = userInputService.getWaitState(rootPlanId);
+		if (waitState != null && waitState.isWaiting()) {
+			waitState.setPlanId(rootPlanId);
+			planRecord.setUserInputWaitState(waitState);
+			logger.info(
+					"Root plan {} is waiting for user input. Set waitState planId to rootPlanId for proper submission.",
+					rootPlanId);
+		}
+		else {
+			planRecord.setUserInputWaitState(null);
+		}
+
+		// Set rootPlanId if it's null, using currentPlanId as default
+		if (planRecord.getRootPlanId() == null) {
+			planRecord.setRootPlanId(planRecord.getCurrentPlanId());
+			logger.info("Set rootPlanId to currentPlanId for plan: {}", planId);
+		}
+
+		// Enrich agentExecutionSequence with detailed think/act steps from repository
+		if (planRecord.getAgentExecutionSequence() != null && !planRecord.getAgentExecutionSequence().isEmpty()) {
+			List<AgentExecutionRecord> enrichedAgents = new java.util.ArrayList<>();
+			for (AgentExecutionRecord agent : planRecord.getAgentExecutionSequence()) {
+				if (agent == null || !StringUtils.hasText(agent.getStepId())) {
+					enrichedAgents.add(agent);
+					continue;
+				}
+				AgentExecutionRecord detailed = planExecutionRecorder.getAgentExecutionDetail(agent.getStepId());
+				enrichedAgents.add(detailed != null ? detailed : agent);
+			}
+			planRecord.setAgentExecutionSequence(enrichedAgents);
+
+			// Surface latest partial result even when not finished
+			String latest = extractLatestResult(enrichedAgents);
+			if (StringUtils.hasText(latest)) {
+				planRecord.setStructureResult(latest);
+			}
+		}
+		return planRecord;
+	}
+
+	/**
+	 * Build task status payload reused by status API and SSE stream.
+	 * @param planId Plan ID
+	 * @return status map
+	 */
+	private Map<String, Object> buildTaskStatus(String planId) {
+		boolean isTaskRunning = taskInterruptionManager.isTaskRunning(planId);
+		Optional<RootTaskManagerEntity> taskEntity = rootTaskManagerService.getTaskByRootPlanId(planId);
+
+		Map<String, Object> response = new HashMap<>();
+		response.put("planId", planId);
+		response.put("isRunning", isTaskRunning);
+
+		if (taskEntity.isPresent()) {
+			RootTaskManagerEntity task = taskEntity.get();
+			response.put("desiredState", task.getDesiredTaskState());
+			response.put("startTime", task.getStartTime());
+			response.put("endTime", task.getEndTime());
+			response.put("lastUpdated", task.getLastUpdated());
+		response.put("taskResult", task.getTaskResult());
+		response.put("exists", true);
+	}
+	else {
+			response.put("exists", false);
+			response.put("desiredState", null);
+			response.put("startTime", null);
+			response.put("endTime", null);
+			response.put("lastUpdated", null);
+			response.put("taskResult", null);
+		}
+		return response;
+	}
+
+	/**
+	 * Create a minimal runtime plan template and coordinator tool when a toolName is not
+	 * pre-registered. This removes the need for users to manage plan templates manually.
+	 * @param toolName tool name provided by user
+	 * @param serviceGroup optional service group
+	 * @return planTemplateId or null if creation fails
+	 */
+	private String ensureRuntimePlanTemplate(String toolName, String serviceGroup) {
+		try {
+			String planTemplateId = "runtime-" + toolName;
+
+			PlanTemplateConfigVO config = new PlanTemplateConfigVO();
+			config.setPlanTemplateId(planTemplateId);
+			config.setTitle(toolName);
+			config.setPlanType("dynamic_agent");
+			config.setServiceGroup(serviceGroup != null && !serviceGroup.isEmpty() ? serviceGroup : "ungrouped");
+			config.setDirectResponse(false);
+
+			PlanTemplateConfigVO.StepConfig step = new PlanTemplateConfigVO.StepConfig();
+			step.setAgentName("ConfigurableDynaAgent");
+			// Use DEFAULT_AGENT tag so it routes to ConfigurableDynaAgent executor
+			step.setStepRequirement("[DEFAULT_AGENT] 完成任务: <<input>>");
+			step.setModelName("");
+			step.setTerminateColumns("");
+			// 默认开放一组常用工具，若名称含 browser 则强调浏览器工具
+			List<String> defaultTools = new java.util.ArrayList<>(
+					List.of("extract_relevant_content", "file_merge_tool", "terminate"));
+			String lower = toolName.toLowerCase();
+			if (lower.contains("browser")) {
+				defaultTools.add(0, "browser_use");
+			}
+			step.setSelectedToolKeys(defaultTools);
+			config.setSteps(List.of(step));
+
+			PlanTemplateConfigVO.ToolConfigVO toolConfig = new PlanTemplateConfigVO.ToolConfigVO();
+			// toolConfig.setToolName(toolName);
+			toolConfig.setToolDescription(toolName);
+			toolConfig.setEnableInternalToolcall(true);
+			toolConfig.setEnableHttpService(true);
+			toolConfig.setEnableInConversation(false);
+			toolConfig.setPublishStatus("PUBLISHED");
+
+			PlanTemplateConfigVO.InputSchemaParam inputParam = new PlanTemplateConfigVO.InputSchemaParam();
+			inputParam.setName("input");
+			inputParam.setDescription("任务描述");
+			inputParam.setType("string");
+			inputParam.setRequired(true);
+			toolConfig.setInputSchema(List.of(inputParam));
+
+			config.setToolConfig(toolConfig);
+
+			planTemplateConfigService.createOrUpdateCoordinatorToolFromPlanTemplateConfig(config);
+			logger.info("Created runtime plan template {} for tool {}", planTemplateId, toolName);
+			return planTemplateId;
+		}
+		catch (Exception e) {
+			logger.error("Failed to create runtime plan template for tool {}: {}", toolName, e.getMessage(), e);
+			return null;
+		}
+	}
+
+	/**
+	 * Extract latest result from agent executions (prefers action result, then think
+	 * output, then agent result).
+	 */
+	private String extractLatestResult(List<AgentExecutionRecord> agents) {
+		if (agents == null || agents.isEmpty()) {
+			return null;
+		}
+		String latest = null;
+		for (AgentExecutionRecord agent : agents) {
+			if (agent == null) {
+				continue;
+			}
+			List<ThinkActRecord> steps = agent.getThinkActSteps();
+			if (steps != null && !steps.isEmpty()) {
+				for (int i = steps.size() - 1; i >= 0; i--) {
+					ThinkActRecord step = steps.get(i);
+					if (step == null) {
+						continue;
+					}
+					if (StringUtils.hasText(step.getActionResult())) {
+						return step.getActionResult();
+					}
+					if (StringUtils.hasText(step.getThinkOutput())) {
+						return step.getThinkOutput();
+					}
+				}
+			}
+			if (StringUtils.hasText(agent.getResult())) {
+				latest = agent.getResult();
+			}
+		}
+		return latest;
+	}
+
+	/**
+	 * Stream task status and execution details so the frontend can render live progress.
+	 * @param request Body containing planId
+	 * @return SSE emitter with periodic updates
+	 */
+	@PostMapping(value = "/taskStream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	public SseEmitter streamTask(@RequestBody Map<String, Object> request) {
+		String planId = request != null ? (String) request.get("planId") : null;
+		if (!StringUtils.hasText(planId)) {
+			SseEmitter errorEmitter = new SseEmitter(5000L);
+			try {
+				Map<String, Object> error = Map.of("type", "error", "message", "planId is required");
+				errorEmitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(error)));
+				errorEmitter.complete();
+			}
+			catch (Exception e) {
+				errorEmitter.completeWithError(e);
+			}
+			return errorEmitter;
+		}
+
+		SseEmitter emitter = new SseEmitter(300000L);
+		emitter.onTimeout(() -> {
+			logger.warn("taskStream timeout for planId {}", planId);
+			emitter.complete();
+		});
+		emitter.onError((ex) -> logger.error("taskStream error for planId {}", planId, ex));
+
+		CompletableFuture.runAsync(() -> {
+			try {
+				boolean finished = false;
+				boolean hasProgress = false;
+				int maxTicks = 300; // Align with 5 minute emitter timeout
+				for (int i = 0; i < maxTicks && !finished; i++) {
+					Map<String, Object> status = buildTaskStatus(planId);
+					PlanExecutionRecord detail = buildPlanExecutionView(planId);
+
+					boolean completed = detail != null && detail.isCompleted();
+					boolean running = Boolean.TRUE.equals(status.get("isRunning"));
+					boolean exists = Boolean.TRUE.equals(status.get("exists"));
+					boolean stopRequested = status.get("desiredState") != null
+							&& "STOP".equals(status.get("desiredState").toString());
+					hasProgress = hasProgress || detail != null || exists || running;
+
+					Map<String, Object> payload = new HashMap<>();
+					payload.put("type", completed ? "done" : "update");
+					payload.put("planId", planId);
+					payload.put("status", status);
+					payload.put("detail", detail);
+					payload.put("completed", completed);
+					payload.put("running", running);
+					emitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(payload)));
+
+					finished = completed || (hasProgress && !running && (!exists || stopRequested));
+					if (!finished) {
+						Thread.sleep(1000L);
+					}
+				}
+				emitter.complete();
+			}
+			catch (PlanException e) {
+				logger.error("Plan exception while streaming task {}", planId, e);
+				try {
+					Map<String, Object> error = new HashMap<>();
+					error.put("type", "error");
+					error.put("planId", planId);
+					error.put("message", e.getMessage());
+					emitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(error)));
+				}
+				catch (Exception ignored) {
+					// ignore send errors
+				}
+				emitter.completeWithError(e);
+			}
+			catch (Exception e) {
+				logger.error("Failed to stream task updates for planId: {}", planId, e);
+				try {
+					Map<String, Object> error = new HashMap<>();
+					error.put("type", "error");
+					error.put("planId", planId);
+					error.put("message", e.getMessage());
+					emitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(error)));
+				}
+				catch (Exception ignored) {
+					// ignore send errors
+				}
+				emitter.completeWithError(e);
+			}
+		});
+		return emitter;
 	}
 
 	/**

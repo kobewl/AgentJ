@@ -1,0 +1,49 @@
+{
+  "title": "Browser Research Plan",
+  "planTemplateId": "auto-browser-plan",
+  "planType": "dynamic_agent",
+  "directResponse": false,
+  "serviceGroup": "ungrouped",
+  "steps": [
+    {
+      "stepRequirement": "[BROWSER_AGENT] Use the browser to accomplish: <<task>>. If urls provided: <<urls>>, visit them first; goal/output style: <<goal>>. Collect info, summarize, and cite source URLs.",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": "",
+      "selectedToolKeys": [
+        "browser_use",
+        "extract_relevant_content",
+        "file_merge_tool",
+        "terminate"
+      ]
+    }
+  ],
+  "toolConfig": {
+    "toolName": "auto_browser_exec",
+    "toolDescription": "Automatically use browser tools to research or operate web pages",
+    "enableInternalToolcall": true,
+    "enableHttpService": true,
+    "enableInConversation": false,
+    "publishStatus": "PUBLISHED",
+    "inputSchema": [
+      {
+        "name": "task",
+        "description": "Task / question description",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "urls",
+        "description": "Optional URL list, comma separated",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "goal",
+        "description": "Expected output format or focus",
+        "type": "string",
+        "required": false
+      }
+    ]
+  }
+}

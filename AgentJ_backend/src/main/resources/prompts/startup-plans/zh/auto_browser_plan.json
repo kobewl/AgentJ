@@ -1,0 +1,49 @@
+{
+  "title": "浏览器调研计划",
+  "planTemplateId": "auto-browser-plan",
+  "planType": "dynamic_agent",
+  "directResponse": false,
+  "serviceGroup": "ungrouped",
+  "steps": [
+    {
+      "stepRequirement": "[BROWSER_AGENT] 使用浏览器完成任务: <<task>>。若提供 urls: <<urls>>，优先访问；目标/输出要求: <<goal>>。获取信息后总结并给出来源 URL。",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": "",
+      "selectedToolKeys": [
+        "browser_use",
+        "extract_relevant_content",
+        "file_merge_tool",
+        "terminate"
+      ]
+    }
+  ],
+  "toolConfig": {
+    "toolName": "auto_browser_exec",
+    "toolDescription": "自动使用浏览器工具完成网页调研或操作",
+    "enableInternalToolcall": true,
+    "enableHttpService": true,
+    "enableInConversation": false,
+    "publishStatus": "PUBLISHED",
+    "inputSchema": [
+      {
+        "name": "task",
+        "description": "任务/问题描述",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "urls",
+        "description": "可选 URL 列表，逗号分隔",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "goal",
+        "description": "期望的输出格式或重点",
+        "type": "string",
+        "required": false
+      }
+    ]
+  }
+}

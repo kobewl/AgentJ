@@ -1,0 +1,37 @@
+{
+  "title": "通用智能执行",
+  "planTemplateId": "auto-general-plan",
+  "planType": "dynamic_agent",
+  "directResponse": false,
+  "serviceGroup": "ungrouped",
+  "steps": [
+    {
+      "stepRequirement": "[GENERAL_AGENT] 完成任务: <<task>>。可用上下文: <<context>>。如需工具可自行选择，输出可执行结果/总结，并在完成时调用 terminate。",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": ""
+    }
+  ],
+  "toolConfig": {
+    "toolName": "auto_general_exec",
+    "toolDescription": "通用任务执行，Agent 自行选择合适的工具或直接回答",
+    "enableInternalToolcall": true,
+    "enableHttpService": true,
+    "enableInConversation": false,
+    "publishStatus": "PUBLISHED",
+    "inputSchema": [
+      {
+        "name": "task",
+        "description": "任务/问题描述",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "context",
+        "description": "可选的上下文/约束/输出格式",
+        "type": "string",
+        "required": false
+      }
+    ]
+  }
+}
