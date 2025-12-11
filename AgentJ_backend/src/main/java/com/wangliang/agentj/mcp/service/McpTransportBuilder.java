@@ -42,7 +42,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.client.transport.ServerParameters;
 import io.modelcontextprotocol.client.transport.StdioClientTransport;
 import io.modelcontextprotocol.client.transport.WebClientStreamableHttpTransport;
-import io.modelcontextprotocol.client.transport.WebFluxSseClientTransport;
 import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapper;
 import io.modelcontextprotocol.spec.McpClientTransport;
 import reactor.netty.http.client.HttpClient;
@@ -176,10 +175,10 @@ public class McpTransportBuilder {
 		JacksonMcpJsonMapper jsonMapper = new JacksonMcpJsonMapper(objectMapper);
 
 		if (sseEndpoint != null && !sseEndpoint.isEmpty()) {
-			return new WebFluxSseClientTransport(webClientBuilder, jsonMapper, sseEndpoint);
+			return new TolerantWebFluxSseClientTransport(webClientBuilder, jsonMapper, sseEndpoint);
 		}
 		else {
-			return new WebFluxSseClientTransport(webClientBuilder, jsonMapper);
+			return new TolerantWebFluxSseClientTransport(webClientBuilder, jsonMapper, "/sse");
 		}
 	}
 
