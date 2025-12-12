@@ -107,23 +107,29 @@ public class DatabaseSqlGenerator {
 	private static String generateMysqlTableInfoSql(boolean fuzzy, String fuzzyText) {
 		if (fuzzy) {
 			return "SELECT TABLE_NAME, TABLE_COMMENT FROM information_schema.TABLES "
-					+ "WHERE TABLE_COMMENT LIKE ? AND table_schema NOT IN ('sys','mysql','performance_schema','information_schema')";
+					+ "WHERE TABLE_COMMENT LIKE ? "
+					+ "AND table_schema NOT IN ('sys','mysql','performance_schema','information_schema') "
+					+ "AND table_schema = database()";
 		}
 		else {
 			return "SELECT TABLE_NAME, TABLE_COMMENT FROM information_schema.TABLES "
-					+ "WHERE table_schema NOT IN ('sys','mysql','performance_schema','information_schema')";
+					+ "WHERE table_schema NOT IN ('sys','mysql','performance_schema','information_schema') "
+					+ "AND table_schema = database()";
 		}
 	}
 
 	private static String generateMysqlColumnInfoSql(String inClause) {
 		return "SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, CHARACTER_MAXIMUM_LENGTH, COLUMN_COMMENT, "
-				+ "COLUMN_DEFAULT, IS_NULLABLE " + "FROM information_schema.COLUMNS WHERE TABLE_NAME IN (" + inClause
-				+ ") " + "ORDER BY TABLE_NAME, ORDINAL_POSITION";
+				+ "COLUMN_DEFAULT, IS_NULLABLE "
+				+ "FROM information_schema.COLUMNS WHERE TABLE_NAME IN (" + inClause + ") "
+				+ "AND TABLE_SCHEMA = database() "
+				+ "ORDER BY TABLE_NAME, ORDINAL_POSITION";
 	}
 
 	private static String generateMysqlIndexInfoSql(String inClause) {
 		return "SELECT TABLE_NAME, INDEX_NAME, COLUMN_NAME, INDEX_TYPE "
 				+ "FROM information_schema.STATISTICS WHERE TABLE_NAME IN (" + inClause + ") "
+				+ "AND TABLE_SCHEMA = database() "
 				+ "ORDER BY TABLE_NAME, INDEX_NAME, SEQ_IN_INDEX";
 	}
 

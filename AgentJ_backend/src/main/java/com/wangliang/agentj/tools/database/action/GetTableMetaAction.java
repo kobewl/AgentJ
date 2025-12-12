@@ -57,6 +57,8 @@ public class GetTableMetaAction extends AbstractDatabaseAction {
 
 		boolean fuzzy = text != null && !text.trim().isEmpty();
 		String tableSql = DatabaseSqlGenerator.generateTableInfoSql(databaseType, fuzzy, text);
+		log.info("GetTableMetaAction tableSql, datasource={}, sql={}",
+				(datasourceName != null ? datasourceName : "default"), tableSql);
 
 		try (Connection conn = datasourceName != null && !datasourceName.trim().isEmpty()
 				? dataSourceService.getConnection(datasourceName) : dataSourceService.getConnection();
@@ -109,6 +111,8 @@ public class GetTableMetaAction extends AbstractDatabaseAction {
 				inClause.append(",");
 		}
 		String columnSql = DatabaseSqlGenerator.generateColumnInfoSql(databaseType, inClause.toString());
+		log.info("GetTableMetaAction columnSql, datasource={}, sql={}, tables={}",
+				(datasourceName != null ? datasourceName : "default"), columnSql, tableMetaMap.keySet());
 		try (Connection conn = datasourceName != null && !datasourceName.trim().isEmpty()
 				? dataSourceService.getConnection(datasourceName) : dataSourceService.getConnection();
 				PreparedStatement ps = conn.prepareStatement(columnSql)) {
@@ -143,6 +147,8 @@ public class GetTableMetaAction extends AbstractDatabaseAction {
 		}
 		// 3. Get index information
 		String indexSql = DatabaseSqlGenerator.generateIndexInfoSql(databaseType, inClause.toString());
+		log.info("GetTableMetaAction indexSql, datasource={}, sql={}, tables={}",
+				(datasourceName != null ? datasourceName : "default"), indexSql, tableMetaMap.keySet());
 		try (Connection conn = datasourceName != null && !datasourceName.trim().isEmpty()
 				? dataSourceService.getConnection(datasourceName) : dataSourceService.getConnection();
 				PreparedStatement ps = conn.prepareStatement(indexSql)) {
@@ -197,10 +203,12 @@ public class GetTableMetaAction extends AbstractDatabaseAction {
 		tableMetaList.addAll(tableMetaMap.values());
 		// 4. Return structured object
 		try {
-			String json = objectMapper.writeValueAsString(tableMetaList);
+			String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(tableMetaList);
 			log.info("GetTableMetaAction completed successfully, datasourceName={}, found {} tables", datasourceName,
 					tableMetaList.size());
-			String resultContent = "Datasource: " + (datasourceName != null ? datasourceName : "default") + "\n" + json;
+			String resultContent = "Datasource: " + (datasourceName != null ? datasourceName : "default") + "\n"
+					+ "Tables: " + tableMetaList.size() + "\n"
+					+ "```json\n" + json + "\n```";
 			return new ToolExecuteResult(resultContent);
 		}
 		catch (JsonProcessingException e) {

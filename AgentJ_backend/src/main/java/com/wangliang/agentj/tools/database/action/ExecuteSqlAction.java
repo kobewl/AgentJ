@@ -83,17 +83,20 @@ public class ExecuteSqlAction extends AbstractDatabaseAction {
 				}
 			}
 
-			log.info("Executing prepared statement with {} parameters", parameters.size());
+			log.info("Executing prepared SQL, datasource={}, sql={}, params={}",
+					(datasourceName != null ? datasourceName : "default"), query, parameters);
 			boolean hasResultSet = pstmt.execute();
 
 			if (hasResultSet) {
 				try (ResultSet rs = pstmt.getResultSet()) {
-					results.add(formatResultSet(rs));
+					results.add(buildResultHeader(query, parameters, datasourceName)
+							+ formatResultSet(rs));
 				}
 			}
 			else {
 				int updateCount = pstmt.getUpdateCount();
-				results.add("Execution successful. Affected rows: " + updateCount);
+				results.add(buildResultHeader(query, parameters, datasourceName)
+						+ "Execution successful. Affected rows: " + updateCount);
 			}
 
 			log.info("ExecuteSqlAction (prepared) completed successfully, datasourceName={}", datasourceName);
@@ -123,15 +126,18 @@ public class ExecuteSqlAction extends AbstractDatabaseAction {
 				sql = sql.trim();
 				if (sql.isEmpty())
 					continue;
+				log.info("Executing SQL, datasource={}, sql={}", (datasourceName != null ? datasourceName : "default"),
+						sql);
 				boolean hasResultSet = stmt.execute(sql);
 				if (hasResultSet) {
 					try (ResultSet rs = stmt.getResultSet()) {
-						results.add(formatResultSet(rs));
+						results.add(buildResultHeader(sql, null, datasourceName) + formatResultSet(rs));
 					}
 				}
 				else {
 					int updateCount = stmt.getUpdateCount();
-					results.add("Execution successful. Affected rows: " + updateCount);
+					results.add(buildResultHeader(sql, null, datasourceName)
+							+ "Execution successful. Affected rows: " + updateCount);
 				}
 			}
 			log.info("ExecuteSqlAction (regular) completed successfully, datasourceName={}, statements={}",
@@ -216,6 +222,15 @@ public class ExecuteSqlAction extends AbstractDatabaseAction {
 		}
 		// Replace pipe characters and newlines to prevent markdown table breakage
 		return cell.replace("|", "\\|").replace("\n", "\\n").replace("\r", "\\r");
+	}
+
+	private String buildResultHeader(String sql, List<Object> parameters, String datasourceName) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("SQL: ").append(sql.trim()).append("\n");
+		if (parameters != null && !parameters.isEmpty()) {
+			sb.append("Parameters: ").append(parameters).append("\n");
+		}
+		return sb.toString();
 	}
 
 	/**

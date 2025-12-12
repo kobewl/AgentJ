@@ -53,6 +53,7 @@ import org.springframework.ai.tool.ToolCallback;
 import reactor.core.publisher.Flux;
 
 import java.util.*;
+import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -593,6 +594,9 @@ public class DynamicAgent extends ReActAgent {
 
 		try {
 			List<ToolCall> toolCalls = streamResult.getEffectiveToolCalls();
+			// Sanitize toolcall arguments to avoid malformed JSON (common LLM mistakes such
+			// as missing closing quotes).
+			sanitizeToolCalls(toolCalls);
 
 			// Route to appropriate handler based on tool count
 			if (toolCalls == null || toolCalls.isEmpty()) {
@@ -738,6 +742,39 @@ public class DynamicAgent extends ReActAgent {
 			return new AgentExecResult(result, shouldTerminate ? AgentState.COMPLETED : AgentState.IN_PROGRESS);
 		}
 		catch (Exception e) {
+			// Attempt a fallback if the error is JSON conversion (common when the LLM
+			// returns malformed tool arguments).
+			if (toolCall != null && e.getMessage() != null
+					&& e.getMessage().contains("Conversion from JSON")) {
+				try {
+					PlanningFactory.ToolCallBackContext ctx = getToolCallBackContext(toolCall.name());
+					if (ctx != null) {
+						String sanitized = sanitizeToolArguments(toolCall.arguments());
+						Object inputObj = objectMapper.readValue(sanitized, ctx.getFunctionInstance().getInputType());
+						ToolExecuteResult fallbackResult = ctx.getFunctionInstance().apply(inputObj,
+								new ToolContext(new HashMap<>()));
+						String result = fallbackResult != null ? fallbackResult.getOutput() : "Fallback executed";
+						PlanExecutionRecorder.ActToolParam param = actToolInfoList.isEmpty() ? null
+								: actToolInfoList.get(0);
+						if (param != null) {
+							param.setResult(result);
+						}
+						log.warn("Fallback executed for malformed tool args, tool={}, sanitizedArgs={}", toolCall.name(),
+								sanitized);
+						boolean shouldTerminate = false;
+						if (ctx.getFunctionInstance() instanceof TerminableTool terminableTool) {
+							shouldTerminate = terminableTool.canTerminate();
+						}
+						// Record fallback action result
+						recordActionResult(actToolInfoList);
+						return new AgentExecResult(result, shouldTerminate ? AgentState.COMPLETED : AgentState.IN_PROGRESS);
+					}
+				}
+				catch (Exception fallbackEx) {
+					log.error("Fallback execution failed: {}", fallbackEx.getMessage(), fallbackEx);
+				}
+			}
+
 			log.error("Error executing single tool: {}", e.getMessage(), e);
 			processMemory(toolExecutionResult); // Process memory even on error
 			// For other errors, wrap exception with SystemErrorReportTool
@@ -1557,6 +1594,66 @@ public class DynamicAgent extends ReActAgent {
 		else if (formInputTool.getInputState() == FormInputTool.InputState.INPUT_TIMEOUT) {
 			log.warn("User input timed out for planId: {}", getCurrentPlanId());
 		}
+	}
+
+	/**
+	 * Fix common malformed JSON arguments from LLM tool calls (e.g., missing closing
+	 * quotes) by patching the in-memory ToolCall instance so downstream parsing
+	 * succeeds.
+	 */
+	private void sanitizeToolCalls(List<ToolCall> toolCalls) {
+		if (toolCalls == null || toolCalls.isEmpty()) {
+			return;
+		}
+		for (ToolCall toolCall : toolCalls) {
+			try {
+				String rawArgs = toolCall.arguments();
+				String fixedArgs = sanitizeToolArguments(rawArgs);
+				if (rawArgs != null && fixedArgs != null && !rawArgs.equals(fixedArgs)) {
+					try {
+						Field argumentsField = toolCall.getClass().getDeclaredField("arguments");
+						argumentsField.setAccessible(true);
+						argumentsField.set(toolCall, fixedArgs);
+						log.warn("Sanitized toolCall arguments for {}: {} -> {}", toolCall.name(), rawArgs, fixedArgs);
+					}
+					catch (Exception reflectEx) {
+						log.warn("Failed to patch toolCall arguments via reflection for {}: {}", toolCall.name(),
+								reflectEx.getMessage());
+					}
+				}
+			}
+			catch (Exception e) {
+				log.warn("sanitizeToolCalls failed: {}", e.getMessage());
+			}
+		}
+	}
+
+	/**
+	 * Simple heuristic to close unbalanced quotes/braces in tool arguments.
+	 */
+	private String sanitizeToolArguments(String raw) {
+		if (raw == null) {
+			return null;
+		}
+		String fixed = raw.trim();
+		boolean changed = false;
+		if (!fixed.endsWith("}")) {
+			fixed = fixed + "}";
+			changed = true;
+		}
+		long quoteCount = fixed.chars().filter(ch -> ch == '"').count();
+		if (quoteCount % 2 != 0) {
+			int lastBrace = fixed.lastIndexOf('}');
+			if (lastBrace < 0) {
+				lastBrace = fixed.length();
+				fixed = fixed + "\"";
+			}
+			else {
+				fixed = fixed.substring(0, lastBrace) + "\"" + fixed.substring(lastBrace);
+			}
+			changed = true;
+		}
+		return changed ? fixed : raw;
 	}
 
 }

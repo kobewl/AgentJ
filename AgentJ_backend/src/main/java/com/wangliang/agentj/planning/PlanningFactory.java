@@ -346,15 +346,32 @@ public class PlanningFactory {
 		// Add subplan tool registration
 		if (subplanToolService != null) {
 			try {
+				// Track existing base tool names to avoid exposing duplicate variants (e.g.
+				// database_read_use__2 and database_read_use__5) that confuse the LLM and
+				// shadow real tools.
+				java.util.Set<String> existingBaseNames = new java.util.HashSet<>();
+				for (String existingKey : toolCallbackMap.keySet()) {
+					existingBaseNames.add(extractBaseToolName(existingKey));
+				}
+
 				Map<String, ToolCallBackContext> subplanToolCallbacks = subplanToolService
 					.createSubplanToolCallbacks(planId, rootPlanId, expectedReturnInfo, serviceGroupIndexService);
 				// Do not overwrite existing tool callbacks (e.g., built-in tools like database_read_use).
 				// If a subplan tool name conflicts, keep the original tool callback to avoid breaking real tool calls.
 				for (Map.Entry<String, ToolCallBackContext> entry : subplanToolCallbacks.entrySet()) {
+					String baseName = extractBaseToolName(entry.getKey());
+					if (existingBaseNames.contains(baseName)) {
+						log.warn("Skip registering subplan tool '{}' because base name '{}' already exists in registry",
+								entry.getKey(), baseName);
+						continue;
+					}
 					ToolCallBackContext existing = toolCallbackMap.putIfAbsent(entry.getKey(), entry.getValue());
 					if (existing != null) {
 						log.warn("Skip registering subplan tool '{}' due to key conflict (existing tool kept)",
 								entry.getKey());
+					}
+					else {
+						existingBaseNames.add(baseName);
 					}
 				}
 				log.info("Registered {} subplan tools", subplanToolCallbacks.size());
@@ -396,6 +413,14 @@ public class PlanningFactory {
 	@ConditionalOnProperty(name = "spring.ai.mcp.client.enabled", havingValue = "false")
 	public ToolCallbackProvider emptyToolCallbackProvider() {
 		return () -> new HashMap<String, ToolCallBackContext>();
+	}
+
+	private String extractBaseToolName(String qualifiedKey) {
+		if (qualifiedKey == null) {
+			return null;
+		}
+		int idx = qualifiedKey.indexOf("__");
+		return idx > 0 ? qualifiedKey.substring(0, idx) : qualifiedKey;
 	}
 
 }
