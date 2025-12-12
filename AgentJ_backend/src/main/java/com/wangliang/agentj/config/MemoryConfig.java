@@ -36,7 +36,7 @@ public class MemoryConfig {
 
 	// import memory auto configuration
 	// lynxe only support memory for mysql and postgresql now
-	@Value("${spring.ai.memory.mysql.enabled:false}")
+	@Value("${spring.ai.memory.mysql.enabled}")
 	private boolean mysqlEnabled;
 
 	@Value("${spring.ai.memory.postgres.enabled:false}")

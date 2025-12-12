@@ -70,15 +70,26 @@ public class McpTransportBuilder {
 	private final ConnectionProvider connectionProvider;
 
 	/**
-	 * Shared HttpClient instance for all MCP transports to reduce resource consumption
-	 * and prevent HttpClientImpl$SelectorManager thread accumulation
+	 * Shared HttpClient instance for regular HTTP requests (POST messages)
+	 * with standard timeouts
 	 */
 	private final HttpClient sharedHttpClient;
 
 	/**
-	 * Shared ReactorClientHttpConnector using the shared HttpClient
+	 * Shared ReactorClientHttpConnector for regular HTTP requests
 	 */
 	private final ReactorClientHttpConnector sharedConnector;
+
+	/**
+	 * Dedicated HttpClient for SSE long connections
+	 * NO read timeout - SSE streams need to stay open indefinitely
+	 */
+	private final HttpClient sseHttpClient;
+
+	/**
+	 * Dedicated ReactorClientHttpConnector for SSE connections
+	 */
+	private final ReactorClientHttpConnector sseConnector;
 
 	public McpTransportBuilder(McpConfigValidator configValidator, McpProperties mcpProperties,
 							   ObjectMapper objectMapper) {
@@ -89,25 +100,39 @@ public class McpTransportBuilder {
 		// Create shared connection provider for MCP transports
 		this.connectionProvider = ConnectionProvider.builder("mcp-shared-pool")
 				.maxConnections(200) // Increased for multiple MCP servers
-				.maxIdleTime(Duration.ofMinutes(5))
-				.maxLifeTime(Duration.ofMinutes(10))
-				.pendingAcquireTimeout(Duration.ofSeconds(30))
+				.maxIdleTime(Duration.ofMinutes(10))
+				.maxLifeTime(Duration.ofMinutes(30))
+				.pendingAcquireTimeout(Duration.ofSeconds(60))
 				.evictInBackground(Duration.ofSeconds(120))
 				.build();
 
-		// Create shared HttpClient instance with optimized configuration
+		// Create shared HttpClient for regular HTTP requests (POST /message)
 		this.sharedHttpClient = HttpClient.create(connectionProvider)
 				.resolver(DefaultAddressResolverGroup.INSTANCE)
-				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30000) // 30 seconds
-				.doOnConnected(conn -> conn.addHandlerLast(new ReadTimeoutHandler(30, TimeUnit.SECONDS))
-						.addHandlerLast(new WriteTimeoutHandler(30, TimeUnit.SECONDS)))
+				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30000)
+				.doOnConnected(conn -> conn.addHandlerLast(new ReadTimeoutHandler(60, TimeUnit.SECONDS))
+						.addHandlerLast(new WriteTimeoutHandler(60, TimeUnit.SECONDS)))
 				.option(ChannelOption.SO_KEEPALIVE, true)
 				.option(ChannelOption.TCP_NODELAY, true);
 
-		// Create shared connector
+		// Create shared connector for regular HTTP
 		this.sharedConnector = new ReactorClientHttpConnector(sharedHttpClient);
 
-		logger.info("Initialized shared HttpClient for MCP transports with connection pool size: 200");
+		// Create dedicated HttpClient for SSE long connections
+		// NO read timeout - SSE is a long-lived connection that may not receive data for extended periods
+		this.sseHttpClient = HttpClient.create(connectionProvider)
+				.resolver(DefaultAddressResolverGroup.INSTANCE)
+				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30000)
+				// NO ReadTimeoutHandler for SSE - it's a long-lived stream
+				.doOnConnected(conn -> conn.addHandlerLast(new WriteTimeoutHandler(60, TimeUnit.SECONDS)))
+				.option(ChannelOption.SO_KEEPALIVE, true)
+				.option(ChannelOption.TCP_NODELAY, true)
+				.responseTimeout(Duration.ofMinutes(30)); // Allow SSE to stay open for 30 minutes
+
+		// Create dedicated connector for SSE
+		this.sseConnector = new ReactorClientHttpConnector(sseHttpClient);
+
+		logger.info("Initialized shared HttpClient for MCP transports - regular: 60s timeout, SSE: no read timeout");
 	}
 
 	/**
@@ -170,7 +195,8 @@ public class McpTransportBuilder {
 		logger.info("Building SSE transport for server: {} with baseUrl: {}, endpoint: {}", serverName, baseUrl,
 				sseEndpoint);
 
-		WebClient.Builder webClientBuilder = createWebClientBuilder(baseUrl, serverConfig);
+		// Use SSE-specific WebClient builder with no read timeout
+		WebClient.Builder webClientBuilder = createSseWebClientBuilder(baseUrl, serverConfig);
 
 		JacksonMcpJsonMapper jsonMapper = new JacksonMcpJsonMapper(objectMapper);
 
@@ -282,6 +308,36 @@ public class McpTransportBuilder {
 	}
 
 	/**
+	 * Create WebClient builder for SSE long connections (no read timeout)
+	 * @param baseUrl Base URL
+	 * @param serverConfig Server configuration (may contain custom headers)
+	 * @return WebClient builder configured for SSE
+	 */
+	private WebClient.Builder createSseWebClientBuilder(String baseUrl, McpServerConfig serverConfig) {
+		WebClient.Builder builder = WebClient.builder()
+				.clientConnector(sseConnector) // Use dedicated SSE connector with no read timeout
+				.baseUrl(baseUrl)
+				.defaultHeader("Accept", "text/event-stream")
+				.defaultHeader("Content-Type", "application/json")
+				.defaultHeader("User-Agent", mcpProperties.getUserAgent())
+				.codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 1024 * 10));
+				// NO timeout filter for SSE - it's a long-lived connection
+
+		// Apply custom headers from server configuration
+		if (serverConfig != null && serverConfig.getHeaders() != null && !serverConfig.getHeaders().isEmpty()) {
+			Map<String, String> headers = serverConfig.getHeaders();
+			for (Map.Entry<String, String> header : headers.entrySet()) {
+				builder.defaultHeader(header.getKey(), header.getValue());
+				logger.debug("Added custom header for SSE: {} = {}", header.getKey(),
+						header.getKey().toLowerCase().contains("auth") ? "***" : header.getValue());
+			}
+			logger.info("Applied {} custom headers for SSE connection", headers.size());
+		}
+
+		return builder;
+	}
+
+	/**
 	 * Create WebClient builder (with baseUrl) using shared HttpClient instance
 	 * @param baseUrl Base URL
 	 * @param serverConfig Server configuration (may contain custom headers)
@@ -295,9 +351,9 @@ public class McpTransportBuilder {
 				.defaultHeader("Content-Type", "application/json")
 				.defaultHeader("User-Agent", mcpProperties.getUserAgent())
 				.codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 1024 * 10))
-				// Add timeout to prevent hanging connections
+				// Add timeout for regular HTTP requests (not SSE)
 				.filter((request,
-						 next) -> next.exchange(request).timeout(java.time.Duration.ofSeconds(30)).onErrorMap(ex -> {
+						 next) -> next.exchange(request).timeout(java.time.Duration.ofSeconds(60)).onErrorMap(ex -> {
 					if (ex.getMessage() != null && ex.getMessage().contains("Failed to resolve")) {
 						return new IOException("DNS resolution failed for URL: " + baseUrl + ". "
 								+ "Please verify the hostname is correct and accessible.", ex);
