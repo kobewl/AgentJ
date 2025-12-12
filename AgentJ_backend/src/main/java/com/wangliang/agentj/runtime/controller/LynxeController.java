@@ -939,13 +939,47 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 			PlanTemplateConfigVO.StepConfig step = new PlanTemplateConfigVO.StepConfig();
 			step.setAgentName("ConfigurableDynaAgent");
 			// Use DEFAULT_AGENT tag so it routes to ConfigurableDynaAgent executor
-			step.setStepRequirement("[DEFAULT_AGENT] 完成任务: <<input>>");
+			String lower = toolName.toLowerCase();
+			if (lower.startsWith("ai_database_read_agent")) {
+				step.setStepRequirement(
+						"[DEFAULT_AGENT] 你是数据库助手。请使用工具 database_read_use / database_metadata_use 完成任务: <<input>>\n"
+								+ "要求：优先使用 datasourceName（如用户提供）。需要查表时优先 database_read_use(action=get_table_name) 或查询 information_schema。\n"
+								+ "完成后调用 terminate 返回结果。");
+			}
+			else if (lower.startsWith("ai_database_write_agent")) {
+				step.setStepRequirement(
+						"[DEFAULT_AGENT] 你是数据库助手。请使用工具 database_write_use / database_read_use / database_metadata_use 完成任务: <<input>>\n"
+								+ "要求：写入前先用 database_read_use 做必要验证；执行写入使用 database_write_use(action=execute_write_sql)。\n"
+								+ "完成后调用 terminate 返回结果。");
+			}
+			else if (lower.startsWith("ai_database_meta_agent")) {
+				step.setStepRequirement(
+						"[DEFAULT_AGENT] 你是数据库助手。请使用工具 database_metadata_use / database_read_use 完成任务: <<input>>\n"
+								+ "要求：优先使用 datasourceName（如用户提供）。\n"
+								+ "完成后调用 terminate 返回结果。");
+			}
+			else {
+				step.setStepRequirement("[DEFAULT_AGENT] 使用可用工具完成任务: <<input>>");
+			}
 			step.setModelName("");
 			step.setTerminateColumns("");
-			// 默认开放一组常用工具，若名称含 browser 则强调浏览器工具
-			List<String> defaultTools = new java.util.ArrayList<>(
-					List.of("extract_relevant_content", "file_merge_tool", "terminate"));
-			String lower = toolName.toLowerCase();
+
+			// 默认开放最小工具集，避免引用不存在的工具
+			List<String> defaultTools = new java.util.ArrayList<>(List.of("terminate"));
+			// AI 数据库页面使用独立协调器 toolName，真正要开放的是 database_* 工具
+			if (lower.startsWith("ai_database_read_agent")) {
+				defaultTools.add(0, "database_metadata_use");
+				defaultTools.add(0, "database_read_use");
+			}
+			else if (lower.startsWith("ai_database_write_agent")) {
+				defaultTools.add(0, "database_metadata_use");
+				defaultTools.add(0, "database_read_use");
+				defaultTools.add(0, "database_write_use");
+			}
+			else if (lower.startsWith("ai_database_meta_agent")) {
+				defaultTools.add(0, "database_read_use");
+				defaultTools.add(0, "database_metadata_use");
+			}
 			if (lower.contains("browser")) {
 				defaultTools.add(0, "browser_use");
 			}

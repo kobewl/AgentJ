@@ -203,10 +203,10 @@ public class DatasourceConfigController {
 			Map<String, Object> response = new java.util.HashMap<>();
 			response.put("success", success);
 			if (success) {
-				response.put("message", "Connection test successful");
+				response.put("message", "连接测试成功");
 			}
 			else {
-				response.put("message", "Connection test failed");
+				response.put("message", "连接测试失败");
 			}
 			return ResponseEntity.ok(response);
 		}
@@ -214,7 +214,7 @@ public class DatasourceConfigController {
 			logger.error("Error testing database connection", e);
 			Map<String, Object> response = new java.util.HashMap<>();
 			response.put("success", false);
-			response.put("message", "Connection test failed: " + e.getMessage());
+			response.put("message", "连接测试失败: " + e.getMessage());
 			return ResponseEntity.ok(response);
 		}
 	}

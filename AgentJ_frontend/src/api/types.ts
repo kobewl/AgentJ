@@ -38,13 +38,15 @@ export interface CronConfig {
 export interface DatasourceConfig {
   id?: number;
   name: string;
+  type: string;
   url: string;
   username?: string;
   password?: string;
-  driverClassName?: string;
-  enabled?: boolean;
-  createTime?: string;
-  updateTime?: string;
+  driver_class_name?: string;
+  enable?: boolean;
+  password_set?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface StepConfig {
@@ -117,4 +119,3 @@ export interface MemoryResponse<T = unknown> {
   message?: string;
   data?: T;
 }
-

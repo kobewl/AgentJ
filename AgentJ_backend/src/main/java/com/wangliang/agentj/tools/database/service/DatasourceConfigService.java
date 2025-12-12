@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -38,6 +39,14 @@ import java.util.stream.Collectors;
 public class DatasourceConfigService {
 
 	private static final Logger logger = LoggerFactory.getLogger(DatasourceConfigService.class);
+
+	private static final Map<String, String> DEFAULT_DRIVER_BY_TYPE = Map.of(
+			"mysql", "com.mysql.cj.jdbc.Driver",
+			"mariadb", "org.mariadb.jdbc.Driver",
+			"postgresql", "org.postgresql.Driver",
+			"oracle", "oracle.jdbc.OracleDriver",
+			"sqlserver", "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+			"h2", "org.h2.Driver");
 
 	private final DatasourceConfigRepository repository;
 
@@ -130,6 +139,12 @@ public class DatasourceConfigService {
 					"Datasource configuration with name '" + vo.getName() + "' already exists");
 		}
 
+		applyDefaultDriverIfMissing(vo);
+		if (vo.getDriverClassName() == null || vo.getDriverClassName().trim().isEmpty()) {
+			throw new IllegalArgumentException(
+					"Driver class name is required (cannot infer from type '" + vo.getType() + "')");
+		}
+
 		DatasourceConfigEntity entity = mapToEntity(vo);
 		entity.setCreatedAt(LocalDateTime.now());
 		entity.setUpdatedAt(LocalDateTime.now());
@@ -165,7 +180,16 @@ public class DatasourceConfigService {
 		entity.setType(vo.getType());
 		entity.setEnable(vo.getEnable());
 		entity.setUrl(vo.getUrl());
-		entity.setDriverClassName(vo.getDriverClassName());
+
+		String driverClassName = vo.getDriverClassName();
+		if (driverClassName == null || driverClassName.trim().isEmpty()) {
+			driverClassName = inferDriverClassName(vo.getType());
+		}
+		if (driverClassName == null || driverClassName.trim().isEmpty()) {
+			driverClassName = entity.getDriverClassName();
+		}
+		entity.setDriverClassName(driverClassName);
+
 		entity.setUsername(vo.getUsername());
 		// Only update password if a new value is provided (including empty string)
 		// If password is null, keep the existing password
@@ -232,8 +256,15 @@ public class DatasourceConfigService {
 			logger.warn("DataSourceService not available for connection testing");
 			return false;
 		}
-		return dataSourceService.testConnection(vo.getUrl(), vo.getUsername(), vo.getPassword(),
-				vo.getDriverClassName());
+		String driverClassName = vo.getDriverClassName();
+		if (driverClassName == null || driverClassName.trim().isEmpty()) {
+			driverClassName = inferDriverClassName(vo.getType());
+		}
+		if (driverClassName == null || driverClassName.trim().isEmpty()) {
+			logger.warn("Cannot test connection: missing driver class name for type '{}'", vo.getType());
+			return false;
+		}
+		return dataSourceService.testConnection(vo.getUrl(), vo.getUsername(), vo.getPassword(), driverClassName);
 	}
 
 	/**
@@ -248,6 +279,26 @@ public class DatasourceConfigService {
 			entity.setPassword("");
 		}
 		return entity;
+	}
+
+	private static String inferDriverClassName(String type) {
+		if (type == null) {
+			return null;
+		}
+		return DEFAULT_DRIVER_BY_TYPE.get(type.trim().toLowerCase());
+	}
+
+	private static void applyDefaultDriverIfMissing(DatasourceConfigVO vo) {
+		if (vo == null) {
+			return;
+		}
+		String driverClassName = vo.getDriverClassName();
+		if (driverClassName == null || driverClassName.trim().isEmpty()) {
+			String inferred = inferDriverClassName(vo.getType());
+			if (inferred != null) {
+				vo.setDriverClassName(inferred);
+			}
+		}
 	}
 
 }

@@ -7,20 +7,20 @@
       </div>
       <el-tabs v-model="activeTab">
         <el-tab-pane label="登录" name="login">
-          <el-form :model="form" :rules="rules" ref="formRef" label-position="top">
+          <el-form :model="form" :rules="rules" ref="formRef" label-position="top" @submit.prevent="handleLogin">
             <el-form-item label="用户名或邮箱" prop="username">
               <el-input v-model="form.username" placeholder="请输入用户名或邮箱" />
             </el-form-item>
             <el-form-item label="密码" prop="password">
               <el-input v-model="form.password" type="password" show-password placeholder="请输入密码" />
             </el-form-item>
-            <el-button type="primary" :loading="loading" style="width: 100%" @click="handleLogin">
+            <el-button type="primary" :loading="loading" style="width: 100%" native-type="submit" @click="handleLogin">
               登录
             </el-button>
           </el-form>
         </el-tab-pane>
         <el-tab-pane label="注册" name="register">
-          <el-form :model="registerForm" :rules="registerRules" ref="registerFormRef" label-position="top">
+          <el-form :model="registerForm" :rules="registerRules" ref="registerFormRef" label-position="top" @submit.prevent="handleRegister">
             <el-form-item label="用户名" prop="username">
               <el-input v-model="registerForm.username" placeholder="请输入用户名" />
             </el-form-item>
@@ -36,7 +36,7 @@
             <el-form-item label="确认密码" prop="confirmPassword">
               <el-input v-model="registerForm.confirmPassword" type="password" show-password placeholder="请再次输入密码" />
             </el-form-item>
-            <el-button type="primary" :loading="registerLoading" style="width: 100%" @click="handleRegister">
+            <el-button type="primary" :loading="registerLoading" style="width: 100%" native-type="submit" @click="handleRegister">
               注册并登录
             </el-button>
           </el-form>

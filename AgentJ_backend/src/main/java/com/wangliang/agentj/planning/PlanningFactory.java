@@ -348,7 +348,15 @@ public class PlanningFactory {
 			try {
 				Map<String, ToolCallBackContext> subplanToolCallbacks = subplanToolService
 					.createSubplanToolCallbacks(planId, rootPlanId, expectedReturnInfo, serviceGroupIndexService);
-				toolCallbackMap.putAll(subplanToolCallbacks);
+				// Do not overwrite existing tool callbacks (e.g., built-in tools like database_read_use).
+				// If a subplan tool name conflicts, keep the original tool callback to avoid breaking real tool calls.
+				for (Map.Entry<String, ToolCallBackContext> entry : subplanToolCallbacks.entrySet()) {
+					ToolCallBackContext existing = toolCallbackMap.putIfAbsent(entry.getKey(), entry.getValue());
+					if (existing != null) {
+						log.warn("Skip registering subplan tool '{}' due to key conflict (existing tool kept)",
+								entry.getKey());
+					}
+				}
 				log.info("Registered {} subplan tools", subplanToolCallbacks.size());
 			}
 			catch (Exception e) {

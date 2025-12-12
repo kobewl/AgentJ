@@ -15,9 +15,9 @@
         <el-table-column prop="name" label="名称" width="160" />
         <el-table-column prop="url" label="URL" min-width="220" />
         <el-table-column prop="username" label="用户名" width="140" />
-        <el-table-column prop="enabled" label="启用" width="100">
+        <el-table-column prop="enable" label="启用" width="100">
           <template #default="scope">
-            <el-tag :type="scope.row.enabled ? 'success' : 'info'">{{ scope.row.enabled ? '是' : '否' }}</el-tag>
+            <el-tag :type="scope.row.enable ? 'success' : 'info'">{{ scope.row.enable ? '是' : '否' }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200">
@@ -38,8 +38,19 @@
         <el-form-item label="名称" required>
           <el-input v-model="form.name" />
         </el-form-item>
+        <el-form-item label="数据库类型" required>
+          <el-select v-model="form.type" placeholder="请选择数据库类型" style="width: 100%">
+            <el-option v-for="opt in dbOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="IP/主机" required>
+          <el-input v-model="form.host" placeholder="请输入数据库IP或主机名" />
+        </el-form-item>
+        <el-form-item label="数据库名称">
+          <el-input v-model="form.database" placeholder="可选，留空则连接到实例" />
+        </el-form-item>
         <el-form-item label="URL" required>
-          <el-input v-model="form.url" />
+          <el-input v-model="form.url" disabled />
         </el-form-item>
         <el-form-item label="用户名">
           <el-input v-model="form.username" />
@@ -48,10 +59,10 @@
           <el-input v-model="form.password" type="password" show-password />
         </el-form-item>
         <el-form-item label="Driver">
-          <el-input v-model="form.driverClassName" />
+          <el-input v-model="form.driver_class_name" disabled />
         </el-form-item>
         <el-form-item label="启用">
-          <el-switch v-model="form.enabled" />
+          <el-switch v-model="form.enable" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="save">保存</el-button>
@@ -63,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue';
+import { reactive, ref, onMounted, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import {
   createDatasourceConfig,
@@ -77,7 +88,108 @@ import type { DatasourceConfig } from '@/api/types';
 const items = ref<DatasourceConfig[]>([]);
 const loading = ref(false);
 const drawer = ref(false);
-const form = reactive<DatasourceConfig>({ name: '', url: '', username: '', password: '', enabled: true });
+
+type DatasourceForm = DatasourceConfig & {
+  host: string;
+  database: string;
+};
+
+const driverMap: Record<string, string> = {
+  mysql: 'com.mysql.cj.jdbc.Driver',
+  mariadb: 'org.mariadb.jdbc.Driver',
+  postgresql: 'org.postgresql.Driver',
+  oracle: 'oracle.jdbc.OracleDriver',
+  sqlserver: 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
+  h2: 'org.h2.Driver',
+};
+
+const urlDefaults: Record<string, { prefix: string; port: number }> = {
+  mysql: { prefix: 'jdbc:mysql://', port: 3306 },
+  mariadb: { prefix: 'jdbc:mariadb://', port: 3306 },
+  postgresql: { prefix: 'jdbc:postgresql://', port: 5432 },
+  sqlserver: { prefix: 'jdbc:sqlserver://', port: 1433 },
+  oracle: { prefix: 'jdbc:oracle:thin:@//', port: 1521 },
+};
+
+const dbOptions = [
+  { value: 'mysql', label: 'MySQL' },
+  { value: 'mariadb', label: 'MariaDB' },
+  { value: 'postgresql', label: 'PostgreSQL' },
+  { value: 'oracle', label: 'Oracle' },
+  { value: 'sqlserver', label: 'SQL Server' },
+  { value: 'h2', label: 'H2' },
+];
+
+const form = reactive<DatasourceForm>({
+  name: '',
+  type: 'mysql',
+  host: '',
+  database: '',
+  url: '',
+  username: '',
+  password: '',
+  driver_class_name: '',
+  enable: true,
+});
+
+const applyDriverFromType = () => {
+  const t = (form.type || '').toLowerCase();
+  const driver = driverMap[t];
+  if (driver) {
+    form.driver_class_name = driver;
+  }
+};
+
+const buildUrlFromParts = (type?: string, host?: string, database?: string) => {
+  const t = (type || '').toLowerCase();
+  const db = (database || '').trim();
+  if (t === 'h2') {
+    return db ? `jdbc:h2:mem:${db}` : 'jdbc:h2:mem:test';
+  }
+  const base = urlDefaults[t];
+  const h = (host || '').trim();
+  if (!base || !h) {
+    return '';
+  }
+  if (t === 'sqlserver') {
+    return `${base.prefix}${h}:${base.port}${db ? `;databaseName=${db}` : ''}`;
+  }
+  return `${base.prefix}${h}:${base.port}${db ? `/${db}` : ''}`;
+};
+
+const applyUrlFromHostAndDb = () => {
+  const computed = buildUrlFromParts(form.type, form.host, form.database);
+  if (computed) {
+    form.url = computed;
+  } else if (!form.id) {
+    form.url = '';
+  }
+};
+
+const parseHostAndDatabase = (url?: string, type?: string) => {
+  const t = (type || '').toLowerCase();
+  if (!url) return { host: '', database: '' };
+  if (t === 'h2') {
+    const m = url.match(/^jdbc:h2:mem:([^;]+)$/i);
+    return { host: '', database: m?.[1] || '' };
+  }
+  if (t === 'sqlserver') {
+    const m = url.match(/^jdbc:sqlserver:\/\/([^:;\/]+)(?::\d+)?(?:;.*databaseName=([^;]+))?/i);
+    return { host: m?.[1] || '', database: m?.[2] || '' };
+  }
+  const m = url.match(/^jdbc:[a-z0-9]+:\/\/([^:/;]+)(?::\d+)?(?:\/([^?;]+))?/i);
+  if (m) return { host: m[1], database: m[2] || '' };
+  return { host: '', database: '' };
+};
+
+watch(
+  () => [form.type, form.host, form.database],
+  () => {
+    applyDriverFromType();
+    applyUrlFromHostAndDb();
+  },
+  { immediate: true },
+);
 
 const load = async () => {
   loading.value = true;
@@ -94,15 +206,42 @@ const load = async () => {
 const openEdit = (row?: DatasourceConfig) => {
   if (row) {
     Object.assign(form, row);
+    form.password = undefined;
+    const parsed = parseHostAndDatabase(form.url, form.type);
+    form.host = parsed.host;
+    form.database = parsed.database;
   } else {
-    Object.assign(form, { id: undefined, name: '', url: '', username: '', password: '', driverClassName: '', enabled: true });
+    Object.assign(form, {
+      id: undefined,
+      name: '',
+      type: 'mysql',
+      host: '',
+      database: '',
+      url: '',
+      username: '',
+      password: '',
+      driver_class_name: '',
+      enable: true,
+    });
   }
+  applyDriverFromType();
+  applyUrlFromHostAndDb();
   drawer.value = true;
 };
 
 const save = async () => {
-  if (!form.name || !form.url) {
-    ElMessage.warning('请填写名称和 URL');
+  applyDriverFromType();
+  applyUrlFromHostAndDb();
+  if (!form.name || !form.type) {
+    ElMessage.warning('请填写名称和数据库类型');
+    return;
+  }
+  if (!form.url) {
+    ElMessage.warning('请输入数据库IP/主机');
+    return;
+  }
+  if (!form.driver_class_name) {
+    ElMessage.warning('当前数据库类型没有可用 Driver');
     return;
   }
   try {
@@ -121,10 +260,24 @@ const save = async () => {
 
 const test = async () => {
   try {
+    applyDriverFromType();
+    applyUrlFromHostAndDb();
+    if (!form.type || !form.driver_class_name) {
+      ElMessage.warning('请选择数据库类型');
+      return;
+    }
+    if (!form.url) {
+      ElMessage.warning('请输入数据库IP/主机');
+      return;
+    }
     const res = await testDatasourceConnection(form);
-    ElMessage.success(res.data.message || '测试完成');
+    if (res.data?.success) {
+      ElMessage.success('连接测试成功');
+    } else {
+      ElMessage.error(res.data?.message || '连接测试失败');
+    }
   } catch (error) {
-    ElMessage.error('测试失败');
+    ElMessage.error('连接测试失败');
   }
 };
 
@@ -141,4 +294,3 @@ const remove = async (id?: number) => {
 
 onMounted(load);
 </script>
-
