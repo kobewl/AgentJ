@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -32,7 +33,7 @@ public class TokenStore {
 
 	private static final Logger log = LoggerFactory.getLogger(TokenStore.class);
 
-	private static final long DEFAULT_TTL_SECONDS = 24 * 3600;
+	private static final long DEFAULT_TTL_SECONDS = Duration.ofHours(24).toSeconds();
 
 	private final Map<String, TokenEntry> tokenMap = new ConcurrentHashMap<>();
 

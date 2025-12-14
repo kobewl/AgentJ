@@ -1,4 +1,4 @@
-package com.wangliang.agentj.controller;
+package com.wangliang.agentj.conversation.controller;
 
 import com.wangliang.agentj.conversation.entity.dto.ConversationMessageRequest;
 import com.wangliang.agentj.conversation.entity.dto.ConversationSessionRequest;
@@ -7,11 +7,9 @@ import com.wangliang.agentj.conversation.entity.vo.ConversationMessageView;
 import com.wangliang.agentj.conversation.entity.vo.ConversationSessionView;
 import com.wangliang.agentj.conversation.entity.vo.PagedResult;
 import com.wangliang.agentj.conversation.service.ConversationRecordService;
-import com.wangliang.agentj.planning.controller.PlanTemplateController;
 import com.wangliang.agentj.user.service.UserService;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;

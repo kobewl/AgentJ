@@ -27,12 +27,13 @@ export interface InitStatus {
 
 export interface CronConfig {
   id?: number | string;
-  name?: string;
-  cronExpression?: string;
-  description?: string;
+  cronName?: string;
+  cronTime?: string;
+  planDesc?: string;
+  planTemplateId?: string;
   status?: number;
   createTime?: string;
-  updateTime?: string;
+  lastExecutedTime?: string;
 }
 
 export interface DatasourceConfig {

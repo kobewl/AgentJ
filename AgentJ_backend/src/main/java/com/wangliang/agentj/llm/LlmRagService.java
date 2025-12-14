@@ -39,9 +39,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class LlmService implements LynxeListener<ModelChangeEvent> {
+public class LlmRagService implements LynxeListener<ModelChangeEvent> {
 
-	private static final Logger log = LoggerFactory.getLogger(LlmService.class);
+	private static final Logger log = LoggerFactory.getLogger(LlmRagService.class);
 
 	private DynamicModelEntity defaultModel;
 
@@ -91,7 +91,7 @@ public class LlmService implements LynxeListener<ModelChangeEvent> {
 	@org.springframework.context.annotation.Lazy
 	private ConversationMemoryLimitService conversationMemoryLimitService;
 
-	public LlmService() {
+	public LlmRagService() {
 	}
 
 	/**
