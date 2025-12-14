@@ -750,9 +750,11 @@ public class DynamicAgent extends ReActAgent {
 					PlanningFactory.ToolCallBackContext ctx = getToolCallBackContext(toolCall.name());
 					if (ctx != null) {
 						String sanitized = sanitizeToolArguments(toolCall.arguments());
-						Object inputObj = objectMapper.readValue(sanitized, ctx.getFunctionInstance().getInputType());
-						ToolExecuteResult fallbackResult = ctx.getFunctionInstance().apply(inputObj,
-								new ToolContext(new HashMap<>()));
+							Object inputObj = objectMapper.readValue(sanitized, ctx.getFunctionInstance().getInputType());
+							@SuppressWarnings("unchecked")
+							ToolCallBiFunctionDef<Object> fallbackTool = (ToolCallBiFunctionDef<Object>) ctx
+								.getFunctionInstance();
+							ToolExecuteResult fallbackResult = fallbackTool.apply(inputObj, new ToolContext(new HashMap<>()));
 						String result = fallbackResult != null ? fallbackResult.getOutput() : "Fallback executed";
 						PlanExecutionRecorder.ActToolParam param = actToolInfoList.isEmpty() ? null
 								: actToolInfoList.get(0);

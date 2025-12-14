@@ -1,7 +1,7 @@
 <template>
   <div class="page-wrapper">
-    <el-row :gutter="16">
-      <el-col :span="13">
+    <el-row :gutter="16" class="layout-row">
+      <el-col :xs="24" :md="24" :lg="13" :xl="13">
         <el-card shadow="never" class="panel">
           <template #header>
             <div class="card-toolbar">
@@ -55,7 +55,7 @@
         </el-card>
       </el-col>
 
-      <el-col :span="11">
+      <el-col :xs="24" :md="24" :lg="11" :xl="11">
         <el-card shadow="never" class="panel status-panel">
           <template #header>
             <div class="card-toolbar">
@@ -481,11 +481,19 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .page-wrapper {
-  padding: 8px;
+  padding: 16px;
+  min-height: calc(100vh - 72px);
+  padding-bottom: 120px; /* 给粘性面板预留滚动空间 */
+  overflow-y: auto;
+  background: #f7f8fb;
+}
+
+.layout-row {
+  row-gap: 16px;
 }
 
 .panel {
-  height: 100%;
+  height: auto;
 }
 
 .card-toolbar {
@@ -542,5 +550,24 @@ onBeforeUnmount(() => {
   max-height: 420px;
   overflow-y: auto;
   padding-right: 6px;
+}
+
+:global(body) {
+  overflow-y: auto;
+  background: #f7f8fb;
+}
+
+.status-panel {
+  position: sticky;
+  top: 16px;
+}
+
+@media (max-width: 1200px) {
+  .page-wrapper {
+    min-height: auto;
+  }
+  .status-panel {
+    position: static;
+  }
 }
 </style>

@@ -486,6 +486,7 @@ watch(isDark, (newVal) => {
   background: var(--bg-secondary);
   min-height: calc(100vh - 64px);
   transition: var(--transition);
+  overflow-y: auto;
 }
 
 .main--full {
@@ -568,4 +569,3 @@ watch(isDark, (newVal) => {
   }
 }
 </style>
-

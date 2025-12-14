@@ -15,8 +15,8 @@
  */
 package com.wangliang.agentj.runtime.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wangliang.agentj.planning.PlanningFactory;
-import com.wangliang.agentj.tools.AbstractBaseTool;
 import com.wangliang.agentj.tools.ToolCallBiFunctionDef;
 import com.wangliang.agentj.tools.code.ToolExecuteResult;
 import org.slf4j.Logger;
@@ -39,6 +39,12 @@ import java.util.concurrent.CompletableFuture;
 public class ParallelToolExecutionService {
 
 	private static final Logger log = LoggerFactory.getLogger(ParallelToolExecutionService.class);
+
+	private final ObjectMapper objectMapper;
+
+	public ParallelToolExecutionService(ObjectMapper objectMapper) {
+		this.objectMapper = objectMapper;
+	}
 
 	/**
 	 * Result of a single tool execution
@@ -129,9 +135,10 @@ public class ParallelToolExecutionService {
 					ToolContext toolContextForExecution = new ToolContext(contextMap);
 
 					// Execute the tool using apply method
+					Object typedInput = convertInput(input, functionInstance.getInputType());
 					@SuppressWarnings("unchecked")
-					ToolExecuteResult result = ((AbstractBaseTool<Map<String, Object>>) functionInstance).apply(input,
-							toolContextForExecution);
+					ToolCallBiFunctionDef<Object> typedFunction = (ToolCallBiFunctionDef<Object>) functionInstance;
+					ToolExecuteResult result = typedFunction.apply(typedInput, toolContextForExecution);
 
 					log.debug("Completed execution for tool: {}", toolName);
 					return new ToolExecutionResult(toolName, result, true);
@@ -228,6 +235,24 @@ public class ParallelToolExecutionService {
 		catch (Exception e) {
 			log.warn("Failed to parse tool arguments as JSON: {}. Using empty map.", arguments);
 			return new HashMap<>();
+		}
+	}
+
+	/**
+	 * Convert parsed input map into the tool's declared input type. Falls back to the
+	 * raw map if conversion fails.
+	 */
+	private Object convertInput(Map<String, Object> input, Class<?> targetType) {
+		if (targetType == null || targetType == Object.class || input == null || targetType.isInstance(input)) {
+			return input;
+		}
+		try {
+			return objectMapper.convertValue(input, targetType);
+		}
+		catch (IllegalArgumentException ex) {
+			log.warn("Failed to convert tool arguments to {}. Using raw map instead. Error: {}", targetType.getName(),
+					ex.getMessage());
+			return input;
 		}
 	}
 
