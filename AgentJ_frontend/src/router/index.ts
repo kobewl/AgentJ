@@ -6,9 +6,8 @@ import PlanTemplates from '@/pages/PlanTemplates.vue';
 import ChatDialog from '@/pages/ChatDialog.vue';
 import Memories from '@/pages/Memories.vue';
 import DatasourceConfigs from '@/pages/DatasourceConfigs.vue';
-import DatabaseAi from '@/pages/DatabaseAi.vue';
+import UnifiedAgent from '@/pages/UnifiedAgent.vue';
 import CronTasks from '@/pages/CronTasks.vue';
-import AgentTasks from '@/pages/AgentTasks.vue';
 import Login from '@/pages/Login.vue';
 import { isAuthenticated } from '@/utils/auth';
 import { ElMessage } from 'element-plus';
@@ -40,9 +39,9 @@ export const menuRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/agents',
-    name: 'AgentTasks',
-    component: AgentTasks,
-    meta: { title: 'Agent 任务', icon: 'Cpu' },
+    name: 'UnifiedAgent',
+    component: UnifiedAgent,
+    meta: { title: 'AI Agent', icon: 'Cpu' },
   },
   {
     path: '/chat',
@@ -63,12 +62,6 @@ export const menuRoutes: RouteRecordRaw[] = [
     meta: { title: '数据源', icon: 'Coin' },
   },
   {
-    path: '/database-ai',
-    name: 'DatabaseAi',
-    component: DatabaseAi,
-    meta: { title: 'AI数据库', icon: 'MagicStick' },
-  },
-  {
     path: '/cron',
     name: 'CronTasks',
     component: CronTasks,
@@ -81,6 +74,8 @@ const router = createRouter({
   routes: [
     { path: '/', redirect: '/dashboard' },
     { path: '/login', name: 'Login', component: Login, meta: { title: '登录', public: true } },
+    // 兼容旧路由，重定向到统一 Agent 页面
+    { path: '/database-ai', redirect: '/agents' },
     ...menuRoutes,
     { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
   ],

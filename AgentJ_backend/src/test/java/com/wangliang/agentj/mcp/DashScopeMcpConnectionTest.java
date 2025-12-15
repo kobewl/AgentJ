@@ -49,7 +49,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DashScopeMcpConnectionTest {
 
     // 请替换为你的实际API Key
-    private static final String API_KEY = "sk-7ffe50084259436a9ac7b6689b51fd3c";
+    private static final String API_KEY = "";
     private static final String BASE_URL = "https://dashscope.aliyuncs.com";
     private static final String SSE_ENDPOINT = "/api/v1/mcps/WebSearch/sse";
 
