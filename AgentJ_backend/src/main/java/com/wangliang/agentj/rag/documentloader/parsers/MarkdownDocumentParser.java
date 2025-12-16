@@ -44,7 +44,7 @@ public class MarkdownDocumentParser implements DocumentParser {
     
     @Override
     public Document parse(String content, String fileName) throws IOException {
-        logger.info("开始解析Markdown内容: {}", fileName);
+        logger.info("开始解析 Markdown 内容: {}", fileName);
         return parseContent(content, fileName);
     }
     

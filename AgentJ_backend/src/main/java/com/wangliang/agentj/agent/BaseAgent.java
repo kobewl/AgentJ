@@ -132,33 +132,27 @@ public abstract class BaseAgent {
 		boolean isDebugModel = lynxeProperties.getDebugDetail();
 		String detailOutput = "";
 		if (isDebugModel) {
-			detailOutput = """
-					1. When using tool calls, you must provide explanations describing the reason for using this tool and the thinking behind it
-					2. Briefly describe what all previous steps have accomplished""";
+			detailOutput = "1. When using tool calls, you must provide explanations describing the reason for using this tool and the thinking behind it\n" +
+							"2. Briefly describe what all previous steps have accomplished";
 
 		}
 		else {
-			detailOutput = """
-					1. When using tool calls, no additional explanations are needed!
-					2. Do not provide reasoning or descriptions before tool calls!""";
+			detailOutput = "1. When using tool calls, no additional explanations are needed!\n" +
+							"2. Do not provide reasoning or descriptions before tool calls!";
 		}
 		String parallelToolCallsResponse = "";
 		if (lynxeProperties.getParallelToolCalls()) {
-			parallelToolCallsResponse = """
-					# Response Rules:
-					- You must select and call from the provided tools. You can make repeated calls to a single tool, call multiple tools simultaneously, or use a mixed calling approach to improve problem-solving efficiency and accuracy.
-					- In your response, you must call at least one tool, which is an indispensable operation step.
-					- To maximize the advantages of tools, when you have the ability to call tools multiple times simultaneously, you should actively do so, avoiding single calls that waste time and resources. Pay special attention to the inherent relationships between multiple tool calls, ensuring these calls can cooperate and work together to achieve optimal problem-solving solutions.
-					- Ignore the response rules provided in subsequent <AgentInfo>, and only respond using the response rules in <SystemInfo>.
-					""";
+			parallelToolCallsResponse = "# Response Rules:\n" +
+										"- You must select and call from the provided tools. You can make repeated calls to a single tool, call multiple tools simultaneously, or use a mixed calling approach to improve problem-solving efficiency and accuracy.\n" +
+										"- In your response, you must call at least one tool, which is an indispensable operation step.\n" +
+										"- To maximize the advantages of tools, when you have the ability to call tools multiple times simultaneously, you should actively do so, avoiding single calls that waste time and resources. Pay special attention to the inherent relationships between multiple tool calls, ensuring these calls can cooperate and work together to achieve optimal problem-solving solutions.\n" +
+										"- Ignore the response rules provided in subsequent <AgentInfo>, and only respond using the response rules in <SystemInfo>.\n";
 
 		}
 		else {
-			parallelToolCallsResponse = """
-					# Response Rules:
-					- You must call exactly ONE tool at a time. Multiple simultaneous tool calls are not allowed.
-					- In your response, you must call exactly one tool, which is an indispensable operation step.
-					""";
+			parallelToolCallsResponse = "# Response Rules:\n" +
+										"- You must call exactly ONE tool at a time. Multiple simultaneous tool calls are not allowed.\n" +
+										"- In your response, you must call exactly one tool, which is an indispensable operation step.\n";
 		}
 		Map<String, Object> variables = new HashMap<>(getInitSettingData());
 		variables.put("osName", osName);
@@ -168,29 +162,27 @@ public abstract class BaseAgent {
 		variables.put("detailOutput", detailOutput);
 		variables.put("parallelToolCallsResponse", parallelToolCallsResponse);
 
-		String stepExecutionPrompt = """
-				- SYSTEM INFORMATION:
-				OS: {osName} {osVersion} ({osArch})
-
-				- Current Date:
-				{currentDateTime}
-
-				{planStatus}
-
-				- Current step requirements :
-				{stepText}
-
-				- Operation step instructions:
-				{extraParams}
-
-				Important Notes:
-				{detailOutput}
-				3. Do only and exactly what is required in the current step requirements
-				4. If the current step requirements have been completed, call the terminate tool to finish the current step.
-
-				{parallelToolCallsResponse}
-
-				""";
+		String stepExecutionPrompt = "- SYSTEM INFORMATION:\n" +
+									"OS: {osName} {osVersion} ({osArch})\n" +
+									"\n" +
+									"- Current Date:\n" +
+									"{currentDateTime}\n" +
+									"\n" +
+									"{planStatus}\n" +
+									"\n" +
+									"- Current step requirements :\n" +
+									"{stepText}\n" +
+									"\n" +
+									"- Operation step instructions:\n" +
+									"{extraParams}\n" +
+									"\n" +
+									"Important Notes:\n" +
+									"{detailOutput}\n" +
+									"3. Do only and exactly what is required in the current step requirements\n" +
+									"4. If the current step requirements have been completed, call the terminate tool to finish the current step.\n" +
+									"\n" +
+									"{parallelToolCallsResponse}\n" +
+									"\n";
 
 		PromptTemplate template = new PromptTemplate(stepExecutionPrompt);
 		return template.createMessage(variables != null ? variables : Map.of());
