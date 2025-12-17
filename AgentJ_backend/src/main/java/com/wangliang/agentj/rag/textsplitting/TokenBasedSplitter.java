@@ -94,7 +94,7 @@ public class TokenBasedSplitter extends AbstractTextSplitter {
             logger.info("TokenTextSplitter produced {} documents", splitDocuments.size());
             
             // 将Spring AI Document转换为我们自己的TextChunk格式
-            return convertToTextChunks(splitDocuments, documentId, text);
+            return convertToTextChunks(new ArrayList<Object>(splitDocuments), documentId, text);
             
         } catch (Exception e) {
             logger.error("Error during token-based text splitting for document: {}", documentId, e);
@@ -125,31 +125,14 @@ public class TokenBasedSplitter extends AbstractTextSplitter {
     }
     
     /**
-     * 将文本分割成Token单元
-     */
-    private List<TokenUnit> tokenizeText(String text, boolean isChineseText) {
-        List<TokenUnit> tokenUnits = new ArrayList<>();
-        
-        if (isChineseText) {
-            // 中文模式：按字符和词语分割
-            tokenUnits = tokenizeChineseText(text);
-        } else {
-            // 英文模式：按单词和标点分割
-            tokenUnits = tokenizeEnglishText(text);
-        }
-        
-        return tokenUnits;
-    }
-    
-    /**
      * 将Spring AI Document转换为TextChunk
      */
-    private List<TextChunk> convertToTextChunks(List<Document> documents, String documentId, String originalText) {
+    private List<TextChunk> convertToTextChunks(List<Object> documents, String documentId, String originalText) {
         List<TextChunk> chunks = new ArrayList<>();
         
         for (int i = 0; i < documents.size(); i++) {
-            Document doc = documents.get(i);
-            String content = doc.getContent();
+            Object doc = documents.get(i);
+            String content = extractContent(doc);
             
             // 计算在原始文本中的位置
             int startPos = i == 0 ? 0 : findPositionInOriginalText(originalText, content, chunks, i);
@@ -157,7 +140,7 @@ public class TokenBasedSplitter extends AbstractTextSplitter {
             
             // 创建元数据
             Map<String, Object> chunkMetadata = createChunkMetadata(
-                i, content.length(), startPos, endPos, doc.getMetadata()
+                i, content.length(), startPos, endPos, extractMetadata(doc)
             );
             
             // 创建TextChunk
@@ -169,6 +152,41 @@ public class TokenBasedSplitter extends AbstractTextSplitter {
         }
         
         return chunks;
+    }
+
+    private String extractContent(Object doc) {
+        try {
+            var m = doc.getClass().getMethod("getContent");
+            return Objects.toString(m.invoke(doc), "");
+        } catch (Exception ignored) {
+        }
+        try {
+            var m = doc.getClass().getMethod("content");
+            return Objects.toString(m.invoke(doc), "");
+        } catch (Exception ignored) {
+        }
+        return "";
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> extractMetadata(Object doc) {
+        try {
+            var m = doc.getClass().getMethod("getMetadata");
+            Object meta = m.invoke(doc);
+            if (meta instanceof Map) {
+                return (Map<String, Object>) meta;
+            }
+        } catch (Exception ignored) {
+        }
+        try {
+            var m = doc.getClass().getMethod("metadata");
+            Object meta = m.invoke(doc);
+            if (meta instanceof Map) {
+                return (Map<String, Object>) meta;
+            }
+        } catch (Exception ignored) {
+        }
+        return Map.of();
     }
     
     /**
@@ -233,7 +251,6 @@ public class TokenBasedSplitter extends AbstractTextSplitter {
     /**
      * 获取分割器类型
      */
-    @Override
     public String getType() {
         return "TOKEN_BASED";
     }
@@ -241,7 +258,6 @@ public class TokenBasedSplitter extends AbstractTextSplitter {
     /**
      * 获取分割器版本
      */
-    @Override
     public String getVersion() {
         return "2.0.0";
     }
@@ -257,7 +273,6 @@ public class TokenBasedSplitter extends AbstractTextSplitter {
     /**
      * 获取分割器详细信息
      */
-    @Override
     public Map<String, Object> getInfo() {
         Map<String, Object> info = super.getInfo();
         info.put("type", getType());

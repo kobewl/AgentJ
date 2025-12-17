@@ -26,6 +26,7 @@ import com.wangliang.agentj.planning.service.PlanTemplateService;
 import com.wangliang.agentj.runtime.service.PlanIdDispatcher;
 import com.wangliang.agentj.runtime.service.PlanningCoordinator;
 import com.wangliang.agentj.runtime.service.ServiceGroupIndexService;
+import com.wangliang.agentj.runtime.util.ToolNameSanitizer;
 import com.wangliang.agentj.subplan.model.vo.SubplanToolWrapper;
 import com.wangliang.agentj.tools.code.ToolExecuteResult;
 import org.slf4j.Logger;
@@ -140,7 +141,12 @@ public class SubplanToolService {
 							objectMapper, parameterMappingService);
 
 					// Get tool name from wrapper (uses PlanTemplateConfigVO title)
-					toolName = toolWrapper.getName();
+					String rawToolName = toolWrapper.getName();
+					toolName = ToolNameSanitizer.sanitize(rawToolName);
+					if (!toolName.equals(rawToolName)) {
+						logger.warn("Coordinator tool name sanitized from '{}' to '{}' to satisfy provider constraints",
+								rawToolName, toolName);
+					}
 
 					// Get description from coordinator tool config
 					String description = "";

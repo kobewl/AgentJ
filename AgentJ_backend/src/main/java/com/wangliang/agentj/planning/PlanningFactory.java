@@ -33,6 +33,7 @@ import com.wangliang.agentj.runtime.executor.LevelBasedExecutorPool;
 import com.wangliang.agentj.runtime.service.PlanIdDispatcher;
 import com.wangliang.agentj.runtime.service.ServiceGroupIndexService;
 import com.wangliang.agentj.runtime.service.TaskInterruptionManager;
+import com.wangliang.agentj.runtime.util.ToolNameSanitizer;
 import com.wangliang.agentj.subplan.service.SubplanToolService;
 import com.wangliang.agentj.tools.DebugTool;
 import com.wangliang.agentj.tools.FormInputTool;
@@ -306,7 +307,12 @@ public class PlanningFactory {
 				// Use qualified key format: toolName__index (avoid special chars like '*'
 				// that LLMs may truncate)
 				String serviceGroup = toolDefinition.getServiceGroup();
-				String toolName = toolDefinition.getName();
+				String rawToolName = toolDefinition.getName();
+				String toolName = ToolNameSanitizer.sanitize(rawToolName);
+				if (!toolName.equals(rawToolName)) {
+					log.warn("Tool name sanitized from '{}' to '{}' to satisfy provider constraints", rawToolName,
+							toolName);
+				}
 				String qualifiedKey;
 
 				if (serviceGroup != null && !serviceGroup.isEmpty()) {

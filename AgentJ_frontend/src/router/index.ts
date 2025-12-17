@@ -4,6 +4,8 @@ import InitSetup from '@/pages/InitSetup.vue';
 import ConfigCenter from '@/pages/ConfigCenter.vue';
 import PlanTemplates from '@/pages/PlanTemplates.vue';
 import ChatDialog from '@/pages/ChatDialog.vue';
+import KnowledgeManage from '@/pages/KnowledgeManage.vue';
+import KnowledgeChat from '@/pages/KnowledgeChat.vue';
 import Memories from '@/pages/Memories.vue';
 import DatasourceConfigs from '@/pages/DatasourceConfigs.vue';
 import UnifiedAgent from '@/pages/UnifiedAgent.vue';
@@ -48,6 +50,18 @@ export const menuRoutes: RouteRecordRaw[] = [
     name: 'ChatDialog',
     component: ChatDialog,
     meta: { title: 'LLM对话', icon: 'ChatLineRound' },
+  },
+  {
+    path: '/knowledge',
+    name: 'KnowledgeManage',
+    component: KnowledgeManage,
+    meta: { title: '知识库管理', icon: 'FolderOpened' },
+  },
+  {
+    path: '/knowledge-chat',
+    name: 'KnowledgeChat',
+    component: KnowledgeChat,
+    meta: { title: '知识库对话', icon: 'ChatDotRound' },
   },
   {
     path: '/memories',

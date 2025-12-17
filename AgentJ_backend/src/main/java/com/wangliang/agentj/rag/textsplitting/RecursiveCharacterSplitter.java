@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * 递归字符文本分割器
@@ -385,7 +386,6 @@ public class RecursiveCharacterSplitter extends AbstractTextSplitter {
     /**
      * 获取分割器类型
      */
-    @Override
     public String getType() {
         return "RECURSIVE_CHARACTER";
     }
@@ -393,7 +393,6 @@ public class RecursiveCharacterSplitter extends AbstractTextSplitter {
     /**
      * 获取分割器版本
      */
-    @Override
     public String getVersion() {
         return "1.0.0";
     }
@@ -409,7 +408,6 @@ public class RecursiveCharacterSplitter extends AbstractTextSplitter {
     /**
      * 获取分割器详细信息
      */
-    @Override
     public Map<String, Object> getInfo() {
         Map<String, Object> info = super.getInfo();
         info.put("type", getType());

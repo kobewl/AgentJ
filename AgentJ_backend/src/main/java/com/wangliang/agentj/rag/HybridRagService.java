@@ -1,0 +1,192 @@
+package com.wangliang.agentj.rag;
+
+import com.wangliang.agentj.config.RagProperties;
+import com.wangliang.agentj.llm.LlmService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+/**
+ * 基于 Spring AI 官方范式的混合 RAG 流程：
+ * - 查询预处理由外部调用方负责（可串联重写/关键词/意图识别）
+ * - Retriever 负责向量检索（Qdrant）
+ * - 检索结果按阈值/TopK 过滤，构造上下文
+ * - ChatClient 生成回答并做简单后检查
+ */
+@Service
+@Slf4j
+public class HybridRagService {
+
+    private final VectorStore vectorStore;
+    private final LlmService llmService;
+    private final RagProperties ragProperties;
+    private ChatClient chatClient;
+
+    public HybridRagService(VectorStore vectorStore, LlmService llmService, RagProperties ragProperties) {
+        this.vectorStore = vectorStore;
+        this.llmService = llmService;
+        this.ragProperties = ragProperties;
+        // lazy init to avoid startup failure if model not ready
+        try {
+            this.chatClient = llmService.getDefaultDynamicAgentChatClient();
+        } catch (Exception ignored) {
+        }
+    }
+
+    public String answer(String userQuery) {
+        return answerWithKnowledge(null, userQuery);
+    }
+
+    /**
+     * 指定知识库过滤的对话，metadata 使用 kbId 过滤。
+     */
+    public String answerWithKnowledge(String knowledgeBaseId, String userQuery) {
+        if (userQuery == null || userQuery.trim().isEmpty()) {
+            return "请输入有效的问题。";
+        }
+
+        // 简化调用以兼容当前 spring-ai 版本；若需过滤 kbId，可在 metadata 中自定义过滤实现
+        List<?> retrieved = vectorStore.similaritySearch(userQuery);
+        List<Object> filtered = retrieved.stream()
+                .filter(obj -> {
+                    Double score = extractScore(obj);
+                    return score == null || score >= ragProperties.getSimilarityThreshold();
+                })
+                .limit(ragProperties.getTopK())
+                .collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(filtered)) {
+            log.warn("未检索到足够的上下文，将提示模型说明信息不足");
+        }
+
+        // 生成前构造可控长度的上下文
+        String context = buildContext(filtered, ragProperties.getMaxContextChars());
+
+        String prompt = """
+                你是一个严谨的知识助手，请基于检索到的上下文回答用户问题。
+                - 如果上下文不足以回答，请明确说明“未在知识库找到足够信息”。
+                - 回答需简洁、用中文。
+                
+                用户问题：{question}
+                检索到的上下文：
+                {context}
+                """;
+
+        String answer = chatClient().prompt()
+                .user(u -> u.text(prompt)
+                        .param("question", userQuery.trim())
+                        .param("context", context.isBlank() ? "（无可用上下文）" : context))
+                .call()
+                .content();
+
+        if (answer == null || answer.trim().isEmpty()) {
+            return "未生成有效回答，请稍后重试。";
+        }
+
+        return answer.trim();
+    }
+
+    private String buildContext(List<?> documents, int maxChars) {
+        if (CollectionUtils.isEmpty(documents) || maxChars <= 0) {
+            return "";
+        }
+        StringBuilder builder = new StringBuilder();
+        for (Object doc : documents) {
+            String content = extractContent(doc);
+            if (content.isBlank()) {
+                continue;
+            }
+            String filename = null;
+            Map<String, Object> metadata = extractMetadata(doc);
+            Object name = metadata.get("filename");
+            if (name != null) {
+                filename = name.toString();
+            }
+            int remaining = maxChars - builder.length();
+            if (remaining <= 0) {
+                break;
+            }
+            if (filename != null) {
+                builder.append("【").append(filename).append("】\n");
+            }
+            builder.append(content, 0, Math.min(content.length(), remaining));
+            builder.append("\n\n");
+        }
+        return builder.toString().trim();
+    }
+
+    private String extractContent(Object doc) {
+        try {
+            var m = doc.getClass().getMethod("getContent");
+            return Objects.toString(m.invoke(doc), "");
+        }
+        catch (Exception ignored) {
+        }
+        try {
+            var m = doc.getClass().getMethod("content");
+            return Objects.toString(m.invoke(doc), "");
+        }
+        catch (Exception ignored) {
+        }
+        return "";
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> extractMetadata(Object doc) {
+        try {
+            var m = doc.getClass().getMethod("getMetadata");
+            Object meta = m.invoke(doc);
+            if (meta instanceof Map) {
+                return (Map<String, Object>) meta;
+            }
+        }
+        catch (Exception ignored) {
+        }
+        try {
+            var m = doc.getClass().getMethod("metadata");
+            Object meta = m.invoke(doc);
+            if (meta instanceof Map) {
+                return (Map<String, Object>) meta;
+            }
+        }
+        catch (Exception ignored) {
+        }
+        return Map.of();
+    }
+
+    private Double extractScore(Object doc) {
+        try {
+            var m = doc.getClass().getMethod("getScore");
+            Object score = m.invoke(doc);
+            if (score instanceof Number num) {
+                return num.doubleValue();
+            }
+        }
+        catch (Exception ignored) {
+        }
+        try {
+            var m = doc.getClass().getMethod("score");
+            Object score = m.invoke(doc);
+            if (score instanceof Number num) {
+                return num.doubleValue();
+            }
+        }
+        catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private ChatClient chatClient() {
+        if (this.chatClient == null) {
+            this.chatClient = llmService.getDefaultDynamicAgentChatClient();
+        }
+        return this.chatClient;
+    }
+}

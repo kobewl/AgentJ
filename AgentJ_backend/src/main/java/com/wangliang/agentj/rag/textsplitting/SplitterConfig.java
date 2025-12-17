@@ -1,6 +1,7 @@
 package com.wangliang.agentj.rag.textsplitting;
 
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Arrays;
@@ -278,6 +279,13 @@ public class SplitterConfig {
     
     public Map<String, Object> getCustomParameters() {
         return customParameters;
+    }
+
+    /**
+     * 兼容工厂调用的递归配置便捷方法。
+     */
+    public static SplitterConfig recursiveConfig() {
+        return new SplitterConfig();
     }
     
     public void setCustomParameters(Map<String, Object> customParameters) {

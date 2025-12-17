@@ -330,8 +330,20 @@ public abstract class AbstractTextSplitter implements TextSplitter {
     public String[] getSupportedTypes() {
         return supportedTypes != null ? supportedTypes.clone() : new String[0];
     }
-    
+
     public void setSupportedTypes(String[] supportedTypes) {
         this.supportedTypes = supportedTypes != null ? supportedTypes.clone() : new String[0];
+    }
+
+    /**
+     * 基础信息，子类可在此基础上扩展。
+     */
+    public Map<String, Object> getInfo() {
+        Map<String, Object> info = new HashMap<>();
+        info.put("name", getName());
+        info.put("description", getDescription());
+        info.put("supported_types", Arrays.asList(getSupportedTypes()));
+        info.put("config", config != null ? config.toString() : "");
+        return info;
     }
 }

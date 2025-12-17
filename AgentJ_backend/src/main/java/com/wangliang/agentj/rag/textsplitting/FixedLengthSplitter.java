@@ -244,7 +244,7 @@ public class FixedLengthSplitter extends AbstractTextSplitter {
      * 检查字符是否为标点符号
      */
     private boolean isPunctuation(char ch) {
-        return ".,;:!?。，；：！？\"'"".indexOf(ch) != -1;
+        return ".,;:!?。，；：！？\"'".indexOf(ch) != -1;
     }
     
     /**
@@ -271,7 +271,6 @@ public class FixedLengthSplitter extends AbstractTextSplitter {
     /**
      * 获取分割器类型
      */
-    @Override
     public String getType() {
         return "FIXED_LENGTH";
     }
@@ -279,7 +278,6 @@ public class FixedLengthSplitter extends AbstractTextSplitter {
     /**
      * 获取分割器版本
      */
-    @Override
     public String getVersion() {
         return "1.0.0";
     }
@@ -287,7 +285,6 @@ public class FixedLengthSplitter extends AbstractTextSplitter {
     /**
      * 获取分割器详细信息
      */
-    @Override
     public Map<String, Object> getInfo() {
         Map<String, Object> info = super.getInfo();
         info.put("type", getType());
