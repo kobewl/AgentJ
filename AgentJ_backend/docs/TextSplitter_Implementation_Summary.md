@@ -47,7 +47,6 @@ Successfully implemented a comprehensive text splitting module for the AgentJ RA
 - **TextSplitterTest.java**: Comprehensive JUnit test suite
 - **TextSplitterManualTest.java**: Manual testing class
 - **TextSplitter_Usage_Guide.md**: Detailed usage documentation
-- **TextSplitterVerification.java**: Standalone verification script
 
 ## 🔧 Key Features
 
@@ -158,7 +157,6 @@ src/test/java/com/wangliang/agentj/rag/textsplitting/
 └── TextSplitterManualTest.java          # Manual tests
 
 TextSplitter_Usage_Guide.md              # Usage documentation
-TextSplitterVerification.java             # Verification script
 TextSplitter_Implementation_Summary.md     # This summary
 ```
 
