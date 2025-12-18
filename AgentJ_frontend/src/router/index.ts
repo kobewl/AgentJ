@@ -10,6 +10,7 @@ import Memories from '@/pages/Memories.vue';
 import DatasourceConfigs from '@/pages/DatasourceConfigs.vue';
 import UnifiedAgent from '@/pages/UnifiedAgent.vue';
 import CronTasks from '@/pages/CronTasks.vue';
+import WorkflowDesigner from '@/pages/WorkflowDesigner.vue';
 import Login from '@/pages/Login.vue';
 import { isAuthenticated } from '@/utils/auth';
 import { ElMessage } from 'element-plus';
@@ -80,6 +81,12 @@ export const menuRoutes: RouteRecordRaw[] = [
     name: 'CronTasks',
     component: CronTasks,
     meta: { title: '定时任务', icon: 'Timer' },
+  },
+  {
+    path: '/workflow',
+    name: 'WorkflowDesigner',
+    component: WorkflowDesigner,
+    meta: { title: '工作流设计', icon: 'Share' },
   },
 ];
 
