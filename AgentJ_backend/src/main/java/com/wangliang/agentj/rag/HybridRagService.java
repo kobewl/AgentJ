@@ -2,7 +2,10 @@ package com.wangliang.agentj.rag;
 
 import com.wangliang.agentj.config.RagProperties;
 import com.wangliang.agentj.llm.LlmService;
+import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
@@ -21,8 +24,9 @@ import java.util.stream.Collectors;
  * - ChatClient 生成回答并做简单后检查
  */
 @Service
-@Slf4j
 public class HybridRagService {
+
+    private static final Logger log = LoggerFactory.getLogger(HybridRagService.class);
 
     private final VectorStore vectorStore;
     private final LlmService llmService;

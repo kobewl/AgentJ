@@ -10,7 +10,8 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.wangliang.agentj.tools.AbstractBaseTool;
 import com.wangliang.agentj.tools.code.ToolExecuteResult;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,8 +21,9 @@ import java.nio.file.Paths;
  * <p>
  * Based on user requests, the AI calls this tool to generate PDF files.
  */
-@Slf4j
 public class PdfGenerator extends AbstractBaseTool<PdfGenerator.PdfGeneratorInput> {
+
+    private static final Logger log = LoggerFactory.getLogger(PdfGenerator.class);
 
     private static final String TOOL_NAME = "pdf_generator";
     private static final String OUTPUT_DIR = "uploads/pdf_general";
@@ -81,7 +83,7 @@ public class PdfGenerator extends AbstractBaseTool<PdfGenerator.PdfGeneratorInpu
                 document.add(paragraph);
             }
             return "PDF generated successfully to: " + filePath;
-        }catch (Exception e){
+        } catch (Exception e) {
             return "Error generating PDF: " + e.getMessage();
         }
     }
@@ -167,8 +169,7 @@ public class PdfGenerator extends AbstractBaseTool<PdfGenerator.PdfGeneratorInpu
 
         try {
             return new ToolExecuteResult(generatePdf(input));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("PDF generation failed", e);
             return new ToolExecuteResult("Error generating PDF: " + e.getMessage());
         }
