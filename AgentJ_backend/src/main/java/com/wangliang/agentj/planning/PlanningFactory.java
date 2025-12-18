@@ -49,6 +49,7 @@ import com.wangliang.agentj.tools.cron.CronTool;
 import com.wangliang.agentj.tools.database.*;
 import com.wangliang.agentj.tools.dirOperator.DirectoryOperator;
 import com.wangliang.agentj.tools.excelProcessor.IExcelProcessingService;
+import com.wangliang.agentj.tools.fileGenerator.PdfGenerator;
 import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
 import com.wangliang.agentj.tools.i18n.ToolI18nService;
 import com.wangliang.agentj.tools.innerStorage.SmartContentSavingService;
@@ -145,7 +146,6 @@ public class PlanningFactory {
 	@Lazy
 	private TaskInterruptionManager taskInterruptionManager;
 
-	@SuppressWarnings("unused")
 	@Autowired
 	private PptGeneratorOperator pptGeneratorOperator;
 
@@ -261,10 +261,11 @@ public class PlanningFactory {
 			toolDefinitions.add(new FileImportOperator(textFileService, null, toolI18nService));
 			toolDefinitions.add(new FileSplitterTool(textFileService, objectMapper, toolI18nService));
 			toolDefinitions.add(new DirectoryOperator(unifiedDirectoryManager, objectMapper, toolI18nService));
+			toolDefinitions.add(new PdfGenerator());
 			// toolDefinitions.add(new UploadedFileLoaderTool(unifiedDirectoryManager,
 			// applicationContext));
 			// toolDefinitions.add(new TableProcessorTool(tableProcessingService));
-			// toolDefinitions.add(pptGeneratorOperator);
+			toolDefinitions.add(pptGeneratorOperator);
 			// toolDefinitions.add(jsxGeneratorOperator);
 			// toolDefinitions.add(new FileMergeTool(unifiedDirectoryManager));
 			// toolDefinitions.add(new GoogleSearch());

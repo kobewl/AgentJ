@@ -104,3 +104,4 @@ spring.log
 **/application-private.yml
 **/*.env
 /extensions/
+/uploads/

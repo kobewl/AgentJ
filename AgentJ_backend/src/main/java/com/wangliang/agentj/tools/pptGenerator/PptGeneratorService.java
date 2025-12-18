@@ -61,6 +61,10 @@ public class PptGeneratorService implements IPptGeneratorService {
 	// Supported PPT file extensions.
 	private static final Set<String> SUPPORTED_EXTENSIONS = new HashSet<>(Set.of(".pptx", ".ppt"));
 
+	private static final String TEMPLATE_DIR = "extensions/pptGenerator/template";
+
+	private static final String OUTPUT_DIR = "uploads/ppt_general";
+
 	/**
 	 * Create a PPT file.
 	 * @param pptInput PPT input parameters.
@@ -75,14 +79,18 @@ public class PptGeneratorService implements IPptGeneratorService {
 		if (StringUtils.isBlank(pptInput.getFileName())) {
 			throw new IllegalArgumentException("File name cannot be blank");
 		}
+		String normalizedFileName = normalizeOutputFileName(pptInput.getFileName());
+		pptInput.setFileName(normalizedFileName);
 		// Check if we should use a template
 		XMLSlideShow presentation;
 
 		// If path is provided and file exists, use it as template
 		if (StringUtils.isNotBlank(pptInput.getPath())) {
-			Path templatePath = Path.of("extensions/pptGenerator/template").resolve(pptInput.getPath());
+			Path templatePath = resolveTemplatePath(pptInput.getPath());
 			if (Files.exists(templatePath) && isSupportedPptFileType(templatePath.toString())) {
-				presentation = new XMLSlideShow(new FileInputStream(templatePath.toFile()));
+				try (FileInputStream fis = new FileInputStream(templatePath.toFile())) {
+					presentation = new XMLSlideShow(fis);
+				}
 			}
 			else {
 				presentation = new XMLSlideShow();
@@ -159,8 +167,8 @@ public class PptGeneratorService implements IPptGeneratorService {
 							if (imageFile.exists()) {
 								try (FileInputStream fis = new FileInputStream(imageFile)) {
 									byte[] pictureData = IOUtils.toByteArray(fis);
-									XSLFPictureData picture = presentation.addPicture(pictureData,
-											XSLFPictureData.PictureType.JPEG);
+									XSLFPictureData.PictureType pictureType = detectPictureType(imageFile.getName());
+									XSLFPictureData picture = presentation.addPicture(pictureData, pictureType);
 									XSLFPictureShape pictureShape = contentSlide.createPicture(picture);
 									// Set image position and size.
 									pictureShape.setAnchor(new Rectangle(50, 150, 400, 300));
@@ -177,24 +185,14 @@ public class PptGeneratorService implements IPptGeneratorService {
 				}
 			}
 
-			// Determine output file path
-			String outputPath = "extensions/pptGenerator";
-			if (StringUtils.isNotBlank(pptInput.getFileName())) {
-				// If fileName is provided, use it as the output file name
-				Path outputPathObj = Path.of(outputPath);
-				if (Files.isDirectory(outputPathObj)) {
-					// If outputPath is a directory, append fileName to it
-					outputPath = outputPathObj.resolve(pptInput.getFileName()).toString();
-				}
-				else {
-					// If outputPath is a file path, replace the file name
-					outputPath = outputPathObj.getParent().resolve(pptInput.getFileName()).toString();
-				}
+			String outputPath = validatePptFilePath(null, pptInput.getFileName());
+			Path outputPathObj = Path.of(outputPath);
+			if (outputPathObj.getParent() != null) {
+				Files.createDirectories(outputPathObj.getParent());
 			}
 
 			// Save PPT file.
-			File outputFile = new File(outputPath);
-			try (FileOutputStream out = new FileOutputStream(outputFile)) {
+			try (FileOutputStream out = new FileOutputStream(outputPathObj.toFile())) {
 				presentation.write(out);
 			}
 
@@ -282,6 +280,45 @@ public class PptGeneratorService implements IPptGeneratorService {
 		}
 	}
 
+	private String normalizeOutputFileName(String fileName) {
+		String trimmed = fileName.trim();
+		String baseName = Path.of(trimmed).getFileName().toString();
+		if (!isSupportedPptFileType(baseName)) {
+			baseName = baseName + ".pptx";
+		}
+		return baseName;
+	}
+
+	private Path resolveTemplatePath(String templatePath) {
+		Path requestedPath = Path.of(templatePath).normalize();
+		if (requestedPath.isAbsolute() || requestedPath.startsWith("..")) {
+			throw new SecurityException("Illegal template path: " + templatePath);
+		}
+		Path baseDir = Path.of(TEMPLATE_DIR).normalize();
+		Path resolvedPath = baseDir.resolve(requestedPath).normalize();
+		if (!resolvedPath.startsWith(baseDir)) {
+			throw new SecurityException("Illegal template path: " + templatePath);
+		}
+		return resolvedPath;
+	}
+
+	private XSLFPictureData.PictureType detectPictureType(String fileName) {
+		String lower = fileName.toLowerCase(Locale.ROOT);
+		if (lower.endsWith(".png")) {
+			return XSLFPictureData.PictureType.PNG;
+		}
+		if (lower.endsWith(".gif")) {
+			return XSLFPictureData.PictureType.GIF;
+		}
+		if (lower.endsWith(".bmp")) {
+			return XSLFPictureData.PictureType.BMP;
+		}
+		if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+			return XSLFPictureData.PictureType.JPEG;
+		}
+		return XSLFPictureData.PictureType.JPEG;
+	}
+
 	// PptGeneratorService interface implementation.
 
 	@Override
@@ -309,34 +346,24 @@ public class PptGeneratorService implements IPptGeneratorService {
 
 	@Override
 	public String validatePptFilePath(String planId, String filePath) throws IOException {
-		// 1. Basic validation.
 		if (StringUtils.isBlank(filePath)) {
 			throw new IllegalArgumentException("File path cannot be blank");
 		}
 
-		// 2. File type validation.
-		if (!isSupportedPptFileType(filePath)) {
-			throw new IllegalArgumentException("Unsupported file type: " + getFileExtension(filePath));
-		}
-
-		// 3. Path normalization.
-		Path requestedPath = Path.of(filePath).normalize();
-
-		// 4. Security validation - prevent path traversal attacks.
-		if (requestedPath.toString().contains("../") || requestedPath.isAbsolute()) {
+		String normalizedFileName = normalizeOutputFileName(filePath);
+		Path requestedPath = Path.of(normalizedFileName).normalize();
+		if (requestedPath.isAbsolute() || requestedPath.startsWith("..")) {
 			throw new SecurityException("Illegal path: absolute path or parent directory reference is not allowed");
 		}
 
-		// 5. Limit output directory range.
-		Path baseDir = Path.of("extensions/pptGenerator").normalize();
+		Path baseDir = Path.of(OUTPUT_DIR).normalize();
+		Path outputPath = baseDir.resolve(requestedPath).normalize();
+		if (!outputPath.startsWith(baseDir)) {
+			throw new SecurityException("Illegal path: outside output directory");
+		}
 
-		// 6. Get the final absolute path.
-		Path absolutePath = unifiedDirectoryManager.getSpecifiedDirectory(baseDir.resolve(requestedPath).toString());
-
-		// 7. Ensure the directory exists.
-		Files.createDirectories(absolutePath.getParent());
-
-		return absolutePath.toString();
+		Files.createDirectories(baseDir);
+		return outputPath.toString();
 	}
 
 	@Override
@@ -368,7 +395,7 @@ public class PptGeneratorService implements IPptGeneratorService {
 	@Override
 	public String getTemplateList() throws IOException {
 		// Template directory path
-		String templateDirPath = "extensions/pptGenerator/template";
+		String templateDirPath = TEMPLATE_DIR;
 		Path templateDir = Path.of(templateDirPath).normalize();
 		Path jsonFilePath = templateDir.resolve("template_list.json");
 
@@ -465,7 +492,7 @@ public class PptGeneratorService implements IPptGeneratorService {
 		}
 
 		// 4. Limit template directory range.
-		Path baseDir = Path.of("extensions/pptGenerator/template").normalize();
+		Path baseDir = Path.of(TEMPLATE_DIR).normalize();
 		Path absolutePath = baseDir.resolve(requestedPath);
 
 		// 5. Check if the file exists.
