@@ -15,6 +15,12 @@
  */
 package com.wangliang.agentj.tools.pptGenerator;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.List;
 
 public class PptInput {
@@ -25,16 +31,18 @@ public class PptInput {
 
 	private String subtitle;
 
-	@com.fasterxml.jackson.annotation.JsonProperty("slide_contents")
+	@JsonProperty("slide_contents")
 	private List<SlideContent> slideContents;
 
 	private String path;
 
-	@com.fasterxml.jackson.annotation.JsonProperty("template_content")
+	@JsonProperty("template_content")
 	private String templateContent;
 
-	@com.fasterxml.jackson.annotation.JsonProperty("file_name")
+	@JsonProperty("file_name")
 	private String fileName;
+
+	private static final ObjectMapper SLIDE_CONTENTS_MAPPER = new ObjectMapper();
 
 	public static class SlideContent {
 
@@ -100,6 +108,36 @@ public class PptInput {
 
 	public List<SlideContent> getSlideContents() {
 		return slideContents;
+	}
+
+	@JsonSetter("slide_contents")
+	public void setSlideContents(JsonNode slideContentsNode) {
+		if (slideContentsNode == null || slideContentsNode.isNull()) {
+			this.slideContents = null;
+			return;
+		}
+		try {
+			if (slideContentsNode.isTextual()) {
+				String raw = slideContentsNode.asText();
+				if (raw == null || raw.trim().isEmpty()) {
+					this.slideContents = null;
+				}
+				else {
+					this.slideContents = SLIDE_CONTENTS_MAPPER.readValue(raw,
+							new TypeReference<List<SlideContent>>() {
+							});
+				}
+			}
+			else {
+				this.slideContents = SLIDE_CONTENTS_MAPPER.convertValue(slideContentsNode,
+						new TypeReference<List<SlideContent>>() {
+						});
+			}
+		}
+		catch (Exception e) {
+			throw new IllegalArgumentException("Invalid slide_contents format, must be JSON array or JSON string array",
+					e);
+		}
 	}
 
 	public void setSlideContents(List<SlideContent> slideContents) {

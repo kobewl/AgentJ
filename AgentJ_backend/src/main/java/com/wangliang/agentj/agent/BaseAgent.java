@@ -167,6 +167,7 @@ public abstract class BaseAgent {
 									"\n" +
 									"- Current Date:\n" +
 									"{currentDateTime}\n" +
+									"Use this date for time-sensitive queries and web searches; do not assume another year.\n" +
 									"\n" +
 									"{planStatus}\n" +
 									"\n" +
