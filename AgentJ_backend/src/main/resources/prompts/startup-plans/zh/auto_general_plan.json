@@ -6,7 +6,19 @@
   "serviceGroup": "ungrouped",
   "steps": [
     {
-      "stepRequirement": "[GENERAL_AGENT] 完成任务: <<task>>。可用上下文: <<context>>。如需工具可自行选择，输出可执行结果/总结，并在完成时调用 terminate。",
+      "stepRequirement": "[GENERAL_AGENT] 解析任务并生成可执行计划：<<task>>。可用上下文: <<context>>。",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": ""
+    },
+    {
+      "stepRequirement": "[GENERAL_AGENT] 按计划执行任务: <<task>>。必要时选择合适工具完成关键步骤。",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": ""
+    },
+    {
+      "stepRequirement": "[GENERAL_AGENT] 汇总结果并按要求输出（可用上下文: <<context>>）。完成时调用 terminate。",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
       "terminateColumns": ""

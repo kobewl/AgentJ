@@ -6,7 +6,43 @@
   "serviceGroup": "ungrouped",
   "steps": [
     {
-      "stepRequirement": "[BROWSER_AGENT] 使用浏览器完成任务: <<task>>。若提供 urls: <<urls>>，优先访问；目标/输出要求: <<goal>>。获取信息后总结并给出来源 URL。",
+      "stepRequirement": "[BROWSER_AGENT] 解析任务并生成浏览/信息收集计划：<<task>>。若提供 urls: <<urls>>，记录优先访问顺序；输出目标: <<goal>>。",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": "",
+      "selectedToolKeys": [
+        "browser_use",
+        "extract_relevant_content",
+        "file_merge_tool",
+        "terminate"
+      ]
+    },
+    {
+      "stepRequirement": "[BROWSER_AGENT] 按计划打开页面或搜索入口，优先访问 urls: <<urls>>，定位与任务相关的页面/区域。",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": "",
+      "selectedToolKeys": [
+        "browser_use",
+        "extract_relevant_content",
+        "file_merge_tool",
+        "terminate"
+      ]
+    },
+    {
+      "stepRequirement": "[BROWSER_AGENT] 抽取关键事实与数据，必要时跨页面核对，记录来源链接。",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": "",
+      "selectedToolKeys": [
+        "browser_use",
+        "extract_relevant_content",
+        "file_merge_tool",
+        "terminate"
+      ]
+    },
+    {
+      "stepRequirement": "[BROWSER_AGENT] 汇总结论并按 <<goal>> 输出，附上来源 URL。",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
       "terminateColumns": "",

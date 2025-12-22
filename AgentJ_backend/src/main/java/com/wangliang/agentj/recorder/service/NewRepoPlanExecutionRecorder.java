@@ -91,10 +91,12 @@ public class NewRepoPlanExecutionRecorder implements PlanExecutionRecorder {
 			planExecutionRecordEntity.setStartTime(LocalDateTime.now());
 			planExecutionRecordEntity.setTitle(title);
 			planExecutionRecordEntity.setUserRequest(userRequset);
+			planExecutionRecordEntity.setCurrentStepIndex(0);
 
 			// Process execution steps and create/update AgentExecutionRecordEntity
 			// instances
 			if (executionSteps != null && !executionSteps.isEmpty()) {
+				List<String> stepRequirements = new ArrayList<>();
 				for (ExecutionStep step : executionSteps) {
 					// Create or update AgentExecutionRecordEntity for each step
 
@@ -103,7 +105,14 @@ public class NewRepoPlanExecutionRecorder implements PlanExecutionRecorder {
 						// Add to plan execution record
 						planExecutionRecordEntity.addAgentExecutionRecord(agentRecord);
 					}
+					if (step != null && step.getStepRequirement() != null) {
+						stepRequirements.add(step.getStepRequirement());
+					}
 				}
+				planExecutionRecordEntity.setSteps(stepRequirements);
+			}
+			else {
+				planExecutionRecordEntity.setSteps(new ArrayList<>());
 			}
 
 			// Save the entity using repository
@@ -321,6 +330,8 @@ public class NewRepoPlanExecutionRecorder implements PlanExecutionRecorder {
 			// Save the updated entity
 			agentExecutionRecordRepository.save(agentRecord);
 
+			updatePlanCurrentStepIndex(currentPlanId, step.getStepIndex());
+
 			logger.info("Successfully recorded step start for stepId: {}, planId: {}, status: RUNNING",
 					step.getStepId(), currentPlanId);
 
@@ -368,6 +379,11 @@ public class NewRepoPlanExecutionRecorder implements PlanExecutionRecorder {
 
 			// Save the updated entity
 			agentExecutionRecordRepository.save(agentRecord);
+
+			Integer stepIndex = step.getStepIndex();
+			if (stepIndex != null) {
+				updatePlanCurrentStepIndex(currentPlanId, stepIndex + 1);
+			}
 
 			logger.info("Successfully recorded step end for stepId: {}, planId: {}, status: FINISHED", step.getStepId(),
 					currentPlanId);
@@ -622,6 +638,9 @@ public class NewRepoPlanExecutionRecorder implements PlanExecutionRecorder {
 
 			// 3. Mark plan as completed using the entity's complete method
 			planExecutionRecord.complete(summary);
+			if (planExecutionRecord.getSteps() != null) {
+				planExecutionRecord.setCurrentStepIndex(planExecutionRecord.getSteps().size());
+			}
 
 			logger.debug("Marked plan as completed for currentPlanId: {}, summary length: {}", currentPlanId,
 					summary != null ? summary.length() : 0);
@@ -635,6 +654,29 @@ public class NewRepoPlanExecutionRecorder implements PlanExecutionRecorder {
 		}
 		catch (Exception e) {
 			logger.error("Failed to record plan completion for currentPlanId: {}", currentPlanId, e);
+		}
+	}
+
+	private void updatePlanCurrentStepIndex(String currentPlanId, Integer stepIndex) {
+		try {
+			if (stepIndex == null) {
+				return;
+			}
+			Optional<PlanExecutionRecordEntity> planExecutionRecordOpt = planExecutionRecordRepository
+				.findByCurrentPlanId(currentPlanId);
+			if (planExecutionRecordOpt.isEmpty()) {
+				return;
+			}
+			PlanExecutionRecordEntity planExecutionRecord = planExecutionRecordOpt.get();
+			int normalizedIndex = stepIndex;
+			if (planExecutionRecord.getSteps() != null && !planExecutionRecord.getSteps().isEmpty()) {
+				normalizedIndex = Math.min(stepIndex, planExecutionRecord.getSteps().size());
+			}
+			planExecutionRecord.setCurrentStepIndex(normalizedIndex);
+			planExecutionRecordRepository.save(planExecutionRecord);
+		}
+		catch (Exception e) {
+			logger.debug("Failed to update plan currentStepIndex for planId {}: {}", currentPlanId, e.getMessage());
 		}
 	}
 

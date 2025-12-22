@@ -31,6 +31,7 @@ import com.wangliang.agentj.exception.PlanException;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.llm.StreamingResponseHandler;
 import com.wangliang.agentj.planning.service.IPlanParameterMappingService;
+import com.wangliang.agentj.planning.service.PlanDraftingService;
 import com.wangliang.agentj.planning.model.vo.PlanTemplateConfigVO;
 import com.wangliang.agentj.planning.service.PlanTemplateConfigService;
 import com.wangliang.agentj.planning.service.PlanTemplateService;
@@ -108,6 +109,9 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 
 	@Autowired
 	private IPlanParameterMappingService parameterMappingService;
+
+	@Autowired
+	private PlanDraftingService planDraftingService;
 
 	@Autowired
 	private RootTaskManagerService rootTaskManagerService;
@@ -572,6 +576,9 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 
 			// Parse the plan JSON to create PlanInterface
 			PlanInterface plan = objectMapper.readValue(planJson, PlanInterface.class);
+
+			// Draft a user-specific plan for supported templates before execution
+			applyDraftedPlanIfNeeded(plan, planTemplateId, replacementParams);
 
 			// Handle uploaded files if present
 			if (uploadedFiles != null && !uploadedFiles.isEmpty()) {
@@ -1046,6 +1053,138 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 			}
 		}
 		return latest;
+	}
+
+	private void applyDraftedPlanIfNeeded(PlanInterface plan, String planTemplateId,
+			Map<String, Object> replacementParams) {
+		if (plan == null || planTemplateId == null) {
+			return;
+		}
+		if (!(plan instanceof DynamicAgentExecutionPlan dynamicPlan)) {
+			return;
+		}
+		if (!planTemplateId.startsWith("auto-")) {
+			return;
+		}
+
+		String task = resolveTaskInput(replacementParams, dynamicPlan);
+		if (!StringUtils.hasText(task)) {
+			return;
+		}
+		String context = resolveParam(replacementParams, "context");
+		String goal = resolveParam(replacementParams, "goal");
+
+		List<String> draftedSteps = planDraftingService.draftPlanSteps(task, context, goal, 6);
+		if (draftedSteps == null || draftedSteps.isEmpty()) {
+			return;
+		}
+
+		ExecutionStep baseStep = dynamicPlan.getSteps() != null && !dynamicPlan.getSteps().isEmpty()
+				? dynamicPlan.getSteps().get(0)
+				: new ExecutionStep();
+		String agentTag = resolveAgentTag(planTemplateId, baseStep);
+		boolean taskIsChinese = containsChinese(task);
+
+		List<ExecutionStep> newSteps = new java.util.ArrayList<>();
+		for (int i = 0; i < draftedSteps.size(); i++) {
+			String stepText = draftedSteps.get(i);
+			if (!StringUtils.hasText(stepText)) {
+				continue;
+			}
+			boolean isLast = i == draftedSteps.size() - 1;
+			String requirement = buildStepRequirement(stepText, agentTag, isLast, taskIsChinese);
+
+			ExecutionStep step = new ExecutionStep();
+			step.setStepRequirement(requirement);
+			step.setAgentName(baseStep.getAgentName());
+			step.setModelName(baseStep.getModelName());
+			step.setTerminateColumns(baseStep.getTerminateColumns());
+			step.setSelectedToolKeys(baseStep.getSelectedToolKeys());
+			newSteps.add(step);
+		}
+
+		if (!newSteps.isEmpty()) {
+			dynamicPlan.setSteps(newSteps);
+			logger.info("Applied drafted plan with {} steps for planTemplateId {}", newSteps.size(), planTemplateId);
+		}
+	}
+
+	private String resolveTaskInput(Map<String, Object> replacementParams, DynamicAgentExecutionPlan dynamicPlan) {
+		String task = resolveParam(replacementParams, "task");
+		if (!StringUtils.hasText(task)) {
+			task = resolveParam(replacementParams, "input");
+		}
+		if (!StringUtils.hasText(task)) {
+			task = resolveParam(replacementParams, "prompt");
+		}
+		if (!StringUtils.hasText(task) && dynamicPlan.getSteps() != null && !dynamicPlan.getSteps().isEmpty()) {
+			String requirement = dynamicPlan.getSteps().get(0).getStepRequirement();
+			task = stripAgentTag(requirement);
+		}
+		return task;
+	}
+
+	private String resolveParam(Map<String, Object> replacementParams, String key) {
+		if (replacementParams == null || key == null) {
+			return null;
+		}
+		Object value = replacementParams.get(key);
+		return value != null ? value.toString() : null;
+	}
+
+	private String resolveAgentTag(String planTemplateId, ExecutionStep baseStep) {
+		if (planTemplateId.contains("browser")) {
+			return "BROWSER_AGENT";
+		}
+		if (planTemplateId.contains("database")) {
+			return "DATABASE_AGENT";
+		}
+		if (baseStep.getStepRequirement() != null) {
+			String requirement = baseStep.getStepRequirement().trim();
+			if (requirement.startsWith("[") && requirement.contains("]")) {
+				int end = requirement.indexOf(']');
+				if (end > 1) {
+					return requirement.substring(1, end).trim();
+				}
+			}
+		}
+		return "GENERAL_AGENT";
+	}
+
+	private String stripAgentTag(String requirement) {
+		if (!StringUtils.hasText(requirement)) {
+			return requirement;
+		}
+		String trimmed = requirement.trim();
+		if (trimmed.startsWith("[") && trimmed.contains("]")) {
+			int end = trimmed.indexOf(']');
+			return trimmed.substring(end + 1).trim();
+		}
+		return trimmed;
+	}
+
+	private boolean containsChinese(String text) {
+		if (!StringUtils.hasText(text)) {
+			return false;
+		}
+		return text.matches(".*\\p{IsHan}+.*");
+	}
+
+	private String buildStepRequirement(String stepText, String agentTag, boolean isLast, boolean taskIsChinese) {
+		String trimmed = stepText.trim();
+		String requirement;
+		if (trimmed.startsWith("[") && trimmed.contains("]")) {
+			requirement = trimmed;
+		}
+		else {
+			requirement = "[" + agentTag + "] " + trimmed;
+		}
+		if (isLast && !requirement.toLowerCase().contains("terminate")) {
+			requirement = taskIsChinese
+					? requirement + " 完成后调用 terminate。"
+					: requirement + " Call terminate when finished.";
+		}
+		return requirement;
 	}
 
 	/**

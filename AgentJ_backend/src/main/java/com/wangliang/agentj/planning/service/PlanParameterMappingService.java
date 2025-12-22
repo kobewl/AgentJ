@@ -16,15 +16,20 @@
 
 package com.wangliang.agentj.planning.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wangliang.agentj.planning.exception.ParameterValidationException;
 import com.wangliang.agentj.planning.model.vo.ParameterValidationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +41,9 @@ import java.util.regex.Pattern;
 public class PlanParameterMappingService implements IPlanParameterMappingService {
 
 	private static final Logger logger = LoggerFactory.getLogger(PlanParameterMappingService.class);
+
+	@Autowired(required = false)
+	private ObjectMapper objectMapper;
 
 	// Parameter placeholder regex pattern: matches <<parameter_name>> format,
 	// supports
@@ -59,6 +67,8 @@ public class PlanParameterMappingService implements IPlanParameterMappingService
 
 		List<String> missingParams = new ArrayList<>();
 		List<String> foundParams = new ArrayList<>();
+		Set<String> requiredParams = extractRequiredParams(planJson);
+		boolean hasSchema = requiredParams != null;
 
 		// Find all parameter placeholders
 		Matcher matcher = PARAMETER_PATTERN.matcher(planJson);
@@ -66,13 +76,17 @@ public class PlanParameterMappingService implements IPlanParameterMappingService
 		while (matcher.find()) {
 			String paramName = matcher.group(1);
 
+			boolean isRequired = !hasSchema || requiredParams.contains(paramName);
 			if (rawParams.containsKey(paramName)) {
 				foundParams.add(paramName);
 				logger.debug("Parameter validation passed: {}", paramName);
 			}
-			else {
+			else if (isRequired) {
 				missingParams.add(paramName);
 				logger.warn("Parameter validation failed: {} not found in raw parameters", paramName);
+			}
+			else {
+				logger.debug("Optional parameter {} not provided, skipping validation error", paramName);
 			}
 		}
 
@@ -199,6 +213,8 @@ public class PlanParameterMappingService implements IPlanParameterMappingService
 		String result = planJson;
 		int replacementCount = 0;
 		List<String> missingParams = new ArrayList<>();
+		Set<String> requiredParams = extractRequiredParams(planJson);
+		boolean hasSchema = requiredParams != null;
 
 		// Find all parameter placeholders
 		Matcher matcher = PARAMETER_PATTERN.matcher(planJson);
@@ -221,10 +237,16 @@ public class PlanParameterMappingService implements IPlanParameterMappingService
 
 				logger.debug("Parameter replacement successful: {} -> {}", placeholder, escapedValue);
 			}
-			else {
+			else if (!hasSchema || requiredParams.contains(paramName)) {
 				missingParams.add(paramName);
 				logger.warn("Parameter {} not found in raw parameters, keeping placeholder: {}", paramName,
 						placeholder);
+			}
+			else {
+				// Optional parameter: replace with empty string
+				result = result.replace(placeholder, "");
+				replacementCount++;
+				logger.debug("Optional parameter {} missing, replaced with empty string", paramName);
 			}
 		}
 
@@ -328,6 +350,46 @@ public class PlanParameterMappingService implements IPlanParameterMappingService
 		errorMessage.append(planJson);
 
 		return errorMessage.toString();
+	}
+
+	private Set<String> extractRequiredParams(String planJson) {
+		if (objectMapper == null || planJson == null) {
+			return null;
+		}
+		try {
+			JsonNode root = objectMapper.readTree(planJson);
+			JsonNode toolConfig = root.get("toolConfig");
+			if (toolConfig == null) {
+				return null;
+			}
+			JsonNode inputSchema = toolConfig.get("inputSchema");
+			if (inputSchema == null || !inputSchema.isArray()) {
+				return null;
+			}
+			Set<String> requiredParams = new HashSet<>();
+			for (JsonNode paramNode : inputSchema) {
+				if (paramNode == null) {
+					continue;
+				}
+				JsonNode nameNode = paramNode.get("name");
+				if (nameNode == null || !nameNode.isTextual()) {
+					continue;
+				}
+				boolean required = true;
+				JsonNode requiredNode = paramNode.get("required");
+				if (requiredNode != null && requiredNode.isBoolean()) {
+					required = requiredNode.asBoolean();
+				}
+				if (required) {
+					requiredParams.add(nameNode.asText());
+				}
+			}
+			return requiredParams;
+		}
+		catch (Exception e) {
+			logger.debug("Failed to parse inputSchema for optional parameters: {}", e.getMessage());
+			return null;
+		}
 	}
 
 }

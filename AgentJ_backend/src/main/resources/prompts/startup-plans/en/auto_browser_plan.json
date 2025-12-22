@@ -6,7 +6,43 @@
   "serviceGroup": "ungrouped",
   "steps": [
     {
-      "stepRequirement": "[BROWSER_AGENT] Use the browser to accomplish: <<task>>. If urls provided: <<urls>>, visit them first; goal/output style: <<goal>>. Collect info, summarize, and cite source URLs.",
+      "stepRequirement": "[BROWSER_AGENT] Analyze the task and draft a browsing/collection plan: <<task>>. If urls provided: <<urls>>, note priority order; output goal: <<goal>>.",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": "",
+      "selectedToolKeys": [
+        "browser_use",
+        "extract_relevant_content",
+        "file_merge_tool",
+        "terminate"
+      ]
+    },
+    {
+      "stepRequirement": "[BROWSER_AGENT] Follow the plan to open pages or search entry points, visiting urls first: <<urls>>. Locate relevant sections.",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": "",
+      "selectedToolKeys": [
+        "browser_use",
+        "extract_relevant_content",
+        "file_merge_tool",
+        "terminate"
+      ]
+    },
+    {
+      "stepRequirement": "[BROWSER_AGENT] Extract key facts/data, cross-check if needed, and record source links.",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": "",
+      "selectedToolKeys": [
+        "browser_use",
+        "extract_relevant_content",
+        "file_merge_tool",
+        "terminate"
+      ]
+    },
+    {
+      "stepRequirement": "[BROWSER_AGENT] Summarize and format according to <<goal>>, citing source URLs.",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
       "terminateColumns": "",

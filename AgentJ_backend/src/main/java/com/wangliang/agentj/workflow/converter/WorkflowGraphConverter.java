@@ -5,11 +5,11 @@ import com.alibaba.cloud.ai.graph.KeyStrategyFactory;
 import com.alibaba.cloud.ai.graph.StateGraph;
 import com.alibaba.cloud.ai.graph.state.strategy.ReplaceStrategy;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.llm.WorkflowLlmService;
 import com.wangliang.agentj.workflow.dto.WorkflowDTO;
 import com.wangliang.agentj.workflow.nodes.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Component;
 
@@ -21,14 +21,15 @@ import static com.alibaba.cloud.ai.graph.action.AsyncNodeAction.node_async;
 import static com.alibaba.cloud.ai.graph.action.AsyncEdgeAction.edge_async;
 
 /**
- * Converts WorkflowDTO (frontend graph definition) to Spring AI Alibaba StateGraph
+ * Converts WorkflowDTO (frontend graph definition) to Spring AI Alibaba
+ * StateGraph
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class WorkflowGraphConverter {
 
-    private final ChatClient.Builder chatClientBuilder;
+    private final WorkflowLlmService workflowLlmService;
     private final ObjectMapper objectMapper;
     private final Map<String, ToolCallback> toolRegistry;
 
@@ -68,7 +69,6 @@ public class WorkflowGraphConverter {
             strategies.put("result", new ReplaceStrategy());
             strategies.put("llm_output", new ReplaceStrategy());
             strategies.put("tool_output", new ReplaceStrategy());
-            strategies.put("systemPrompt", new ReplaceStrategy()); // Runtime system prompt
             strategies.put("_current_node", new ReplaceStrategy());
             strategies.put("_next_node", new ReplaceStrategy());
             strategies.put("_workflow_status", new ReplaceStrategy());
@@ -106,8 +106,11 @@ public class WorkflowGraphConverter {
                         .promptTemplate(getStringValue(data, "promptTemplate", "{{input}}"))
                         .systemPrompt(getStringValue(data, "systemPrompt", null))
                         .outputKey(getStringValue(data, "outputKey", "llm_output"))
+                        .modelName(getStringValue(data, "modelName", null))
+                        .temperature(getDoubleValue(data, "temperature", null))
+                        .topP(getDoubleValue(data, "topP", null))
                         .build();
-                graph.addNode(nodeId, node_async(new LLMNode(chatClientBuilder, config)));
+                graph.addNode(nodeId, node_async(new LLMNode(workflowLlmService, config)));
             }
 
             case "condition" -> {
@@ -142,12 +145,12 @@ public class WorkflowGraphConverter {
     }
 
     private void addEdgesToGraph(StateGraph graph, List<WorkflowDTO.NodeDTO> nodes,
-                                  List<WorkflowDTO.EdgeDTO> edges) throws Exception {
+            List<WorkflowDTO.EdgeDTO> edges) throws Exception {
         // Build a map of node types for quick lookup
         Map<String, String> nodeTypes = new HashMap<>();
         String startNodeId = null;
         String endNodeId = null;
-        
+
         for (WorkflowDTO.NodeDTO node : nodes) {
             nodeTypes.put(node.getId(), node.getType());
             if ("start".equalsIgnoreCase(node.getType())) {
@@ -163,11 +166,11 @@ public class WorkflowGraphConverter {
         for (WorkflowDTO.EdgeDTO edge : edges) {
             edgesBySource.computeIfAbsent(edge.getSource(), k -> new java.util.ArrayList<>()).add(edge);
         }
-        
+
         // Track if we've added an entry edge
         boolean hasEntryEdge = false;
         boolean hasEndEdge = false;
-        
+
         // Process edges
         for (WorkflowDTO.EdgeDTO edge : edges) {
             String sourceId = edge.getSource();
@@ -211,8 +214,7 @@ public class WorkflowGraphConverter {
                     graph.addConditionalEdges(
                             sourceId,
                             edge_async(state -> state.value("_condition_result").orElse("default").toString()),
-                            routeMap
-                    );
+                            routeMap);
                     continue; // Skip regular edge processing for this edge
                 }
             }
@@ -221,11 +223,11 @@ public class WorkflowGraphConverter {
             graph.addEdge(sourceId, targetId);
             log.debug("Added edge: {} -> {}", sourceId, targetId);
         }
-        
+
         // If no edges defined at all, try to create a simple linear flow
         if (edges.isEmpty() || !hasEntryEdge) {
             log.warn("No entry edge found, attempting to auto-create flow");
-            
+
             // Find the first non-start, non-end node to use as entry target
             String firstNodeId = null;
             for (WorkflowDTO.NodeDTO node : nodes) {
@@ -235,11 +237,11 @@ public class WorkflowGraphConverter {
                     break;
                 }
             }
-            
+
             if (firstNodeId != null) {
                 graph.addEdge(StateGraph.START, firstNodeId);
                 log.info("Auto-created entry edge: START -> {}", firstNodeId);
-                
+
                 // Also connect to END if no end edge
                 if (!hasEndEdge) {
                     graph.addEdge(firstNodeId, StateGraph.END);
@@ -256,5 +258,20 @@ public class WorkflowGraphConverter {
     private String getStringValue(Map<String, Object> data, String key, String defaultValue) {
         Object value = data.get(key);
         return value != null ? value.toString() : defaultValue;
+    }
+
+    private Double getDoubleValue(Map<String, Object> data, String key, Double defaultValue) {
+        Object value = data.get(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue();
+        }
+        try {
+            return Double.parseDouble(value.toString());
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 }

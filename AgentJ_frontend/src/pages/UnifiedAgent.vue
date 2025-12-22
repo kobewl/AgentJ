@@ -113,6 +113,25 @@
           </div>
         </div>
 
+        <!-- 计划步骤 -->
+        <div class="plan-section" v-if="planSteps.length">
+          <div class="section-header">
+            <span class="section-title">计划</span>
+            <span class="step-count">{{ planCompleted }}/{{ planTotal }} 已完成</span>
+          </div>
+          <div class="plan-list">
+            <div
+              v-for="item in planSteps"
+              :key="`plan-step-${item.index}`"
+              :class="['plan-item', `plan-${item.state}`]"
+            >
+              <div class="plan-index">{{ item.index }}</div>
+              <div class="plan-text">{{ item.text }}</div>
+              <div class="plan-status">{{ item.label }}</div>
+            </div>
+          </div>
+        </div>
+
         <!-- 等待用户输入 -->
         <div class="wait-input-section" v-if="waitState?.waiting">
           <div class="wait-header">
@@ -373,6 +392,54 @@ const detailText = computed(() => {
   return '';
 });
 
+const planSteps = computed(() => {
+  const steps = (detailJson.value?.steps || []) as string[];
+  const agents = (detailJson.value?.agentExecutionSequence || []) as any[];
+  const fallback = steps.length
+    ? steps
+    : agents.map((agent: any) => agent.agentRequest || agent.agentName || '').filter(Boolean);
+
+  const statusByIndex = new Map<number, string>();
+  agents.forEach((agent: any) => {
+    if (typeof agent.currentStep === 'number') {
+      statusByIndex.set(agent.currentStep, agent.status);
+    }
+  });
+
+  const currentIndex = detailJson.value?.currentStepIndex;
+  const completed = detailJson.value?.completed;
+
+  return fallback
+    .map((text, idx) => {
+      const normalizedText = String(text || '').replace(/^\[[^\]]+\]\s*/, '');
+      const agentStatus = statusByIndex.get(idx);
+      let state: 'done' | 'running' | 'pending' = 'pending';
+
+      if (agentStatus === 'FINISHED') {
+        state = 'done';
+      } else if (agentStatus === 'RUNNING') {
+        state = 'running';
+      } else if (completed) {
+        state = 'done';
+      } else if (typeof currentIndex === 'number') {
+        if (idx < currentIndex) state = 'done';
+        else if (idx === currentIndex) state = 'running';
+      }
+
+      const label = state === 'done' ? '已完成' : state === 'running' ? '进行中' : '待执行';
+      return {
+        index: idx + 1,
+        text: normalizedText,
+        state,
+        label,
+      };
+    })
+    .filter(item => item.text);
+});
+
+const planTotal = computed(() => planSteps.value.length);
+const planCompleted = computed(() => planSteps.value.filter(item => item.state === 'done').length);
+
 // 方法
 const selectAgent = (id: string) => {
   selectedAgent.value = id;
@@ -447,6 +514,7 @@ const buildReplacementParams = () => {
     if (showDatasource.value && datasourceName.value) {
       input += `\n使用数据源: ${datasourceName.value}`;
     }
+    params.task = input;
     params.input = input;
     params.prompt = input;
   }
@@ -819,6 +887,87 @@ watch(selectedAgent, (val) => {
   gap: 12px;
 }
 
+.plan-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plan-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.plan-item {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.plan-index {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.plan-text {
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.plan-status {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.plan-done {
+  border-color: rgba(22, 163, 74, 0.4);
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.plan-done .plan-index {
+  background: rgba(22, 163, 74, 0.15);
+  color: #16a34a;
+}
+
+.plan-done .plan-status {
+  background: rgba(22, 163, 74, 0.15);
+  color: #16a34a;
+}
+
+.plan-running {
+  border-color: rgba(234, 179, 8, 0.5);
+  background: rgba(234, 179, 8, 0.1);
+}
+
+.plan-running .plan-index {
+  background: rgba(234, 179, 8, 0.2);
+  color: #ca8a04;
+}
+
+.plan-running .plan-status {
+  background: rgba(234, 179, 8, 0.2);
+  color: #ca8a04;
+}
+
 .section-header {
   display: flex;
   align-items: center;
@@ -913,5 +1062,6 @@ watch(selectedAgent, (val) => {
   }
 }
 </style>
+
 
 

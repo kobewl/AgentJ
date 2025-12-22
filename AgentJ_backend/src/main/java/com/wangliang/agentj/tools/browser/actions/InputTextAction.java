@@ -39,17 +39,44 @@ public class InputTextAction extends BrowserAction {
 			return new ToolExecuteResult("Failed to create locator for element with index " + index);
 		}
 
+		waitForPageReady(getCurrentPage());
+
 		// Set timeout for element operations to prevent hanging
 		Integer timeoutMs = getElementTimeoutMs();
 
+		try {
+			elementLocator.waitFor(new Locator.WaitForOptions()
+				.setTimeout(timeoutMs)
+				.setState(com.microsoft.playwright.options.WaitForSelectorState.VISIBLE));
+			try {
+				elementLocator.scrollIntoViewIfNeeded(
+						new Locator.ScrollIntoViewIfNeededOptions().setTimeout(timeoutMs));
+			}
+			catch (Exception e) {
+				// Best effort scroll to improve reliability
+			}
+		}
+		catch (com.microsoft.playwright.TimeoutError e) {
+			throw e;
+		}
+
 		// Try fill with timeout
 		try {
+			try {
+				elementLocator.click(new Locator.ClickOptions().setTimeout(timeoutMs));
+			}
+			catch (Exception e) {
+				// Best effort focus, continue to input regardless
+			}
 			Locator.FillOptions fillOptions = new Locator.FillOptions().setTimeout(timeoutMs);
 			elementLocator.fill("", fillOptions); // Clear first
-			// Set character input delay to 100ms, adjustable as needed
-			Locator.PressSequentiallyOptions options = new Locator.PressSequentiallyOptions().setDelay(100)
+			// Set character input delay to 50ms for faster but still stable input
+			Locator.PressSequentiallyOptions options = new Locator.PressSequentiallyOptions().setDelay(50)
 				.setTimeout(timeoutMs);
 			elementLocator.pressSequentially(text, options);
+		}
+		catch (com.microsoft.playwright.TimeoutError e) {
+			throw e;
 		}
 		catch (Exception e) {
 			// If fill fails, try direct fill

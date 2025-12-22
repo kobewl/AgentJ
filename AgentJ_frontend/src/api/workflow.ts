@@ -96,3 +96,19 @@ export async function getNodeTypes(): Promise<NodeType[]> {
   const response = await http.get('/api/workflow/node-types');
   return response.data;
 }
+
+// ============ Model Operations ============
+
+export interface ModelInfo {
+  id: number;
+  modelName: string;
+  description: string;
+  isDefault: boolean;
+  defaultTemperature?: number;
+  defaultTopP?: number;
+}
+
+export async function getAvailableModels(): Promise<ModelInfo[]> {
+  const response = await http.get('/api/workflow/models');
+  return response.data;
+}

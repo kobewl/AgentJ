@@ -41,6 +41,7 @@ public class ClickByElementAction extends BrowserAction {
 		}
 
 		Page page = getCurrentPage();
+		waitForPageReady(page);
 		Locator locator = getLocatorByIdx(index);
 		if (locator == null) {
 			return new ToolExecuteResult("Failed to create locator for element with index " + index);
@@ -52,17 +53,38 @@ public class ClickByElementAction extends BrowserAction {
 				int elementTimeout = getElementTimeoutMs();
 				log.debug("Using element timeout: {}ms for click operations", elementTimeout);
 
-				// For other elements, use standard waiting strategy
-				// Wait for element to be visible and enabled before clicking
-				locator.waitFor(new Locator.WaitForOptions().setTimeout(elementTimeout));
-
-				// Check if element is visible and enabled
-				if (!locator.isVisible()) {
-					throw new RuntimeException("Element is not visible");
+				// Wait for element to be visible before clicking
+				locator.waitFor(new Locator.WaitForOptions()
+					.setTimeout(elementTimeout)
+					.setState(com.microsoft.playwright.options.WaitForSelectorState.VISIBLE));
+				try {
+					locator.scrollIntoViewIfNeeded(
+							new Locator.ScrollIntoViewIfNeededOptions().setTimeout(elementTimeout));
+				}
+				catch (Exception e) {
+					log.debug("Scroll into view failed for idx {}: {}", index, e.getMessage());
 				}
 
-				// Click with explicit timeout
-				locator.click(new Locator.ClickOptions().setTimeout(elementTimeout));
+				// Click with explicit timeout (fallback to force click if needed)
+				try {
+					locator.click(new Locator.ClickOptions().setTimeout(elementTimeout));
+				}
+				catch (com.microsoft.playwright.TimeoutError e) {
+					log.error("Timeout waiting for element with idx {} to be ready for click: {}", index,
+							e.getMessage());
+					throw e;
+				}
+				catch (com.microsoft.playwright.PlaywrightException e) {
+					log.warn("Standard click failed for idx {}, attempting force click: {}", index, e.getMessage());
+					try {
+						locator.click(new Locator.ClickOptions().setTimeout(elementTimeout).setForce(true));
+					}
+					catch (Exception forceClickError) {
+						log.warn("Force click failed for idx {}, attempting JS click: {}", index,
+								forceClickError.getMessage());
+						locator.evaluate("el => el.click()");
+					}
+				}
 
 				// Add small delay to ensure the action is processed
 				Thread.sleep(500);
@@ -70,7 +92,7 @@ public class ClickByElementAction extends BrowserAction {
 			}
 			catch (com.microsoft.playwright.TimeoutError e) {
 				log.error("Timeout waiting for element with idx {} to be ready for click: {}", index, e.getMessage());
-				throw new RuntimeException("Timeout waiting for element to be ready for click: " + e.getMessage(), e);
+				throw e;
 			}
 			catch (Exception e) {
 				log.error("Error during click on element with idx {}: {}", index, e.getMessage());

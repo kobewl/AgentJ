@@ -79,6 +79,9 @@ public class PlanExecutionRecord {
 	// Current step index being executed
 	private Integer currentStepIndex;
 
+	// List of plan steps (plain text requirement list)
+	private List<String> steps;
+
 	// Whether completed
 	private boolean completed;
 
@@ -107,6 +110,7 @@ public class PlanExecutionRecord {
 		this.startTime = LocalDateTime.now();
 		this.completed = false;
 		this.agentExecutionSequence = new ArrayList<>();
+		this.steps = new ArrayList<>();
 		this.id = generateId();
 		// Initialize current step index
 		this.currentStepIndex = 0;
@@ -291,6 +295,14 @@ public class PlanExecutionRecord {
 
 	public void setCurrentStepIndex(Integer currentStepIndex) {
 		this.currentStepIndex = currentStepIndex;
+	}
+
+	public List<String> getSteps() {
+		return steps;
+	}
+
+	public void setSteps(List<String> steps) {
+		this.steps = steps != null ? steps : new ArrayList<>();
 	}
 
 	public boolean isCompleted() {

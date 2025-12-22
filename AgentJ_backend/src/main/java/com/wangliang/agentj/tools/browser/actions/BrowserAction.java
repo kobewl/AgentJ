@@ -74,6 +74,36 @@ public abstract class BrowserAction {
 	}
 
 	/**
+	 * Wait for page to reach a stable load state before interacting.
+	 */
+	protected void waitForPageReady(Page page) {
+		if (page == null || page.isClosed()) {
+			return;
+		}
+		int timeout = getBrowserTimeoutMs();
+		try {
+			page.waitForLoadState(com.microsoft.playwright.options.LoadState.DOMCONTENTLOADED,
+					new Page.WaitForLoadStateOptions().setTimeout(timeout));
+		}
+		catch (TimeoutError e) {
+			log.debug("DOM content load wait timed out: {}", e.getMessage());
+		}
+		catch (PlaywrightException e) {
+			log.debug("DOM content load wait failed: {}", e.getMessage());
+		}
+		try {
+			page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE,
+					new Page.WaitForLoadStateOptions().setTimeout(Math.min(timeout, 5000)));
+		}
+		catch (TimeoutError e) {
+			log.debug("Network idle wait timed out: {}", e.getMessage());
+		}
+		catch (PlaywrightException e) {
+			log.debug("Network idle wait failed: {}", e.getMessage());
+		}
+	}
+
+	/**
 	 * Simulate human behavior
 	 * @param element Playwright ElementHandle instance
 	 */
@@ -165,7 +195,21 @@ public abstract class BrowserAction {
 	 * @return true if element exists, false otherwise
 	 */
 	protected boolean elementExistsByIdx(int idx) {
-		return getLocatorByIdx(idx) != null;
+		Locator locator = getLocatorByIdx(idx);
+		if (locator == null) {
+			return false;
+		}
+		try {
+			return locator.count() > 0;
+		}
+		catch (PlaywrightException e) {
+			log.debug("Failed to count locator for idx {}: {}", idx, e.getMessage());
+			return false;
+		}
+		catch (Exception e) {
+			log.debug("Unexpected error checking locator for idx {}: {}", idx, e.getMessage());
+			return false;
+		}
 	}
 
 	protected String clickAndSwitchToNewTabIfOpened(Page pageToClickOn, Runnable clickLambda) {

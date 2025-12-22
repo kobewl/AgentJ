@@ -1,22 +1,21 @@
 <template>
   <div class="dashboard">
-    <!-- 页面标题 -->
+    <!-- 简洁的页面标题 -->
     <div class="page-header">
       <div class="header-content">
         <div class="title-section">
-          <h1 class="page-title">AgentJ 控制台</h1>
-          <p class="page-subtitle">AI 智能助手管理系统</p>
-        </div>
-        <div class="header-actions">
-          <el-button type="primary" @click="refreshData">
-            <el-icon><Refresh /></el-icon>
-            刷新数据
-          </el-button>
+          <div class="brand-logo">
+            <el-icon size="32"><Cpu /></el-icon>
+          </div>
+          <div class="title-text">
+            <h1 class="page-title">AgentJ</h1>
+            <p class="page-subtitle">AI 智能助手</p>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 统计卡片 -->
+    <!-- 核心统计卡片 - 只保留最重要的数据 -->
     <div class="stats-grid" v-loading="stats.length === 0">
       <el-card class="stat-card" v-for="stat in stats" :key="stat.title">
         <div class="stat-content">
@@ -28,12 +27,6 @@
           <div class="stat-info">
             <div class="stat-value">{{ stat.value }}</div>
             <div class="stat-title">{{ stat.title }}</div>
-            <div class="stat-trend" :class="stat.trend > 0 ? 'up' : 'down'">
-              <el-icon size="12">
-                <component :is="stat.trend > 0 ? 'Top' : 'Bottom'" />
-              </el-icon>
-              {{ Math.abs(stat.trend) }}%
-            </div>
           </div>
         </div>
       </el-card>
@@ -43,138 +36,29 @@
       </div>
     </div>
 
-    <!-- 主要内容区域 -->
-    <div class="content-grid">
-      <!-- 左侧：快速操作 -->
-      <div class="left-panel">
-        <el-card class="quick-actions">
-          <template #header>
-            <div class="card-header">
-              <el-icon><Operation /></el-icon>
-              <span>快速操作</span>
-            </div>
-          </template>
-          <div class="actions-grid">
-            <el-button 
-              v-for="action in quickActions" 
-              :key="action.key"
-              @click="handleQuickAction(action)"
-              :type="action.type"
-              class="action-btn"
-            >
-              <el-icon size="16">
-                <component :is="action.icon" />
-              </el-icon>
-              <span>{{ action.title }}</span>
-            </el-button>
-          </div>
-        </el-card>
-
-        <!-- 系统状态 -->
-        <el-card class="system-status" v-loading="systemStatus.length === 0">
-          <template #header>
-            <div class="card-header">
-              <el-icon><Monitor /></el-icon>
-              <span>系统状态</span>
-            </div>
-          </template>
-          <div class="status-list" v-if="systemStatus.length > 0">
-            <div 
-              v-for="status in systemStatus" 
-              :key="status.name"
-              class="status-item"
-            >
-              <div class="status-indicator" :class="status.status">
-                <el-icon size="8">
-                  <component :is="getStatusIcon(status.status)" />
-                </el-icon>
-              </div>
-              <span class="status-name">{{ status.name }}</span>
-              <span class="status-value">{{ status.value }}</span>
-            </div>
-          </div>
-          <div v-else class="empty-status">
-            <el-icon size="32" class="empty-icon"><Monitor /></el-icon>
-            <p>暂无系统状态信息</p>
-          </div>
-        </el-card>
-      </div>
-
-      <!-- 右侧：数据图表 -->
-      <div class="right-panel">
-        <el-card class="chart-card">
-          <template #header>
-            <div class="card-header">
-              <el-icon><TrendCharts /></el-icon>
-              <span>对话统计</span>
-              <el-select v-model="chartPeriod" size="small" class="period-select">
-                <el-option label="今日" value="day" />
-                <el-option label="本周" value="week" />
-                <el-option label="本月" value="month" />
-              </el-select>
-            </div>
-          </template>
-          <div class="chart-container">
-            <div class="chart-placeholder">
-              <el-icon size="48" class="chart-icon"><DataAnalysis /></el-icon>
-              <p>对话数据图表</p>
-              <el-button type="primary" size="small" @click="loadChartData">
-                加载数据
-              </el-button>
-            </div>
-          </div>
-        </el-card>
-
-        <!-- 最近活动 -->
-        <el-card class="recent-activity">
-          <template #header>
-            <div class="card-header">
-              <el-icon><Clock /></el-icon>
-              <span>最近活动</span>
-            </div>
-          </template>
-          <div class="activity-list">
-            <div 
-              v-for="activity in recentActivities" 
-              :key="activity.id"
-              class="activity-item"
-            >
-              <div class="activity-icon" :style="{ background: activity.color + '20', color: activity.color }">
-                <el-icon size="16">
-                  <component :is="activity.icon" />
-                </el-icon>
-              </div>
-              <div class="activity-content">
-                <div class="activity-title">{{ activity.title }}</div>
-                <div class="activity-time">{{ formatTime(activity.time) }}</div>
-              </div>
-              <el-tag :type="activity.statusType" size="small">
-                {{ activity.status }}
-              </el-tag>
-            </div>
-            <div v-if="recentActivities.length === 0" class="empty-activity">
-              <el-icon size="32" class="empty-icon"><Inbox /></el-icon>
-              <p>暂无活动记录</p>
-            </div>
-          </div>
-        </el-card>
-      </div>
+    <!-- 简化的快速操作 -->
+    <div class="quick-actions-section">
+      <el-card class="quick-actions">
+        <div class="actions-grid">
+          <el-button 
+            v-for="action in quickActions" 
+            :key="action.key"
+            @click="handleQuickAction(action)"
+            :type="action.type"
+            class="action-btn"
+          >
+            <el-icon size="20">
+              <component :is="action.icon" />
+            </el-icon>
+            <span>{{ action.title }}</span>
+          </el-button>
+        </div>
+      </el-card>
     </div>
 
     <!-- 底部信息 -->
     <div class="footer-info">
-      <el-card class="info-card">
-        <div class="info-content">
-          <div class="info-item">
-            <el-icon><InfoFilled /></el-icon>
-            <span>AgentJ v0.0.1 - AI智能助手管理系统</span>
-          </div>
-          <div class="info-item">
-            <el-icon><Clock /></el-icon>
-            <span>最后更新: {{ lastUpdateTime }}</span>
-          </div>
-        </div>
-      </el-card>
+      <p class="footer-text">AgentJ v0.0.1 - AI智能助手管理系统</p>
     </div>
   </div>
 </template>
@@ -183,6 +67,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
+import { Cpu } from '@element-plus/icons-vue';
 
 const router = useRouter();
 const chartPeriod = ref('day');
@@ -291,7 +176,7 @@ onMounted(() => {
 <style scoped>
 .dashboard {
   padding: 24px;
-  background: radial-gradient(circle at 20% 20%, rgb(37 99 235 / 0.04), transparent 35%), var(--bg-secondary);
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: 100vh;
 }
 
@@ -301,17 +186,32 @@ onMounted(() => {
 
 .header-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  background: var(--bg-glass);
-  padding: 20px 24px;
-  border-radius: 16px;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(12px);
+  padding: 48px 32px;
+  text-align: center;
 }
 
 .title-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  margin: 0 auto 16px;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+.title-text {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -319,15 +219,15 @@ onMounted(() => {
 
 .page-title {
   margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 28px;
+  font-weight: 700;
+  color: #333333;
 }
 
 .page-subtitle {
   margin: 0;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: #666666;
 }
 
 .header-actions {
@@ -343,16 +243,17 @@ onMounted(() => {
 }
 
 .stat-card {
-  border-radius: 16px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-color);
-  transition: all 0.3s ease;
-  background: linear-gradient(145deg, var(--bg-primary), rgb(37 99 235 / 0.03));
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: none;
+  transition: all 0.4s ease;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
 }
 
 .stat-content {
@@ -377,16 +278,16 @@ onMounted(() => {
 }
 
 .stat-value {
-  font-size: 28px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 4px;
+  font-size: 32px;
+  font-weight: 700;
+  color: #333333;
+  margin-bottom: 6px;
 }
 
 .stat-title {
   font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
+  color: #666666;
+  margin-bottom: 6px;
 }
 
 .stat-trend {
@@ -427,9 +328,11 @@ onMounted(() => {
 .system-status,
 .chart-card,
 .recent-activity {
-  border-radius: 16px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
 }
 
 .card-header {
@@ -449,15 +352,17 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 16px 8px;
+  gap: 10px;
+  padding: 20px 12px;
   height: auto;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  border-radius: 12px;
+  transition: all 0.4s ease;
+  font-weight: 600;
 }
 
 .action-btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .status-list {
@@ -543,17 +448,18 @@ onMounted(() => {
 .activity-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: var(--bg-primary);
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  border: 1px solid transparent;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  transition: all 0.4s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .activity-item:hover {
-  background: rgb(37 99 235 / 0.06);
-  border-color: var(--border-color);
+  background: rgba(102, 126, 234, 0.1);
+  border-color: rgba(102, 126, 234, 0.3);
+  transform: translateX(8px);
 }
 
 .activity-icon {
@@ -636,7 +542,7 @@ onMounted(() => {
   }
   
   .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
 }
 
@@ -648,7 +554,13 @@ onMounted(() => {
   .header-content {
     flex-direction: column;
     gap: 16px;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .title-section {
+    flex-direction: column;
+    gap: 12px;
   }
   
   .stats-grid {
@@ -661,11 +573,28 @@ onMounted(() => {
   
   .info-content {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .page-title {
+    font-size: 24px;
+  }
+  
+  .stat-value {
+    font-size: 28px;
   }
 }
 
 @media (max-width: 480px) {
+  .dashboard {
+    padding: 12px;
+  }
+  
+  .header-content {
+    padding: 20px;
+  }
+  
   .page-title {
     font-size: 20px;
   }
@@ -676,6 +605,14 @@ onMounted(() => {
   
   .chart-container {
     height: 250px;
+  }
+  
+  .stat-card {
+    padding: 16px;
+  }
+  
+  .action-btn {
+    padding: 16px 8px;
   }
 }
 </style>

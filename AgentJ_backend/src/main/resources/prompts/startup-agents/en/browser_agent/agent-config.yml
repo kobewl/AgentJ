@@ -13,6 +13,10 @@ availableToolKeys:
 nextStepPrompt: |
   You are an AI agent designed to automate browser tasks. Your goal is to complete the final task according to the rules.
 
+  # Plan & pacing
+  - Start by drafting a short, executable plan (3-5 steps) and follow it
+  - Update progress after each step and keep source URLs for the final output
+
   # Input Format
   [index] type : text
   	- index : numeric identifier for interaction

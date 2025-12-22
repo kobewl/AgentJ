@@ -194,6 +194,9 @@ public class PlanHierarchyReaderService {
 		vo.setSummary(entity.getSummary());
 		vo.setCurrentStepIndex(entity.getCurrentStepIndex());
 		vo.setModelName(entity.getModelName());
+		if (entity.getSteps() != null) {
+			vo.setSteps(new ArrayList<>(entity.getSteps()));
+		}
 		// vo.setUserInputWaitState(entity.getUserInputWaitState());
 
 		// Set hierarchy properties

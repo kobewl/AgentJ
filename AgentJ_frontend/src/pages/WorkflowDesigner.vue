@@ -218,6 +218,25 @@
                 placeholder="LLM 节点"
               />
             </el-form-item>
+            <el-form-item label="选择模型">
+              <el-select
+                :model-value="getNodeDataValue('modelName')"
+                @update:model-value="setNodeDataValue('modelName', $event)"
+                placeholder="选择 AI 模型"
+                clearable
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="model in availableModels"
+                  :key="model.modelName"
+                  :label="model.modelName"
+                  :value="model.modelName"
+                >
+                  <span>{{ model.modelName }}</span>
+                  <span v-if="model.isDefault" style="color: #67c23a; margin-left: 8px;">(默认)</span>
+                </el-option>
+              </el-select>
+            </el-form-item>
             <el-form-item label="系统提示词">
               <el-input
                 :value="getNodeDataValue('systemPrompt')"
@@ -234,6 +253,26 @@
                 type="textarea"
                 :rows="4"
                 placeholder="使用 {{input}} 引用用户输入"
+              />
+            </el-form-item>
+            <el-form-item label="温度">
+              <el-slider
+                :model-value="Number(getNodeDataValue('temperature')) || 0.7"
+                @update:model-value="setNodeDataValue('temperature', String($event))"
+                :min="0"
+                :max="2"
+                :step="0.1"
+                show-input
+              />
+            </el-form-item>
+            <el-form-item label="Top P">
+              <el-slider
+                :model-value="Number(getNodeDataValue('topP')) || 1"
+                @update:model-value="setNodeDataValue('topP', String($event))"
+                :min="0"
+                :max="1"
+                :step="0.1"
+                show-input
               />
             </el-form-item>
             <el-form-item label="输出变量">
@@ -317,15 +356,6 @@
       <div class="execute-panel">
         <div class="execute-config">
           <div class="config-section">
-            <label>系统提示词 (可选)</label>
-            <el-input
-              v-model="runtimeSystemPrompt"
-              type="textarea"
-              :rows="3"
-              placeholder="定义 AI 助手的角色和行为..."
-            />
-          </div>
-          <div class="config-section">
             <label>用户输入</label>
             <el-input
               v-model="userPrompt"
@@ -380,7 +410,7 @@ import {
   Refresh, Close, CircleCheck, SetUp, Delete, Upload
 } from '@element-plus/icons-vue';
 import * as workflowApi from '@/api/workflow';
-import type { Workflow, NodeType } from '@/api/workflow';
+import type { Workflow, NodeType, ModelInfo } from '@/api/workflow';
 
 // Default edge options with arrow
 const defaultEdgeOptions: DefaultEdgeOptions = {
@@ -411,8 +441,8 @@ const executing = ref(false);
 const executeDrawerVisible = ref(false);
 const workflowList = ref<Workflow[]>([]);
 const userPrompt = ref('');
-const runtimeSystemPrompt = ref('');
 const executeResult = ref<any>(null);
+const availableModels = ref<ModelInfo[]>([]);
 
 // Computed helpers - must use computed() for reactivity in template
 const statusTagType = computed(() => {
@@ -475,6 +505,7 @@ const getIcon = (iconName: string) => {
 // Lifecycle
 onMounted(async () => {
   await loadNodeTypes();
+  await loadAvailableModels();
   await refreshWorkflowList();
   initDefaultNodes();
   
@@ -514,6 +545,14 @@ async function refreshWorkflowList() {
     workflowList.value = await workflowApi.getWorkflows();
   } catch (e) {
     console.error('Failed to load workflows', e);
+  }
+}
+
+async function loadAvailableModels() {
+  try {
+    availableModels.value = await workflowApi.getAvailableModels();
+  } catch (e) {
+    console.error('Failed to load models', e);
   }
 }
 
@@ -720,7 +759,6 @@ async function doExecute() {
   try {
     const inputs = {
       input: userPrompt.value,
-      systemPrompt: runtimeSystemPrompt.value || undefined,
     };
     executeResult.value = await workflowApi.executeWorkflow(workflowId.value!, { inputs });
     ElMessage.success('执行完成');

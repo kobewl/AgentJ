@@ -6,7 +6,19 @@
   "serviceGroup": "ungrouped",
   "steps": [
     {
-      "stepRequirement": "[GENERAL_AGENT] Complete task: <<task>>. Optional context: <<context>>. Choose tools if needed; deliver actionable result/summary and call terminate when done.",
+      "stepRequirement": "[GENERAL_AGENT] Analyze the task and draft an executable plan: <<task>>. Context: <<context>>.",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": ""
+    },
+    {
+      "stepRequirement": "[GENERAL_AGENT] Execute the task per plan: <<task>>. Choose tools as needed for key steps.",
+      "agentName": "ConfigurableDynaAgent",
+      "modelName": "",
+      "terminateColumns": ""
+    },
+    {
+      "stepRequirement": "[GENERAL_AGENT] Summarize results and format output using context if provided: <<context>>. Call terminate when finished.",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
       "terminateColumns": ""

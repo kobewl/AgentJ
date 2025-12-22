@@ -1,6 +1,7 @@
 package com.wangliang.agentj.workflow.controller;
 
 import com.alibaba.cloud.ai.graph.NodeOutput;
+import com.wangliang.agentj.llm.WorkflowLlmService;
 import com.wangliang.agentj.workflow.dto.WorkflowDTO;
 import com.wangliang.agentj.workflow.dto.WorkflowExecuteRequest;
 import com.wangliang.agentj.workflow.entity.WorkflowExecution;
@@ -30,6 +31,7 @@ public class WorkflowController {
 
     private final WorkflowService workflowService;
     private final WorkflowExecutionService executionService;
+    private final WorkflowLlmService workflowLlmService;
 
     // ============ CRUD Operations ============
 
@@ -121,15 +123,13 @@ public class WorkflowController {
                         "label", "开始",
                         "description", "工作流入口节点",
                         "icon", "play",
-                        "color", "#52c41a"
-                ),
+                        "color", "#52c41a"),
                 Map.of(
                         "type", "end",
                         "label", "结束",
                         "description", "工作流结束节点",
                         "icon", "stop",
-                        "color", "#ff4d4f"
-                ),
+                        "color", "#ff4d4f"),
                 Map.of(
                         "type", "llm",
                         "label", "LLM",
@@ -137,11 +137,16 @@ public class WorkflowController {
                         "icon", "robot",
                         "color", "#1890ff",
                         "configSchema", Map.of(
-                                "promptTemplate", Map.of("type", "textarea", "label", "提示词模板", "required", true),
+                                "modelName", Map.of("type", "select", "label", "选择模型"),
                                 "systemPrompt", Map.of("type", "textarea", "label", "系统提示词"),
-                                "outputKey", Map.of("type", "text", "label", "输出变量名", "default", "llm_output")
-                        )
-                ),
+                                "promptTemplate", Map.of("type", "textarea", "label", "提示词模板", "required", true),
+                                "temperature",
+                                Map.of("type", "slider", "label", "温度", "min", 0, "max", 2, "step", 0.1, "default",
+                                        0.7),
+                                "topP",
+                                Map.of("type", "slider", "label", "Top P", "min", 0, "max", 1, "step", 0.1, "default",
+                                        1.0),
+                                "outputKey", Map.of("type", "text", "label", "输出变量名", "default", "llm_output"))),
                 Map.of(
                         "type", "condition",
                         "label", "条件",
@@ -151,9 +156,7 @@ public class WorkflowController {
                         "configSchema", Map.of(
                                 "expression", Map.of("type", "code", "label", "条件表达式", "language", "javascript"),
                                 "trueTarget", Map.of("type", "text", "label", "真值目标"),
-                                "falseTarget", Map.of("type", "text", "label", "假值目标")
-                        )
-                ),
+                                "falseTarget", Map.of("type", "text", "label", "假值目标"))),
                 Map.of(
                         "type", "tool",
                         "label", "工具",
@@ -163,10 +166,15 @@ public class WorkflowController {
                         "configSchema", Map.of(
                                 "toolName", Map.of("type", "select", "label", "选择工具", "required", true),
                                 "parameterMapping", Map.of("type", "keyvalue", "label", "参数映射"),
-                                "outputKey", Map.of("type", "text", "label", "输出变量名", "default", "tool_output")
-                        )
-                )
-        );
+                                "outputKey", Map.of("type", "text", "label", "输出变量名", "default", "tool_output"))));
         return ResponseEntity.ok(nodeTypes);
+    }
+
+    // ============ Model Operations ============
+
+    @GetMapping("/models")
+    @Operation(summary = "获取可用模型列表")
+    public ResponseEntity<List<Map<String, Object>>> getAvailableModels() {
+        return ResponseEntity.ok(workflowLlmService.getAvailableModels());
     }
 }
