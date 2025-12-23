@@ -5,6 +5,11 @@
       v-if="isMobile && !isCollapsed" 
       class="mobile-overlay"
       @click="toggleSidebar"
+      role="button"
+      tabindex="0"
+      aria-label="关闭侧边栏"
+      @keydown.enter="toggleSidebar"
+      @keydown.space.prevent="toggleSidebar"
     />
     
     <!-- 侧边栏 -->
@@ -12,9 +17,11 @@
       :width="isMobile ? '240px' : '220px'" 
       class="aside"
       :class="{ 'mobile-open': isMobile && !isCollapsed }"
+      role="navigation"
+      aria-label="主导航"
     >
       <div class="logo">
-        <el-icon size="24" class="logo-icon"><Cpu /></el-icon>
+        <el-icon size="24" class="logo-icon" aria-hidden="true"><Cpu /></el-icon>
         <span class="logo-text">AgentJ</span>
       </div>
       
@@ -24,14 +31,17 @@
         class="menu" 
         :collapse="isCollapsed && !isMobile"
         :unique-opened="true"
+        role="menubar"
       >
         <el-menu-item 
           v-for="item in menuRoutes" 
           :key="item.path" 
           :index="item.path"
           class="menu-item"
+          :aria-label="item.meta?.title"
+          role="menuitem"
         >
-          <el-icon v-if="item.meta?.icon" class="menu-icon">
+          <el-icon v-if="item.meta?.icon" class="menu-icon" aria-hidden="true">
             <component :is="resolveIcon(item.meta.icon as string)" />
           </el-icon>
           <template #title>
@@ -41,6 +51,7 @@
               size="small" 
               type="danger"
               class="menu-badge"
+              :aria-label="`${item.meta?.title} 有 ${getMenuBadge(item.path)} 条通知`"
             >
               {{ getMenuBadge(item.path) }}
             </el-tag>
@@ -49,24 +60,24 @@
       </el-menu>
       
       <!-- 侧边栏底部信息 -->
-      <div class="aside-footer">
+      <div class="aside-footer" role="contentinfo" aria-label="系统状态信息">
         <div class="connection-status">
-          <div class="status-indicator" :class="connectionStatusClass">
-            <el-icon size="12">
+          <div class="status-indicator" :class="connectionStatusClass" role="status" :aria-label="`连接状态：${connectionStatusText}`">
+            <el-icon size="12" aria-hidden="true">
               <component :is="connectionStatusIcon" />
             </el-icon>
             <span>{{ connectionStatusText }}</span>
           </div>
         </div>
         <div class="version-info">
-          <span>v{{ appVersion }}</span>
+          <span aria-label="应用版本">v{{ appVersion }}</span>
         </div>
       </div>
     </el-aside>
 
     <el-container>
       <!-- 顶部导航栏 -->
-      <el-header v-if="!isChatPage" class="header">
+      <el-header v-if="!isChatPage" class="header" role="banner">
         <div class="header-left">
           <!-- 移动端菜单按钮 -->
           <el-button 
@@ -74,16 +85,21 @@
             text 
             @click="toggleSidebar"
             class="mobile-menu-btn"
+            :aria-label="isCollapsed ? '打开侧边栏' : '关闭侧边栏'"
+            :aria-expanded="!isCollapsed"
+            aria-controls="sidebar"
           >
-            <el-icon size="20">
+            <el-icon size="20" aria-hidden="true">
               <component :is="isCollapsed ? 'Expand' : 'Fold'" />
             </el-icon>
           </el-button>
           
           <!-- 面包屑导航 -->
-          <el-breadcrumb separator="/" class="breadcrumb">
-            <el-breadcrumb-item>{{ currentTitle }}</el-breadcrumb-item>
-          </el-breadcrumb>
+          <nav class="breadcrumb" aria-label="面包屑导航">
+            <el-breadcrumb separator="/">
+              <el-breadcrumb-item>{{ currentTitle }}</el-breadcrumb-item>
+            </el-breadcrumb>
+          </nav>
         </div>
         
         <div class="header-right">
@@ -92,8 +108,10 @@
             text 
             @click="toggleTheme"
             class="theme-toggle"
+            :aria-label="`切换到${isDark ? '浅色' : '深色'}主题`"
+            :aria-pressed="isDark"
           >
-            <el-icon size="18">
+            <el-icon size="18" aria-hidden="true">
               <component :is="isDark ? 'Sunny' : 'Moon'" />
             </el-icon>
           </el-button>
@@ -103,31 +121,33 @@
             text 
             @click="toggleFullscreen"
             class="fullscreen-toggle"
+            :aria-label="isFullscreen ? '退出全屏' : '进入全屏'"
+            :aria-pressed="isFullscreen"
           >
-            <el-icon size="18">
+            <el-icon size="18" aria-hidden="true">
               <FullScreen />
             </el-icon>
           </el-button>
           
           <!-- 用户信息 -->
-          <el-dropdown trigger="click">
-            <el-button text class="user-menu">
-              <el-icon size="18"><User /></el-icon>
+          <el-dropdown trigger="click" aria-label="用户菜单">
+            <el-button text class="user-menu" aria-haspopup="true" aria-expanded="false">
+              <el-icon size="18" aria-hidden="true"><User /></el-icon>
               <span class="username">{{ username }}</span>
-              <el-icon size="12"><CaretBottom /></el-icon>
+              <el-icon size="12" aria-hidden="true"><CaretBottom /></el-icon>
             </el-button>
             <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item>
-                  <el-icon><User /></el-icon>
+              <el-dropdown-menu role="menu" aria-label="用户操作菜单">
+                <el-dropdown-item role="menuitem">
+                  <el-icon aria-hidden="true"><User /></el-icon>
                   个人设置
                 </el-dropdown-item>
-                <el-dropdown-item>
-                  <el-icon><Setting /></el-icon>
+                <el-dropdown-item role="menuitem">
+                  <el-icon aria-hidden="true"><Setting /></el-icon>
                   系统设置
                 </el-dropdown-item>
-                <el-dropdown-item divided @click="handleLogout">
-                  <el-icon><SwitchButton /></el-icon>
+                <el-dropdown-item divided @click="handleLogout" role="menuitem">
+                  <el-icon aria-hidden="true"><SwitchButton /></el-icon>
                   退出登录
                 </el-dropdown-item>
               </el-dropdown-menu>
@@ -137,7 +157,7 @@
       </el-header>
       
       <!-- 主内容区域 -->
-      <el-main :class="['main', { 'main--full': isChatPage }]">
+      <el-main id="main-content" :class="['main', { 'main--full': isChatPage }]" role="main" :aria-label="currentTitle" tabindex="-1">
         <RouterView v-slot="{ Component, route }">
           <transition name="fade" mode="out-in">
             <component v-if="Component" :is="Component" :key="route.fullPath" />
@@ -191,6 +211,24 @@ const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value;
 };
 
+// 键盘导航支持
+const handleKeyNavigation = (event: KeyboardEvent) => {
+  switch (event.key) {
+    case 'Escape':
+      if (isMobile.value && !isCollapsed.value) {
+        isCollapsed.value = true;
+      }
+      break;
+    case 'm':
+    case 'M':
+      if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+        toggleSidebar();
+      }
+      break;
+  }
+};
+
 // 切换主题
 const toggleTheme = () => {
   isDark.value = !isDark.value;
@@ -199,6 +237,8 @@ const toggleTheme = () => {
 };
 
 // 全屏切换
+const isFullscreen = computed(() => !!document.fullscreenElement);
+
 const toggleFullscreen = () => {
   if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen();
@@ -264,6 +304,7 @@ onMounted(() => {
   checkMobile();
   checkConnection();
   window.addEventListener('resize', checkMobile);
+  window.addEventListener('keydown', handleKeyNavigation);
   
   // 初始化主题
   const savedTheme = localStorage.getItem('theme');
@@ -275,6 +316,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile);
+  window.removeEventListener('keydown', handleKeyNavigation);
 });
 
 // 监听主题变化
@@ -534,9 +576,24 @@ watch(isDark, (newVal) => {
 }
 
 /* 响应式设计 */
+@media (max-width: 1024px) {
+  .aside {
+    width: 200px !important;
+  }
+  
+  .logo-text {
+    font-size: 18px;
+  }
+  
+  .menu-text {
+    font-size: 13px;
+  }
+}
+
 @media (max-width: 768px) {
   .header {
     padding: 0 16px;
+    height: 56px;
   }
   
   .main {
@@ -550,6 +607,29 @@ watch(isDark, (newVal) => {
   .username {
     display: none;
   }
+  
+  .breadcrumb {
+    font-size: 13px;
+  }
+  
+  .mobile-menu-btn {
+    padding: 10px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+  
+  .theme-toggle,
+  .fullscreen-toggle {
+    padding: 10px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+  
+  .user-menu {
+    padding: 10px;
+    min-width: 40px;
+    min-height: 40px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -560,12 +640,88 @@ watch(isDark, (newVal) => {
     height: 100vh;
     z-index: 1000;
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
-  width: 240px !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 260px !important;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
   }
   
   .aside.mobile-open {
     transform: translateX(0);
+  }
+  
+  .header {
+    padding: 0 12px;
+    height: 52px;
+  }
+  
+  .main {
+    padding: 12px;
+  }
+  
+  .mobile-overlay {
+    background: rgba(0, 0, 0, 0.5);
+  }
+  
+  .logo {
+    padding: 16px;
+  }
+  
+  .menu-item {
+    margin: 2px 8px;
+    padding: 12px;
+    min-height: 48px;
+  }
+  
+  .aside-footer {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .aside {
+    width: 240px !important;
+  }
+  
+  .logo-text {
+    font-size: 16px;
+  }
+  
+  .header {
+    padding: 0 8px;
+  }
+  
+  .main {
+    padding: 8px;
+  }
+}
+
+/* 触摸优化 */
+@media (hover: none) and (pointer: coarse) {
+  .menu-item {
+    min-height: 48px;
+    padding: 14px 12px;
+  }
+  
+  .el-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .mobile-menu-btn,
+  .theme-toggle,
+  .fullscreen-toggle,
+  .user-menu {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .menu-item:active {
+    transform: scale(0.98);
+    background: rgb(37 99 235 / 0.15);
+  }
+  
+  .el-button:active {
+    transform: scale(0.95);
   }
 }
 </style>

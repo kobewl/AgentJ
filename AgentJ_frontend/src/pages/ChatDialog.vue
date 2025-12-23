@@ -72,7 +72,7 @@
                 <div class="bubble">
                   <div class="bubble-head">
                     <span class="who">{{ message.role === 'user' ? '我' : 'AI 助手' }}</span>
-                    <span class="time">{{ formatTime(message.timestamp) }}</span>
+                    <span class="time">{{ getRelativeTime(typeof message.timestamp === 'string' ? message.timestamp : message.timestamp.toISOString()) }}</span>
                   </div>
                   <div class="bubble-body">
                     <div 
@@ -227,6 +227,7 @@ import {
 import { marked } from 'marked';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github.css';
+import { getRelativeTime, formatShortTime, formatDateTime } from '@/utils/format';
 
 // 配置marked，支持代码高亮（类型断言以兼容新版类型定义）
 const markedOptions = {
@@ -252,7 +253,7 @@ const renderMarkdown = (content: string) => {
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
-  timestamp: Date;
+  timestamp: Date | string;
 }
 
 type ConversationItem = ConversationSession;
@@ -313,30 +314,6 @@ const scrollToBottom = async () => {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
   }
-};
-
-// 格式化时间
-const formatTime = (date: Date) => {
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const minutes = Math.floor(diff / 60000);
-  
-  if (minutes < 1) return '刚刚';
-  if (minutes < 60) return `${minutes}分钟前`;
-  if (minutes < 1440) return `${Math.floor(minutes / 60)}小时前`;
-  
-  return date.toLocaleString('zh-CN', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
-const formatShortTime = (value?: string) => {
-  if (!value) return '';
-  const date = new Date(value);
-  return date.toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
 // 生成精简标题：优先用用户问题，其次助手回答，最多6字
@@ -415,11 +392,20 @@ const loadMessages = async (convId: string) => {
   try {
     loadingMessages.value = true;
     const resp = await listMessages(convId, { page: 1, size: 200, includeDeleted: false });
-    messages.value = (resp.data.data?.items || []).map((m: ConversationMessage) => ({
-      role: (m.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
-      content: m.content,
-      timestamp: new Date(m.created_at),
-    }));
+    messages.value = (resp.data.data?.items || []).map((m: ConversationMessage) => {
+      let timestamp: Date | string = new Date();
+      if (m.created_at) {
+        const date = new Date(m.created_at);
+        if (!isNaN(date.getTime())) {
+          timestamp = date;
+        }
+      }
+      return {
+        role: (m.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+        content: m.content,
+        timestamp,
+      };
+    });
     await nextTick();
     scrollToBottom();
   } catch (error) {
@@ -639,7 +625,7 @@ const clearChat = () => {
 // 导出对话
 const exportChat = () => {
   const content = messages.value.map(msg => 
-    `${msg.role === 'user' ? '用户' : 'AI助手'} (${formatTime(msg.timestamp)}):\n${msg.content}\n\n`
+    `${msg.role === 'user' ? '用户' : 'AI助手'} (${formatDateTime(typeof msg.timestamp === 'string' ? msg.timestamp : msg.timestamp.toISOString())}):\n${msg.content}\n\n`
   ).join('');
   
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
@@ -685,7 +671,7 @@ watch(streamingText, () => {
 :global(html, body, #app) {
   height: 100%;
   overflow: hidden;
-  background: #f5f7fb;
+  background: var(--bg-page);
 }
 
 .chat-page {
@@ -762,14 +748,14 @@ watch(streamingText, () => {
 
 .conversation-item {
   padding: 12px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
   cursor: pointer;
   transition: all 0.18s ease;
-  background: linear-gradient(180deg, rgba(59, 72, 112, 0.55), rgba(25, 31, 51, 0.7));
+  background: var(--bg-card);
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 10px;
-  color: #e8edf8;
+  color: var(--text-primary);
 }
 
 .conversation-head {
@@ -781,11 +767,11 @@ watch(streamingText, () => {
 
 .conversation-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-md);
 }
 
 .conversation-delete {
-  color: rgba(232, 237, 248, 0.75);
+  color: var(--text-secondary);
   opacity: 0.8;
   transition: all 0.18s ease;
   padding: 4px;
@@ -793,16 +779,16 @@ watch(streamingText, () => {
 }
 
 .conversation-delete:hover {
-  color: #fca5a5;
-  background: rgba(252, 165, 165, 0.08);
+  color: var(--danger-color);
+  background: var(--danger-color-light);
   opacity: 1;
 }
 
 .conversation-item.active {
   background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   border-left: 3px solid var(--accent-color);
-  color: #fff;
-  box-shadow: 0 18px 42px rgba(37, 99, 235, 0.25);
+  color: var(--text-white);
+  box-shadow: var(--shadow-lg);
 }
 
 .conversation-item.deleted {
@@ -814,7 +800,7 @@ watch(streamingText, () => {
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  color: #e8edf8;
+  color: var(--text-primary);
   flex: 1;
   min-width: 0;
 }
@@ -829,7 +815,7 @@ watch(streamingText, () => {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #9aa0aa;
+  color: var(--text-secondary);
 }
 
 .conversation-actions {
@@ -839,26 +825,26 @@ watch(streamingText, () => {
 }
 
 .conversation-item:hover {
-  background: #2b2c33;
+  background: var(--bg-hover);
 }
 
 .sidebar-empty {
   padding: 20px;
   text-align: center;
-  color: #9aa0aa;
+  color: var(--text-secondary);
 }
 
 .chat-hero {
   display: flex;
   justify-content: flex-end;
   padding: 12px 20px;
-  border-bottom: 1px solid #2f3137;
-  background: #343541;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
 }
 
 .chat-panel {
   padding: 16px 20px;
-  background: #343541;
+  background: var(--bg-secondary);
   flex: 1;
   overflow: hidden;
   display: flex;
@@ -870,7 +856,7 @@ watch(streamingText, () => {
   overflow-y: auto;
   padding-right: 12px;
   max-width: 100%;
-  color: #e7e7ea;
+  color: var(--text-primary);
 }
 
 .message-row {
@@ -891,15 +877,15 @@ watch(streamingText, () => {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: #10a37f;
-  color: #ffffff;
+  background: var(--success-color);
+  color: var(--text-white);
   font-weight: 600;
   flex-shrink: 0;
   box-shadow: none;
 }
 
 .avatar[data-role="assistant"] {
-  background: #565869;
+  background: var(--text-secondary);
 }
 
 .bubble {
@@ -917,8 +903,8 @@ watch(streamingText, () => {
 .message-row.user .bubble {
   background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   border: none;
-  color: #fff;
-  box-shadow: 0 10px 30px rgb(37 99 235 / 0.25);
+  color: var(--text-white);
+  box-shadow: var(--shadow-md);
 }
 
 .bubble-head {
@@ -952,8 +938,8 @@ watch(streamingText, () => {
   display: flex;
   align-items: flex-end;
   gap: 12px;
-  background: #40414f;
-  border: 1px solid #565869;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 12px;
 }
@@ -975,52 +961,46 @@ watch(streamingText, () => {
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #5b8dff 0%, #7c5bff 100%);
-  border: 1px solid #8aa2ff;
-  color: #ffffff;
-  box-shadow:
-    0 12px 28px rgba(91, 141, 255, 0.32),
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  border: 1px solid var(--primary-color-light);
+  color: var(--text-white);
+  box-shadow: var(--shadow-md);
   transition: all 0.18s ease, transform 0.12s ease;
 }
 
 .send-btn:hover:not(:disabled) {
   transform: translateY(-1px) scale(1.02);
-  box-shadow:
-    0 16px 36px rgba(91, 141, 255, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  box-shadow: var(--shadow-lg);
 }
 
 .stop-btn {
-  background: #ef4444;
+  background: var(--danger-color);
   border: none;
-  color: white;
+  color: var(--text-white);
 }
 
 .empty-state h3 {
-  color: #f5f5f7;
+  color: var(--text-primary);
 }
 
 .empty-state p {
-  color: #9aa0aa;
+  color: var(--text-secondary);
 }
 
 .status-indicator {
-  color: #9aa0aa;
+  color: var(--text-secondary);
 }
 
 .file-pill {
-  background: #40414f;
-  border: 1px solid #565869;
-  color: #e7e7ea;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 /* Smooth scrolling for messages */
 .messages {
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 #f1f5f9;
+  scrollbar-color: var(--border-color) var(--bg-secondary);
 }
 
 .messages::-webkit-scrollbar {
@@ -1028,25 +1008,25 @@ watch(streamingText, () => {
 }
 
 .messages::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--bg-secondary);
   border-radius: 4px;
 }
 
 .messages::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--border-color);
   border-radius: 4px;
 }
 
 .messages::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--text-secondary);
 }
 
 .chat-hero {
   display: flex;
   justify-content: flex-end;
   padding: 16px 24px;
-  border-bottom: 1px solid #f1f5f9;
-  background: white;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-primary);
 }
 
 .hero-actions {
@@ -1057,7 +1037,7 @@ watch(streamingText, () => {
 
 .chat-panel {
   padding: 20px 24px;
-  background: #f8fafc;
+  background: var(--bg-secondary);
   flex: 1;
   overflow: hidden;
   display: flex;
@@ -1074,7 +1054,7 @@ watch(streamingText, () => {
 .empty-state {
   text-align: center;
   padding: 120px 0;
-  color: #718096;
+  color: var(--text-secondary);
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1088,23 +1068,23 @@ watch(streamingText, () => {
   gap: 8px;
   padding: 12px 20px;
   border-radius: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  color: var(--text-white);
   font-weight: 600;
   font-size: 14px;
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: var(--shadow-md);
   margin-bottom: 24px;
 }
 
 .empty-state h3 {
   font-size: 28px;
-  color: #2d3748;
+  color: var(--text-primary);
   margin: 0 0 16px;
 }
 
 .empty-state p {
   font-size: 16px;
-  color: #718096;
+  color: var(--text-secondary);
   margin: 0;
   max-width: 500px;
 }
@@ -1128,11 +1108,11 @@ watch(streamingText, () => {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  color: var(--text-white);
   font-weight: 600;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.2s ease;
 }
 
@@ -1141,41 +1121,41 @@ watch(streamingText, () => {
 }
 
 .avatar[data-role="user"] {
-  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  color: var(--text-white);
 }
 
 .bubble {
   max-width: 85%;
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
   padding: 10px 14px;
   border-radius: 18px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
   position: relative;
   transition: all 0.2s ease;
 }
 
 .bubble:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
 
 .bubble.live {
-  border-color: #667eea;
-  box-shadow: 0 0 0 1px rgba(102, 126, 234, 0.2), 0 4px 12px rgba(102, 126, 234, 0.15);
-  background: linear-gradient(135deg, #fafbff 0%, #f0f2ff 100%);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-md);
+  background: var(--bg-hover);
 }
 
 .message-row.user .bubble {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  color: var(--text-white);
   border: none;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  box-shadow: var(--shadow-md);
 }
 
 .message-row.user .bubble:hover {
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.25);
+  box-shadow: var(--shadow-lg);
   transform: translateY(-1px);
 }
 
@@ -1189,20 +1169,20 @@ watch(streamingText, () => {
 
 .who {
   font-weight: 600;
-  color: #475569;
+  color: var(--text-primary);
 }
 
 .message-row.user .who {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-white);
 }
 
 .time {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .message-row.user .time {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-white);
 }
 
 .bubble-body .text {
@@ -1210,7 +1190,7 @@ watch(streamingText, () => {
   white-space: pre-wrap;
   word-break: break-word;
   font-size: 14px;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .bubble-body .text.markdown-body {
@@ -1247,7 +1227,7 @@ watch(streamingText, () => {
 .bubble-actions button {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--text-secondary);
   padding: 4px 8px;
   border-radius: 6px;
   cursor: pointer;
@@ -1256,23 +1236,23 @@ watch(streamingText, () => {
 }
 
 .bubble-actions button:hover {
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .message-row.user .bubble-actions button {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-white);
 }
 
 .message-row.user .bubble-actions button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+  background: var(--bg-hover);
+  color: var(--text-white);
 }
 
 .streaming .cursor {
   margin-left: 3px;
   animation: blink 1s infinite;
-  color: #667eea;
+  color: var(--primary-color);
   font-weight: bold;
   font-size: 16px;
   vertical-align: middle;
@@ -1290,34 +1270,34 @@ watch(streamingText, () => {
 
 .input-panel {
   padding: 16px 24px 20px;
-  border-top: 1px solid #f1f5f9;
-  background: white;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-primary);
 }
 
 .input-container {
   display: flex;
   align-items: flex-end;
   gap: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 12px;
   transition: all 0.2s ease;
 }
 
 .input-container:focus-within {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-color-light);
 }
 
 .attach-btn {
   flex-shrink: 0;
-  color: #64748b;
+  color: var(--text-secondary);
   transition: color 0.2s ease;
 }
 
 .attach-btn:hover {
-  color: #667eea;
+  color: var(--primary-color);
 }
 
 .main-input {
@@ -1347,17 +1327,17 @@ watch(streamingText, () => {
 }
 
 .send-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   border: none;
   border-radius: 12px;
-  color: white;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  color: var(--text-white);
+  box-shadow: var(--shadow-md);
 }
 
 .send-btn:hover:not(:disabled) {
   transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, var(--primary-color-dark), var(--accent-color-dark));
 }
 
 .send-btn:active:not(:disabled) {
@@ -1371,18 +1351,18 @@ watch(streamingText, () => {
 }
 
 .stop-btn {
-  color: #ef4444;
-  background: #f56565;
+  color: var(--danger-color);
+  background: var(--danger-color);
   border: none;
   border-radius: 12px;
-  color: white;
-  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
+  color: var(--text-white);
+  box-shadow: var(--shadow-md);
 }
 
 .stop-btn:hover {
-  background: #e53e3e;
-  color: #dc2626;
-  box-shadow: 0 6px 16px rgba(245, 101, 101, 0.4);
+  background: var(--danger-color-dark);
+  color: var(--text-white);
+  box-shadow: var(--shadow-lg);
   transform: translateY(-1px);
 }
 
@@ -1396,14 +1376,14 @@ watch(streamingText, () => {
   align-items: center;
   margin-top: 10px;
   font-size: 12px;
-  color: #a0aec0;
+  color: var(--text-secondary);
 }
 
 .left-info {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .status-indicator {

@@ -1,19 +1,20 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import Dashboard from '@/pages/Dashboard.vue';
-import InitSetup from '@/pages/InitSetup.vue';
-import ConfigCenter from '@/pages/ConfigCenter.vue';
-import PlanTemplates from '@/pages/PlanTemplates.vue';
-import ChatDialog from '@/pages/ChatDialog.vue';
-import KnowledgeManage from '@/pages/KnowledgeManage.vue';
-import KnowledgeChat from '@/pages/KnowledgeChat.vue';
-import Memories from '@/pages/Memories.vue';
-import DatasourceConfigs from '@/pages/DatasourceConfigs.vue';
-import UnifiedAgent from '@/pages/UnifiedAgent.vue';
-import CronTasks from '@/pages/CronTasks.vue';
-import WorkflowDesigner from '@/pages/WorkflowDesigner.vue';
-import Login from '@/pages/Login.vue';
 import { isAuthenticated } from '@/utils/auth';
 import { ElMessage } from 'element-plus';
+
+const Dashboard = () => import('@/pages/Dashboard.vue');
+const InitSetup = () => import('@/pages/InitSetup.vue');
+const ConfigCenter = () => import('@/pages/ConfigCenter.vue');
+const PlanTemplates = () => import('@/pages/PlanTemplates.vue');
+const ChatDialog = () => import('@/pages/ChatDialog.vue');
+const KnowledgeManage = () => import('@/pages/KnowledgeManage.vue');
+const KnowledgeChat = () => import('@/pages/KnowledgeChat.vue');
+const Memories = () => import('@/pages/Memories.vue');
+const DatasourceConfigs = () => import('@/pages/DatasourceConfigs.vue');
+const UnifiedAgent = () => import('@/pages/UnifiedAgent.vue');
+const CronTasks = () => import('@/pages/CronTasks.vue');
+const WorkflowDesigner = () => import('@/pages/WorkflowDesigner.vue');
+const Login = () => import('@/pages/Login.vue');
 
 export const menuRoutes: RouteRecordRaw[] = [
   {

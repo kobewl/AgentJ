@@ -175,7 +175,7 @@
           </template>
 
           <!-- Edge label template for deletion -->
-          <template #edge-label="{ edge }">
+          <template #edge-label="edgeProps">
             <div class="edge-label-wrapper">
               <el-button
                 type="danger"
@@ -183,7 +183,7 @@
                 circle
                 :icon="Delete"
                 class="edge-delete-btn"
-                @click.stop="deleteEdge(edge.id)"
+                @click.stop="deleteEdge(edgeProps.id)"
               />
             </div>
           </template>
@@ -626,8 +626,8 @@ function onConnect(connection: Connection) {
   ElMessage.success('连接已创建');
 }
 
-function onNodeClick(_event: MouseEvent, node: Node) {
-  selectNode(node.id);
+function onNodeClick(event: any) {
+  selectNode(event.node.id);
 }
 
 function selectNode(nodeId: string) {
@@ -635,8 +635,8 @@ function selectNode(nodeId: string) {
   selectedEdgeId.value = null;
 }
 
-function onEdgeClick(_event: MouseEvent, edge: Edge) {
-  selectedEdgeId.value = edge.id;
+function onEdgeClick(event: any) {
+  selectedEdgeId.value = event.edge.id;
   selectedNodeId.value = null;
   ElMessage.info('已选中连线，点击删除按钮或按 Delete 键删除');
 }

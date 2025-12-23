@@ -1,15 +1,48 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="description" content="AgentJ - AI智能助手管理系统，提供强大的AI对话、知识库管理、工作流设计等功能" />
+  <meta name="keywords" content="AI, 智能助手, 对话系统, 知识库, 工作流" />
+  <meta name="author" content="AgentJ Team" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#2563eb" />
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="AgentJ - AI智能助手" />
+  <meta property="og:description" content="强大的AI智能助手管理系统" />
+  <meta property="og:type" content="website" />
+  
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AgentJ Frontend</title>
+  <link rel="apple-touch-icon" href="/favicon.svg" />
+  <title>AgentJ - AI智能助手</title>
+  
+  <!-- Critical CSS inline placeholder -->
+  <style>
+    body { margin: 0; background: #f8fafc; }
+    #app { min-height: 100vh; }
+    .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 
 <body>
-  <div id="app"></div>
+  <!-- 跳过导航链接 - 可访问性 -->
+  <a href="#main-content" class="skip-link">跳到主要内容</a>
+  
+  <div id="app">
+    <div class="loading">
+      <div class="spinner"></div>
+    </div>
+  </div>
   <script type="module" src="/src/main.ts"></script>
 </body>
 

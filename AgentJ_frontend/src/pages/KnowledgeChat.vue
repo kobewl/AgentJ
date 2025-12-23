@@ -55,6 +55,7 @@ import { onMounted, ref, nextTick } from 'vue';
 import { Promotion, Refresh } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { listKnowledgeBases, chatWithKnowledge, KnowledgeItem } from '@/api/knowledge';
+import { formatTime } from '@/utils/format';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -87,7 +88,7 @@ const send = async () => {
     return;
   }
   const content = question.value.trim();
-  messages.value.push({ role: 'user', content, time: now() });
+  messages.value.push({ role: 'user', content, time: formatTime(new Date().toISOString()) });
   question.value = '';
   await nextTick();
   scrollToBottom();
@@ -96,7 +97,7 @@ const send = async () => {
   try {
     const resp = await chatWithKnowledge(selectedBaseId.value, content);
     const answer = resp.data.data?.answer || '未获取到回答';
-    messages.value.push({ role: 'assistant', content: answer, time: now() });
+    messages.value.push({ role: 'assistant', content: answer, time: formatTime(new Date().toISOString()) });
   } catch (e: any) {
     ElMessage.error(e?.response?.data?.message || '对话失败');
   } finally {
@@ -119,10 +120,6 @@ const scrollToBottom = () => {
   if (el) {
     el.scrollTop = el.scrollHeight;
   }
-};
-
-const now = () => {
-  return new Date().toLocaleTimeString();
 };
 
 onMounted(() => {

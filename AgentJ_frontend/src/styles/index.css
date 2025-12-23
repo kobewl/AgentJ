@@ -44,6 +44,81 @@
   box-sizing: border-box;
 }
 
+/* 跳过导航链接 - 可访问性 */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--primary-color);
+  color: white;
+  padding: 8px 16px;
+  z-index: 10000;
+  text-decoration: none;
+  font-weight: 500;
+  transition: top 0.3s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* 焦点样式 - 可访问性 */
+:focus-visible {
+  outline: 3px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* 焦点样式覆盖 */
+.el-button:focus-visible,
+.el-input__wrapper:focus-visible,
+.el-textarea__inner:focus-visible,
+.el-menu-item:focus-visible,
+.el-dropdown-item:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* 屏幕阅读器专用 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  :root {
+    --border-color: #000000;
+    --border-strong: #000000;
+    --text-primary: #000000;
+    --text-secondary: #000000;
+  }
+  
+  .dark {
+    --border-color: #ffffff;
+    --border-strong: #ffffff;
+    --text-primary: #ffffff;
+    --text-secondary: #ffffff;
+  }
+}
+
 html,
 body,
 #app {
@@ -285,6 +360,26 @@ a {
 }
 
 /* 响应式设计 */
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .el-aside {
+    width: 200px !important;
+  }
+  
+  .section-title {
+    font-size: 16px;
+  }
+  
+  .section-desc {
+    font-size: 12px;
+  }
+}
+
 @media (max-width: 768px) {
   .el-aside {
     width: 200px !important;
@@ -298,6 +393,40 @@ a {
   .grid {
     grid-template-columns: 1fr !important;
   }
+  
+  .card-toolbar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .table-actions {
+    flex-wrap: wrap;
+  }
+  
+  .el-card {
+    border-radius: var(--radius-md);
+  }
+  
+  .el-button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+  
+  .el-dialog {
+    width: 90% !important;
+    margin: 0 auto;
+  }
+  
+  .el-dialog__header,
+  .el-dialog__body,
+  .el-dialog__footer {
+    padding: 16px;
+  }
+  
+  .empty-block {
+    padding: 24px 16px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -308,7 +437,8 @@ a {
     height: 100vh;
     z-index: 1000;
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
   }
 
   .el-aside.mobile-open {
@@ -317,6 +447,174 @@ a {
 
   .main {
     padding: 12px !important;
+  }
+  
+  .el-card__header {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  
+  .el-card__body {
+    padding: 16px;
+  }
+  
+  .el-table {
+    font-size: 13px;
+  }
+  
+  .el-table th,
+  .el-table td {
+    padding: 8px 4px;
+  }
+  
+  .el-button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .el-button.is-circle {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .el-tag {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+  
+  .el-input__inner,
+  .el-textarea__inner {
+    font-size: 14px;
+  }
+  
+  .el-form-item__label {
+    font-size: 13px;
+  }
+  
+  .el-dialog {
+    width: 95% !important;
+  }
+  
+  .section-title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .main {
+    padding: 8px !important;
+  }
+  
+  .el-button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .el-button.is-circle {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .el-card__header {
+    padding: 10px 12px;
+  }
+  
+  .el-card__body {
+    padding: 12px;
+  }
+  
+  .el-table th,
+  .el-table td {
+    padding: 6px 2px;
+  }
+}
+
+/* 触摸优化 */
+@media (hover: none) and (pointer: coarse) {
+  .el-button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px 16px;
+  }
+  
+  .el-button.is-circle {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .el-input__wrapper {
+    min-height: 44px;
+  }
+  
+  .el-select .el-input__wrapper {
+    min-height: 44px;
+  }
+  
+  .el-menu-item {
+    min-height: 48px;
+    padding: 0 16px;
+  }
+  
+  .el-table__row {
+    min-height: 48px;
+  }
+  
+  .el-table th,
+  .el-table td {
+    padding: 12px 8px;
+  }
+  
+  .el-card {
+    touch-action: manipulation;
+  }
+  
+  .el-button:active {
+    transform: scale(0.95);
+  }
+  
+  .el-menu-item:active {
+    transform: scale(0.98);
+  }
+  
+  .el-tag {
+    padding: 4px 10px;
+    font-size: 13px;
+  }
+  
+  .el-input__inner,
+  .el-textarea__inner {
+    font-size: 16px;
+  }
+  
+  .el-dialog__close {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+  }
+}
+
+/* 横屏优化 */
+@media (max-height: 500px) and (orientation: landscape) {
+  .header {
+    height: 48px;
+  }
+  
+  .main {
+    padding: 12px;
+  }
+  
+  .el-dialog {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .aside {
+    padding-top: 8px;
+  }
+  
+  .logo {
+    padding: 12px 16px;
   }
 }
 

@@ -98,12 +98,12 @@
         </el-table-column>
         <el-table-column prop="lastUsedAt" label="最近使用" width="180">
           <template #default="scope">
-            {{ formatDate(scope.row.lastUsedAt) }}
+            {{ formatDateTime(scope.row.lastUsedAt) }}
           </template>
         </el-table-column>
         <el-table-column prop="createdAt" label="创建时间" width="180">
           <template #default="scope">
-            {{ formatDate(scope.row.createdAt) }}
+            {{ formatDateTime(scope.row.createdAt) }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
@@ -262,9 +262,9 @@
               {{ tag }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="最近使用">{{ formatDate(currentMemory.lastUsedAt) }}</el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ formatDate(currentMemory.createdAt) }}</el-descriptions-item>
-          <el-descriptions-item label="更新时间">{{ formatDate(currentMemory.updatedAt) }}</el-descriptions-item>
+          <el-descriptions-item label="最近使用">{{ formatDateTime(currentMemory.lastUsedAt) }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ formatDateTime(currentMemory.createdAt) }}</el-descriptions-item>
+          <el-descriptions-item label="更新时间">{{ formatDateTime(currentMemory.updatedAt) }}</el-descriptions-item>
         </el-descriptions>
         <div style="margin-top: 20px;">
           <h4>内容详情：</h4>
@@ -292,6 +292,7 @@ import {
   markUserPersonalMemoryUsed,
 } from '@/api/userPersonalMemory';
 import type { UserPersonalMemoryItem } from '@/api/types';
+import { formatDateTime } from '@/utils/format';
 import {
   Plus,
   Refresh,
@@ -409,7 +410,7 @@ const loadMemories = async () => {
   loading.value = true;
   try {
     const response = await getUserPersonalMemories(selectedUserId.value);
-    const payload = response.data;
+    const payload = response.data as any;
     let list: any = null;
     if (Array.isArray(payload)) {
       list = payload;
@@ -467,19 +468,6 @@ const parseTags = (tags?: string): string[] => {
   } catch {
     return [];
   }
-};
-
-const formatDate = (date?: string | number[]): string => {
-  if (!date) return '-';
-  
-  // 处理数组格式的日期 [2025, 12, 6, 22, 36, 9]
-  if (Array.isArray(date)) {
-    const [year, month, day, hour, minute, second] = date;
-    return new Date(year, month - 1, day, hour, minute, second).toLocaleString('zh-CN');
-  }
-  
-  // 处理字符串格式的日期
-  return new Date(date).toLocaleString('zh-CN');
 };
 
 const formatContentJson = (contentJson?: string): string => {
