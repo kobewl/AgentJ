@@ -17,10 +17,14 @@ package com.wangliang.agentj.conversation.entity.po;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+
+import com.wangliang.agentj.conversation.entity.ConversationType;
 
 import java.time.LocalDateTime;
 
@@ -52,6 +56,13 @@ public class ConversationSessionEntity {
 	@Column(name = "last_message_at")
 	private LocalDateTime lastMessageAt;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "conversation_type", length = 32)
+	private ConversationType conversationType = ConversationType.CHAT;
+
+	@Column(name = "knowledge_base_id", length = 64)
+	private String knowledgeBaseId;
+
 	@Column(name = "is_deleted", nullable = false)
 	private Boolean isDeleted = false;
 
@@ -75,6 +86,9 @@ public class ConversationSessionEntity {
 		}
 		if (isDeleted == null) {
 			isDeleted = Boolean.FALSE;
+		}
+		if (conversationType == null) {
+			conversationType = ConversationType.CHAT;
 		}
 	}
 
@@ -157,5 +171,21 @@ public class ConversationSessionEntity {
 
 	public void setUpdatedAt(LocalDateTime updatedAt) {
 		this.updatedAt = updatedAt;
+	}
+
+	public ConversationType getConversationType() {
+		return conversationType;
+	}
+
+	public void setConversationType(ConversationType conversationType) {
+		this.conversationType = conversationType;
+	}
+
+	public String getKnowledgeBaseId() {
+		return knowledgeBaseId;
+	}
+
+	public void setKnowledgeBaseId(String knowledgeBaseId) {
+		this.knowledgeBaseId = knowledgeBaseId;
 	}
 }

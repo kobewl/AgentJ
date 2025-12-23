@@ -16,6 +16,7 @@
 package com.wangliang.agentj.conversation.entity.vo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wangliang.agentj.conversation.entity.ConversationType;
 import com.wangliang.agentj.conversation.entity.po.ConversationSessionEntity;
 
 import java.time.LocalDateTime;
@@ -40,6 +41,12 @@ public class ConversationSessionView {
 	@JsonProperty("last_message_at")
 	private LocalDateTime lastMessageAt;
 
+	@JsonProperty("conversation_type")
+	private ConversationType conversationType;
+
+	@JsonProperty("knowledge_base_id")
+	private String knowledgeBaseId;
+
 	@JsonProperty("is_deleted")
 	private Boolean isDeleted;
 
@@ -57,6 +64,8 @@ public class ConversationSessionView {
 		view.setModelName(entity.getModelName());
 		view.setSummary(entity.getSummary());
 		view.setLastMessageAt(entity.getLastMessageAt());
+		view.setConversationType(entity.getConversationType());
+		view.setKnowledgeBaseId(entity.getKnowledgeBaseId());
 		view.setIsDeleted(entity.getIsDeleted());
 		view.setCreatedAt(entity.getCreatedAt());
 		view.setUpdatedAt(entity.getUpdatedAt());
@@ -133,5 +142,21 @@ public class ConversationSessionView {
 
 	public void setUpdatedAt(LocalDateTime updatedAt) {
 		this.updatedAt = updatedAt;
+	}
+
+	public ConversationType getConversationType() {
+		return conversationType;
+	}
+
+	public void setConversationType(ConversationType conversationType) {
+		this.conversationType = conversationType;
+	}
+
+	public String getKnowledgeBaseId() {
+		return knowledgeBaseId;
+	}
+
+	public void setKnowledgeBaseId(String knowledgeBaseId) {
+		this.knowledgeBaseId = knowledgeBaseId;
 	}
 }

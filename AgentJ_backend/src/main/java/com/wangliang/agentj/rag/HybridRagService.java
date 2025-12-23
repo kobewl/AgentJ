@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -56,18 +57,53 @@ public class HybridRagService {
             return "请输入有效的问题。";
         }
 
-        // 简化调用以兼容当前 spring-ai 版本；若需过滤 kbId，可在 metadata 中自定义过滤实现
-        List<?> retrieved = vectorStore.similaritySearch(userQuery);
-        List<Object> filtered = retrieved.stream()
-                .filter(obj -> {
-                    Double score = extractScore(obj);
-                    return score == null || score >= ragProperties.getSimilarityThreshold();
-                })
-                .limit(ragProperties.getTopK())
-                .collect(Collectors.toList());
+        // 使用较低的相似度阈值进行搜索，然后在代码中按 kbId 过滤
+        // 因为 Qdrant 的 FilterExpressionBuilder 可能不完全兼容
+        double effectiveThreshold = Math.max(0.0, ragProperties.getSimilarityThreshold() - 0.3);
+        SearchRequest searchRequest = SearchRequest.builder()
+                .query(userQuery)
+                .topK(ragProperties.getTopK() * 3) // 获取更多结果以便过滤
+                .similarityThreshold(effectiveThreshold)
+                .build();
+        
+        List<?> retrieved = vectorStore.similaritySearch(searchRequest);
+        log.info("向量检索完成: query='{}', 原始检索数={}, effectiveThreshold={}", 
+                userQuery, retrieved.size(), effectiveThreshold);
+        
+        // 在代码中按 kbId 过滤
+        List<Object> filtered;
+        if (knowledgeBaseId != null && !knowledgeBaseId.trim().isEmpty()) {
+            final String targetKbId = knowledgeBaseId.trim();
+            filtered = retrieved.stream()
+                    .filter(doc -> {
+                        Map<String, Object> metadata = extractMetadata(doc);
+                        Object kbId = metadata.get("kbId");
+                        boolean matches = targetKbId.equals(String.valueOf(kbId));
+                        if (!matches && kbId != null) {
+                            log.debug("跳过文档，kbId不匹配: expected={}, actual={}", targetKbId, kbId);
+                        }
+                        return matches;
+                    })
+                    .filter(doc -> {
+                        Double score = extractScore(doc);
+                        return score == null || score >= ragProperties.getSimilarityThreshold();
+                    })
+                    .limit(ragProperties.getTopK())
+                    .collect(Collectors.toList());
+            log.info("按kbId过滤后: knowledgeBaseId={}, 过滤后数量={}, similarityThreshold={}", 
+                    knowledgeBaseId, filtered.size(), ragProperties.getSimilarityThreshold());
+        } else {
+            filtered = retrieved.stream()
+                    .filter(doc -> {
+                        Double score = extractScore(doc);
+                        return score == null || score >= ragProperties.getSimilarityThreshold();
+                    })
+                    .limit(ragProperties.getTopK())
+                    .collect(Collectors.toList());
+        }
 
         if (CollectionUtils.isEmpty(filtered)) {
-            log.warn("未检索到足够的上下文，将提示模型说明信息不足");
+            log.warn("未检索到足够的上下文，将提示模型说明信息不足. knowledgeBaseId={}", knowledgeBaseId);
         }
 
         // 生成前构造可控长度的上下文
@@ -127,18 +163,48 @@ public class HybridRagService {
     }
 
     private String extractContent(Object doc) {
+        // Try getContent() method (Spring AI Document)
         try {
             var m = doc.getClass().getMethod("getContent");
-            return Objects.toString(m.invoke(doc), "");
+            String content = Objects.toString(m.invoke(doc), "");
+            if (!content.isBlank()) {
+                return content;
+            }
         }
         catch (Exception ignored) {
         }
+        // Try content() method (record style)
         try {
             var m = doc.getClass().getMethod("content");
-            return Objects.toString(m.invoke(doc), "");
+            String content = Objects.toString(m.invoke(doc), "");
+            if (!content.isBlank()) {
+                return content;
+            }
         }
         catch (Exception ignored) {
         }
+        // Try getText() method
+        try {
+            var m = doc.getClass().getMethod("getText");
+            String content = Objects.toString(m.invoke(doc), "");
+            if (!content.isBlank()) {
+                return content;
+            }
+        }
+        catch (Exception ignored) {
+        }
+        // Try text() method
+        try {
+            var m = doc.getClass().getMethod("text");
+            String content = Objects.toString(m.invoke(doc), "");
+            if (!content.isBlank()) {
+                return content;
+            }
+        }
+        catch (Exception ignored) {
+        }
+        // Log the document class for debugging
+        log.warn("无法从文档提取内容, 文档类型={}, 文档={}", doc.getClass().getName(), doc);
         return "";
     }
 

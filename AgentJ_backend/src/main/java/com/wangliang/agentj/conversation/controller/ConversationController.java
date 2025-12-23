@@ -1,5 +1,6 @@
 package com.wangliang.agentj.conversation.controller;
 
+import com.wangliang.agentj.conversation.entity.ConversationType;
 import com.wangliang.agentj.conversation.entity.dto.ConversationMessageRequest;
 import com.wangliang.agentj.conversation.entity.dto.ConversationSessionRequest;
 import com.wangliang.agentj.conversation.entity.dto.ConversationTitleRequest;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -36,15 +38,30 @@ public class ConversationController {
 	private UserService userService;
 
 	/**
-	 * 列出当前用户的会话（默认过滤已删除）
+	 * 列出当前用户的会话（支持按类型和知识库ID过滤）
 	 */
 	@GetMapping
 	public ResponseEntity<?> list(@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "20") int size, @RequestParam(required = false) String keyword,
+			@RequestParam(required = false) String conversationType,
+			@RequestParam(required = false) String knowledgeBaseId,
 			@RequestParam(defaultValue = "false") boolean includeDeleted) {
 		Long userId = userService.currentUserId();
-		PagedResult<ConversationSessionView> result = conversationRecordService.listSessions(userId, keyword,
-				includeDeleted, page, size);
+		PagedResult<ConversationSessionView> result;
+		
+		// 如果指定了对话类型，使用按类型查询
+		if (StringUtils.hasText(conversationType)) {
+			ConversationType type;
+			try {
+				type = ConversationType.valueOf(conversationType.toUpperCase());
+			} catch (IllegalArgumentException e) {
+				type = ConversationType.CHAT;
+			}
+			result = conversationRecordService.listSessionsByType(userId, type, knowledgeBaseId, keyword,
+					includeDeleted, page, size);
+		} else {
+			result = conversationRecordService.listSessions(userId, keyword, includeDeleted, page, size);
+		}
 		return ResponseEntity.ok(Map.of("success", true, "data", result));
 	}
 
