@@ -153,6 +153,8 @@ public class UserPersonalMemoryService {
             if (!StringUtils.hasText(raw)) {
                 return;
             }
+            // Strip markdown code block formatting if present (e.g., ```json ... ```)
+            raw = stripMarkdownCodeBlock(raw);
             JsonNode node = objectMapper.readTree(raw);
             String action = node.path("action").asText("");
             if (!"save".equalsIgnoreCase(action)) {
@@ -235,6 +237,34 @@ public class UserPersonalMemoryService {
             }
         }
         return arr.size() == 0 ? null : arr.toString();
+    }
+
+    /**
+     * Strip markdown code block formatting from LLM responses.
+     * Handles cases like: ```json {...} ``` or ``` {...} ```
+     */
+    private String stripMarkdownCodeBlock(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String trimmed = raw.trim();
+        // Check if wrapped in markdown code block
+        if (trimmed.startsWith("```")) {
+            // Find the end of the opening fence (may have language identifier like ```json)
+            int firstNewline = trimmed.indexOf('\n');
+            if (firstNewline > 0) {
+                trimmed = trimmed.substring(firstNewline + 1);
+            } else {
+                // No newline after opening fence, just remove the backticks
+                trimmed = trimmed.substring(3);
+            }
+            // Remove closing fence
+            if (trimmed.endsWith("```")) {
+                trimmed = trimmed.substring(0, trimmed.length() - 3);
+            }
+            return trimmed.trim();
+        }
+        return raw;
     }
 
 }

@@ -1,11 +1,15 @@
 import http from './http';
 
+export type ConversationType = 'CHAT' | 'KNOWLEDGE';
+
 export interface ConversationSession {
   id: string;
   user_id: number;
   title?: string;
   summary?: string;
   model_name: string;
+  conversation_type?: ConversationType;
+  knowledge_base_id?: string;
   last_message_at?: string;
   is_deleted: boolean;
   created_at: string;
@@ -40,6 +44,8 @@ export const listConversations = (params: {
   page?: number;
   size?: number;
   keyword?: string;
+  conversationType?: ConversationType;
+  knowledgeBaseId?: string;
   includeDeleted?: boolean;
 }) =>
   http.get<{ data: PagedResult<ConversationSession>; success: boolean }>('/api/conversations', {

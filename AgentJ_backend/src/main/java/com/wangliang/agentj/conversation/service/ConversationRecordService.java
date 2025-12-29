@@ -1,6 +1,7 @@
 package com.wangliang.agentj.conversation.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangliang.agentj.conversation.entity.ConversationType;
 import com.wangliang.agentj.conversation.entity.dto.ConversationMessageRequest;
 import com.wangliang.agentj.conversation.entity.dto.ConversationSessionRequest;
 import com.wangliang.agentj.conversation.entity.po.ConversationMessageEntity;
@@ -130,6 +131,20 @@ public class ConversationRecordService {
 		entity.setSummary(request.getSummary());
 		entity.setModelName(StringUtils.hasText(request.getModelName()) ? request.getModelName()
 				: ConversationSessionEntity.DEFAULT_MODEL_NAME);
+		// 设置对话类型
+		if (StringUtils.hasText(request.getConversationType())) {
+			try {
+				entity.setConversationType(ConversationType.valueOf(request.getConversationType().toUpperCase()));
+			} catch (IllegalArgumentException e) {
+				entity.setConversationType(ConversationType.CHAT);
+			}
+		} else {
+			entity.setConversationType(ConversationType.CHAT);
+		}
+		// 设置知识库ID
+		if (StringUtils.hasText(request.getKnowledgeBaseId())) {
+			entity.setKnowledgeBaseId(request.getKnowledgeBaseId());
+		}
 		entity.setIsDeleted(Boolean.FALSE);
 		LocalDateTime now = LocalDateTime.now();
 		entity.setCreatedAt(now);
@@ -175,6 +190,21 @@ public class ConversationRecordService {
 		Page<ConversationSessionEntity> pageData = sessionRepository.search(userId,
 				StringUtils.hasText(keyword) ? keyword : null, includeDeleted, PageRequest.of(Math.max(page - 1, 0),
 						Math.max(size, 1)));
+		List<ConversationSessionView> views = pageData.getContent().stream()
+				.map(ConversationSessionView::fromEntity)
+				.collect(Collectors.toList());
+		return new PagedResult<>(views, pageData.getTotalElements(), pageData.getNumber() + 1, pageData.getSize());
+	}
+
+	/**
+	 * 按对话类型和知识库ID查询会话列表
+	 */
+	public PagedResult<ConversationSessionView> listSessionsByType(Long userId, ConversationType conversationType,
+			String knowledgeBaseId, String keyword, boolean includeDeleted, int page, int size) {
+		Page<ConversationSessionEntity> pageData = sessionRepository.searchByType(userId, conversationType,
+				StringUtils.hasText(knowledgeBaseId) ? knowledgeBaseId : null,
+				StringUtils.hasText(keyword) ? keyword : null, includeDeleted,
+				PageRequest.of(Math.max(page - 1, 0), Math.max(size, 1)));
 		List<ConversationSessionView> views = pageData.getContent().stream()
 				.map(ConversationSessionView::fromEntity)
 				.collect(Collectors.toList());

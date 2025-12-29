@@ -17,8 +17,9 @@ public class RagProperties {
 
 	/**
 	 * 相似度阈值，小于该值的文档会被丢弃。
+	 * 针对 Qdrant 向量库，默认值设置较低以确保匹配文档不被过滤。
 	 */
-	private double similarityThreshold = 0.6;
+	private double similarityThreshold = 0.35;
 
 	/**
 	 * 生成阶段可用的上下文最大字符数，避免提示过长。

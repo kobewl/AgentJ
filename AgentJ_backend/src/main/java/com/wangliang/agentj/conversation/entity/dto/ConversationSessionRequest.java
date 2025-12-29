@@ -15,6 +15,8 @@
  */
 package com.wangliang.agentj.conversation.entity.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * 会话创建/更新请求
  */
@@ -26,7 +28,14 @@ public class ConversationSessionRequest {
 
 	private String summary;
 
+	@JsonProperty("model_name")
 	private String modelName;
+
+	@JsonProperty("conversation_type")
+	private String conversationType;
+
+	@JsonProperty("knowledge_base_id")
+	private String knowledgeBaseId;
 
 	public String getId() {
 		return id;
@@ -59,4 +68,21 @@ public class ConversationSessionRequest {
 	public void setModelName(String modelName) {
 		this.modelName = modelName;
 	}
+
+	public String getConversationType() {
+		return conversationType;
+	}
+
+	public void setConversationType(String conversationType) {
+		this.conversationType = conversationType;
+	}
+
+	public String getKnowledgeBaseId() {
+		return knowledgeBaseId;
+	}
+
+	public void setKnowledgeBaseId(String knowledgeBaseId) {
+		this.knowledgeBaseId = knowledgeBaseId;
+	}
 }
+
