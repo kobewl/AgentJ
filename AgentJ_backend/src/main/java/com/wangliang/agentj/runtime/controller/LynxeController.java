@@ -30,6 +30,8 @@ import com.wangliang.agentj.event.PlanExceptionEvent;
 import com.wangliang.agentj.exception.PlanException;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.llm.StreamingResponseHandler;
+import com.wangliang.agentj.model.entity.DynamicModelEntity;
+import com.wangliang.agentj.model.repository.DynamicModelRepository;
 import com.wangliang.agentj.planning.service.IPlanParameterMappingService;
 import com.wangliang.agentj.planning.service.PlanDraftingService;
 import com.wangliang.agentj.planning.model.vo.PlanTemplateConfigVO;
@@ -126,6 +128,9 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 	@Autowired
 	@Lazy
 	private LlmService llmService;
+
+	@Autowired
+	private DynamicModelRepository dynamicModelRepository;
 
 	@Autowired
 	@Lazy
@@ -1447,6 +1452,27 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 			return errorEmitter;
 		}
 
+		String modelId = (String) request.get("modelId");
+		logger.info("Received chat request with modelId: {}", modelId);
+
+		String tempModelName = null;
+		if (modelId != null && !modelId.trim().isEmpty()) {
+			try {
+				DynamicModelEntity model = dynamicModelRepository.findById(Long.parseLong(modelId)).orElse(null);
+				if (model != null) {
+					tempModelName = model.getModelName();
+					logger.info("Resolved modelId {} to modelName: {}", modelId, tempModelName);
+				}
+				else {
+					logger.warn("Model with id {} not found, will use default model", modelId);
+				}
+			}
+			catch (NumberFormatException e) {
+				logger.warn("Invalid modelId format: {}, will use default model", modelId);
+			}
+		}
+		final String modelName = tempModelName;
+
 		// Optional userId from frontend to support personal memory capture
 		Long userId = userService.resolveUserId(request.get("userId"));
 		if (userId == null) {
@@ -1549,7 +1575,15 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 				}
 
 				// Call LLM with simple chat (no tools, no plan execution)
-				ChatClient chatClient = llmService.getDiaChatClient();
+				final ChatClient chatClient;
+				if (modelName != null && !modelName.trim().isEmpty()) {
+					chatClient = llmService.getDynamicAgentChatClient(modelName);
+					logger.info("Using specified model: {}", modelName);
+				}
+				else {
+					chatClient = llmService.getDiaChatClient();
+					logger.info("Using default model");
+				}
 				Prompt prompt = new Prompt(messages);
 
 				// Calculate input character count

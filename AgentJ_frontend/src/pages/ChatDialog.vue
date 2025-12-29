@@ -36,6 +36,23 @@
 
       <div class="chat-main">
         <header class="chat-hero">
+          <div class="model-selector">
+            <el-select
+              v-model="selectedModelId"
+              placeholder="选择模型"
+              size="small"
+              style="width: 280px"
+              @change="handleModelChange"
+              :loading="loadingModels"
+            >
+              <el-option
+                v-for="model in availableModels"
+                :key="model.value"
+                :label="model.label"
+                :value="model.value"
+              />
+            </el-select>
+          </div>
           <div class="hero-actions">
             <el-button text size="small" @click="clearChat" :disabled="messages.length === 0">
               <el-icon><Delete /></el-icon>
@@ -208,6 +225,7 @@ import {
   type ConversationSession,
   type ConversationMessage,
 } from '@/api/conversation';
+import { getAvailableModels } from '@/api/config';
 import {
   ChatDotRound,
   ChatLineRound,
@@ -273,6 +291,9 @@ const sending = ref(false);
 const selectedFile = ref<File | null>(null);
 const messagesContainer = ref<HTMLElement>();
 const autoTitling = ref(false);
+const availableModels = ref<Array<{ value: string; label: string }>>([]);
+const selectedModelId = ref('');
+const loadingModels = ref(false);
 let lastUserPrompt = '';
 
 let abortController: AbortController | null = null;
@@ -328,6 +349,27 @@ const buildShortTitle = (userText?: string, assistantText?: string) => {
   const secondary = sanitizeText(assistantText);
   const source = primary || secondary || '新对话';
   return source.length > 6 ? source.slice(0, 6) : source;
+};
+
+const loadAvailableModels = async () => {
+  try {
+    loadingModels.value = true;
+    const resp = await getAvailableModels();
+    availableModels.value = resp.data.options || [];
+    if (availableModels.value.length > 0 && !selectedModelId.value) {
+      const defaultModel = availableModels.value.find((m: any) => m.isDefault);
+      selectedModelId.value = defaultModel?.value || availableModels.value[0].value;
+    }
+  } catch (error) {
+    console.error('加载模型列表失败', error);
+    ElMessage.error('加载模型列表失败');
+  } finally {
+    loadingModels.value = false;
+  }
+};
+
+const handleModelChange = (value: string) => {
+  console.log('模型已切换:', value);
 };
 
 const shouldAutoTitle = () => {
@@ -552,6 +594,7 @@ const send = async () => {
     input: userInput,
     conversationId: currentConversationId || undefined,
     requestSource: 'VUE_DIALOG',
+    modelId: selectedModelId.value,
   };
   
   // 清空输入
@@ -655,6 +698,7 @@ watch(showDeletedConversations, () => {
 
 onMounted(() => {
   loadConversations();
+  loadAvailableModels();
 });
 
 // 监听消息变化

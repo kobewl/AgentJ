@@ -72,6 +72,7 @@ public class ConfigController {
 			Map<String, Object> option = new HashMap<>();
 			option.put("value", model.getId().toString());
 			option.put("label", model.getModelName() + " (" + model.getModelDescription() + ")");
+			option.put("isDefault", model.getIsDefault());
 			return option;
 		}).collect(Collectors.toList());
 
