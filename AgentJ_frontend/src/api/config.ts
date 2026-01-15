@@ -10,3 +10,8 @@ export const resetAllDefaults = () => http.post('/api/config/reset-all-defaults'
 
 export const getAvailableModels = () => http.get<{ options: ModelOption[]; total: number }>('/api/config/available-models');
 
+export const listConfigGroups = () => http.get<string[]>('/api/config/groups');
+
+export const listConfigSubGroups = (groupName: string) => 
+  http.get<string[]>(`/api/config/groups/${encodeURIComponent(groupName)}/sub-groups`);
+

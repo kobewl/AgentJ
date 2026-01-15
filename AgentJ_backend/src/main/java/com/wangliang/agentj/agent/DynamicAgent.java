@@ -1,18 +1,3 @@
-/*
- * Copyright 2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.wangliang.agentj.agent;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -210,6 +195,15 @@ public class DynamicAgent extends ReActAgent {
 		}
 	}
 
+	/**
+	 * 核心方法: 确保决策的有效性
+	 * 	1. 智能重试与退避
+	 * 	2. 防偷懒机制 —— 早停检测 ( Early Termination )
+	 *
+	 * @param maxRetries
+	 * @return
+	 * @throws Exception
+	 */
 	private boolean executeWithRetry(int maxRetries) throws Exception {
 		int attempt = 0;
 		Exception lastException = null;
@@ -235,6 +229,7 @@ public class DynamicAgent extends ReActAgent {
 			try {
 				log.info("Attempt {}/{}: Executing agent thinking process", attempt, maxRetries);
 
+				// 将基础系统规则、Agent 业务逻辑和实时环境数据有机地结合在一起，生成最终发送给 LLM 的指令。
 				Message systemMessage = getThinkMessage();
 				// Use current env as user message
 				Message currentStepEnvMessage = currentStepEnvMessage();
@@ -490,7 +485,8 @@ public class DynamicAgent extends ReActAgent {
 
 	@Override
 	public AgentExecResult step() {
-		try {
+		try
+		{
 			boolean shouldAct = think();
 			if (!shouldAct) {
 				// Check if we have a latest exception from LLM calls (max retries
@@ -1467,6 +1463,15 @@ public class DynamicAgent extends ReActAgent {
 		return "";
 	}
 
+	/**
+	 * 1.实现环境感知与状态同步
+	 * 遍历 availableToolKeys，通过调用 collectEnvData 获取每个工具内部维护的 currentToolStateString。
+	 *
+	 * 2.解决“信息不对称”问题
+	 *
+	 * 如果没有这个方法 ：LLM 只能依靠历史对话记忆（Chat History）来推测工具状态。
+	 * Agent 会把工具的真实物理状态 强制注入到当前的 Prompt 上下文中。
+	 */
 	public void collectAndSetEnvDataForTools() {
 
 		Map<String, Object> toolEnvDataMap = new HashMap<>();
