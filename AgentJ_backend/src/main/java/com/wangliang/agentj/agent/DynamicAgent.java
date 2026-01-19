@@ -48,45 +48,37 @@ public class DynamicAgent extends ReActAgent {
 
 	private static final Logger log = LoggerFactory.getLogger(DynamicAgent.class);
 
-	private final ObjectMapper objectMapper;
-
+	/**
+	 * 配置字段
+	 */
+	private final ObjectMapper objectMapper; // json 序列化
 	private final String agentName;
-
 	private final String agentDescription;
-
 	private final String nextStepPrompt;
-
 	protected ToolCallbackProvider toolCallbackProvider;
-
 	protected final List<String> availableToolKeys;
 
+	/**
+	 * LLM 调用
+	 */
 	private ChatResponse response;
-
 	private StreamingResponseHandler.StreamingResult streamResult;
-
 	private Prompt userPrompt;
-
 	private List<PlanExecutionRecorder.ActToolParam> actToolInfoList = new ArrayList<>();
 
+	/**
+	 * 服务依赖
+	 */
 	private final ToolCallingManager toolCallingManager;
-
 	private final UserInputService userInputService;
-
 	private final String modelName;
-
 	private final StreamingResponseHandler streamingResponseHandler;
-
 	private LynxeEventPublisher lynxeEventPublisher;
-
 	private AgentInterruptionHelper agentInterruptionHelper;
-
 	private ParallelToolExecutionService parallelToolExecutionService;
-
 	private MemoryService memoryService;
-
 	private ConversationMemoryLimitService conversationMemoryLimitService;
-
-	private ServiceGroupIndexService serviceGroupIndexService;
+	private ServiceGroupIndexService serviceGroupIndexService; // 服务组索引
 
 	/**
 	 * List to record all exceptions from LLM calls during retry attempts

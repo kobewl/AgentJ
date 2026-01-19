@@ -60,24 +60,23 @@ public abstract class BaseAgent {
 	private int planDepth = 0;
 	private String conversationId = null;
 
+	// 服务依赖字段
 	protected LlmService llmService;
-
 	protected final LynxeProperties lynxeProperties;
-
 	protected ObjectMapper objectMapper;
 
 	// 执行控制相关
-	protected final ExecutionStep step;
-	protected final PlanIdDispatcher planIdDispatcher; // 计划ID转换器
+	protected final ExecutionStep step; // 执行步骤实体
+	protected final PlanIdDispatcher planIdDispatcher; // ID 生成器
 	private int maxSteps;
 	private int currentStep = 0;
 
 	// Change the data map to an immutable object and initialize it properly
 	private final Map<String, Object> initSettingData;
 
-	private Map<String, Object> envData = new HashMap<>();
+	private Map<String, Object> envData = new HashMap<>(); // 存储工具的实时状态信息
 
-	protected PlanExecutionRecorder planExecutionRecorder;
+	protected PlanExecutionRecorder planExecutionRecorder; // 执行过程记录，用于前端展示
 
 	public abstract void clearUp(String planId);
 
