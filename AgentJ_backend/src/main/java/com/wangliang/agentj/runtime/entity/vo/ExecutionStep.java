@@ -52,6 +52,26 @@ public class ExecutionStep {
 
 	private String terminateColumns;
 
+	/**
+	 * Execution mode: autonomous (完全自主) or guided (模板引导)
+	 */
+	private String executionMode;
+
+	/**
+	 * Whether to enable automatic planning (trigger PlanDraftingService)
+	 */
+	private Boolean enableAutoPlanning;
+
+	/**
+	 * Description of what this plan is suitable for
+	 */
+	private String description;
+
+	/**
+	 * List of suitable use cases for this plan
+	 */
+	private List<String> suitableFor;
+
 	public Integer getStepIndex() {
 		return stepIndex;
 	}
@@ -158,6 +178,38 @@ public class ExecutionStep {
 		sb.append(stepRequirement);
 
 		return sb.toString();
+	}
+
+	public String getExecutionMode() {
+		return executionMode;
+	}
+
+	public void setExecutionMode(String executionMode) {
+		this.executionMode = executionMode;
+	}
+
+	public Boolean getEnableAutoPlanning() {
+		return enableAutoPlanning;
+	}
+
+	public void setEnableAutoPlanning(Boolean enableAutoPlanning) {
+		this.enableAutoPlanning = enableAutoPlanning;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public List<String> getSuitableFor() {
+		return suitableFor;
+	}
+
+	public void setSuitableFor(List<String> suitableFor) {
+		this.suitableFor = suitableFor;
 	}
 
 }

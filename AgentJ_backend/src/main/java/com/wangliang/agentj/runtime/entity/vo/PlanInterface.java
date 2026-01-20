@@ -179,4 +179,52 @@ public interface PlanInterface {
 
 	public String getResult();
 
+	/**
+	 * Get the execution mode: autonomous (完全自主) or guided (模板引导)
+	 * @return The execution mode
+	 */
+	String getExecutionMode();
+
+	/**
+	 * Set the execution mode
+	 * @param executionMode The execution mode
+	 */
+	void setExecutionMode(String executionMode);
+
+	/**
+	 * Get whether automatic planning is enabled
+	 * @return true if automatic planning is enabled
+	 */
+	Boolean getEnableAutoPlanning();
+
+	/**
+	 * Set whether automatic planning is enabled
+	 * @param enableAutoPlanning The automatic planning flag
+	 */
+	void setEnableAutoPlanning(Boolean enableAutoPlanning);
+
+	/**
+	 * Get the description of the plan
+	 * @return The description
+	 */
+	String getDescription();
+
+	/**
+	 * Set the description of the plan
+	 * @param description The description
+	 */
+	void setDescription(String description);
+
+	/**
+	 * Get the list of suitable use cases
+	 * @return The list of suitable use cases
+	 */
+	List<String> getSuitableFor();
+
+	/**
+	 * Set the list of suitable use cases
+	 * @param suitableFor The list of suitable use cases
+	 */
+	void setSuitableFor(List<String> suitableFor);
+
 }

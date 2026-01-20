@@ -1,6 +1,10 @@
 {
-  "title": "通用智能执行",
-  "planTemplateId": "auto-general-plan",
+  "title": "通用引导模式",
+  "planTemplateId": "guided-general",
+  "executionMode": "guided",
+  "enableAutoPlanning": true,
+  "description": "适用于各种通用任务的引导式执行，AI会根据任务自动生成步骤",
+  "suitableFor": ["通用任务", "数据分析", "文档处理", "自动化流程"],
   "planType": "dynamic_agent",
   "directResponse": false,
   "serviceGroup": "ungrouped",
@@ -9,24 +13,27 @@
       "stepRequirement": "[GENERAL_AGENT] 解析任务并生成可执行计划：<<task>>。可用上下文: <<context>>。",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
-      "terminateColumns": ""
+      "terminateColumns": "",
+      "selectedToolKeys": []
     },
     {
       "stepRequirement": "[GENERAL_AGENT] 按计划执行任务: <<task>>。必要时选择合适工具完成关键步骤。",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
-      "terminateColumns": ""
+      "terminateColumns": "",
+      "selectedToolKeys": []
     },
     {
       "stepRequirement": "[GENERAL_AGENT] 汇总结果并按要求输出（可用上下文: <<context>>）。完成时调用 terminate。",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
-      "terminateColumns": ""
+      "terminateColumns": "",
+      "selectedToolKeys": []
     }
   ],
   "toolConfig": {
-    "toolName": "auto_general_exec",
-    "toolDescription": "通用任务执行，Agent 自行选择合适的工具或直接回答",
+    "toolName": "guided_general_exec",
+    "toolDescription": "通用任务执行，AI会自动规划步骤（模板引导模式）",
     "enableInternalToolcall": true,
     "enableHttpService": true,
     "enableInConversation": false,

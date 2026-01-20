@@ -1,12 +1,16 @@
 {
   "title": "Browser Research Plan",
-  "planTemplateId": "auto-browser-plan",
+  "planTemplateId": "guided-browser-research",
+  "executionMode": "guided",
+  "enableAutoPlanning": true,
+  "description": "Use browser tools for web information collection and analysis. Suitable for web research, price comparison, information gathering.",
+  "suitableFor": ["Web Research", "Price Comparison", "Information Gathering", "Competitor Analysis"],
   "planType": "dynamic_agent",
   "directResponse": false,
   "serviceGroup": "ungrouped",
   "steps": [
     {
-      "stepRequirement": "[BROWSER_AGENT] Analyze the task and draft a browsing/collection plan: <<task>>. If urls provided: <<urls>>, note priority order; output goal: <<goal>>.",
+      "stepRequirement": "[BROWSER_AGENT] Parse task and generate browsing/information collection plan: <<task>>. If urls provided: <<urls>>, record priority access order; Output goal: <<goal>>.",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
       "terminateColumns": "",
@@ -18,7 +22,7 @@
       ]
     },
     {
-      "stepRequirement": "[BROWSER_AGENT] Follow the plan to open pages or search entry points, visiting urls first: <<urls>>. Locate relevant sections.",
+      "stepRequirement": "[BROWSER_AGENT] Open pages or search entry according to plan, prioritize urls: <<urls>>, locate task-relevant pages/areas.",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
       "terminateColumns": "",
@@ -30,7 +34,7 @@
       ]
     },
     {
-      "stepRequirement": "[BROWSER_AGENT] Extract key facts/data, cross-check if needed, and record source links.",
+      "stepRequirement": "[BROWSER_AGENT] Extract key facts and data, cross-check across pages if necessary, record source links.",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
       "terminateColumns": "",
@@ -42,7 +46,7 @@
       ]
     },
     {
-      "stepRequirement": "[BROWSER_AGENT] Summarize and format according to <<goal>>, citing source URLs.",
+      "stepRequirement": "[BROWSER_AGENT] Summarize conclusions and output according to <<goal>>, attach source URLs.",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
       "terminateColumns": "",
@@ -55,8 +59,8 @@
     }
   ],
   "toolConfig": {
-    "toolName": "auto_browser_exec",
-    "toolDescription": "Automatically use browser tools to research or operate web pages",
+    "toolName": "guided_browser_exec",
+    "toolDescription": "Use browser tools for web research or operations (Guided Mode)",
     "enableInternalToolcall": true,
     "enableHttpService": true,
     "enableInConversation": false,
@@ -64,13 +68,13 @@
     "inputSchema": [
       {
         "name": "task",
-        "description": "Task / question description",
+        "description": "Task/problem description",
         "type": "string",
         "required": true
       },
       {
         "name": "urls",
-        "description": "Optional URL list, comma separated",
+        "description": "Optional URL list, comma-separated",
         "type": "string",
         "required": false
       },

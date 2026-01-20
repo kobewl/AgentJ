@@ -1,0 +1,26 @@
+# =====================================
+# Template Selector Configuration
+# =====================================
+# 智能模板选择器配置 - 控制模板自动选择行为
+
+template:
+  selector:
+    # 默认模板（当无法判断时使用）
+    # 选项: autonomous-default, guided-browser-research, guided-general
+    default-template: autonomous-default
+
+    # 是否启用缓存（生产环境强烈建议启用）
+    # 启用后可显著提升性能（~1170ms → ~5ms）
+    cache-enabled: true
+
+    # 是否启用快速规则匹配
+    # 启用后常见场景可在1ms内返回（URL、淘宝、京东等）
+    rule-matching-enabled: true
+
+    # 选择结果缓存大小（最多缓存多少条历史选择结果）
+    # 默认1000条，可根据并发量调整
+    selection-cache-size: 1000
+
+    # 注意：以下是内部常量，如需修改请更改代码
+    # - template.cache.ttl: 5分钟（模板元数据缓存）
+    # - selection.cache.ttl: 30分钟（选择结果缓存）

@@ -63,6 +63,9 @@ public class PlanTemplateController {
 	@Autowired
 	private PlanTemplateConfigService planTemplateConfigService;
 
+	@Autowired
+	private com.wangliang.agentj.planning.service.TemplateSelector templateSelector;
+
 	/**
 	 * Save version history
 	 * @param planJson Plan JSON data
@@ -644,6 +647,92 @@ public class PlanTemplateController {
 		catch (Exception e) {
 			logger.error("Failed to get plan template configuration for planTemplateId: {}", planTemplateId, e);
 			return ResponseEntity.internalServerError().build();
+		}
+	}
+
+	// ============== Template Selector Cache Monitoring APIs ==============
+
+	/**
+	 * Get template selector cache statistics
+	 *
+	 * GET /api/plan-template/template-selector/stats
+	 *
+	 * @return Cache statistics including cache size, age, validity, and configuration
+	 */
+	@GetMapping("/template-selector/stats")
+	public ResponseEntity<Map<String, Object>> getTemplateSelectorStats() {
+		try {
+			Map<String, Object> stats = templateSelector.getCacheStatistics();
+			logger.info("Retrieved template selector cache statistics: {}", stats);
+			return ResponseEntity.ok(stats);
+		}
+		catch (Exception e) {
+			logger.error("Failed to get template selector cache statistics", e);
+			return ResponseEntity.internalServerError()
+				.body(Map.of(
+					"error", "Failed to get cache statistics: " + e.getMessage(),
+					"success", false
+				));
+		}
+	}
+
+	/**
+	 * Clear all template selector caches (template metadata and selection results)
+	 *
+	 * POST /api/plan-template/template-selector/clear-cache
+	 *
+	 * Use this when templates are updated to force a cache refresh
+	 *
+	 * @return Success message
+	 */
+	@PostMapping("/template-selector/clear-cache")
+	public ResponseEntity<Map<String, Object>> clearTemplateSelectorCache() {
+		try {
+			templateSelector.clearCache();
+			logger.info("Cleared all template selector caches");
+			return ResponseEntity.ok(Map.of(
+				"message", "All caches cleared successfully",
+				"success", true,
+				"timestamp", System.currentTimeMillis()
+			));
+		}
+		catch (Exception e) {
+			logger.error("Failed to clear template selector cache", e);
+			return ResponseEntity.internalServerError()
+				.body(Map.of(
+					"error", "Failed to clear cache: " + e.getMessage(),
+					"success", false
+				));
+		}
+	}
+
+	/**
+	 * Clear only selection result cache (preserves template metadata cache)
+	 *
+	 * POST /api/plan-template/template-selector/clear-selection-cache
+	 *
+	 * Use this to free memory without reloading templates from database
+	 *
+	 * @return Success message with number of entries cleared
+	 */
+	@PostMapping("/template-selector/clear-selection-cache")
+	public ResponseEntity<Map<String, Object>> clearSelectionCache() {
+		try {
+			templateSelector.clearSelectionCache();
+			logger.info("Cleared selection result cache");
+			return ResponseEntity.ok(Map.of(
+				"message", "Selection result cache cleared successfully",
+				"success", true,
+				"timestamp", System.currentTimeMillis()
+			));
+		}
+		catch (Exception e) {
+			logger.error("Failed to clear selection cache", e);
+			return ResponseEntity.internalServerError()
+				.body(Map.of(
+					"error", "Failed to clear selection cache: " + e.getMessage(),
+					"success", false
+				));
 		}
 	}
 

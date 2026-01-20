@@ -1,32 +1,39 @@
 {
-  "title": "General Smart Execute",
-  "planTemplateId": "auto-general-plan",
+  "title": "General Guided Mode",
+  "planTemplateId": "guided-general",
+  "executionMode": "guided",
+  "enableAutoPlanning": true,
+  "description": "Guided execution for various general tasks, AI will automatically generate steps based on the task",
+  "suitableFor": ["General Tasks", "Data Analysis", "Document Processing", "Automation Workflows"],
   "planType": "dynamic_agent",
   "directResponse": false,
   "serviceGroup": "ungrouped",
   "steps": [
     {
-      "stepRequirement": "[GENERAL_AGENT] Analyze the task and draft an executable plan: <<task>>. Context: <<context>>.",
+      "stepRequirement": "[GENERAL_AGENT] Parse task and generate executable plan: <<task>>. Available context: <<context>>.",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
-      "terminateColumns": ""
+      "terminateColumns": "",
+      "selectedToolKeys": []
     },
     {
-      "stepRequirement": "[GENERAL_AGENT] Execute the task per plan: <<task>>. Choose tools as needed for key steps.",
+      "stepRequirement": "[GENERAL_AGENT] Execute task according to plan: <<task>>. Select appropriate tools when necessary to complete key steps.",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
-      "terminateColumns": ""
+      "terminateColumns": "",
+      "selectedToolKeys": []
     },
     {
-      "stepRequirement": "[GENERAL_AGENT] Summarize results and format output using context if provided: <<context>>. Call terminate when finished.",
+      "stepRequirement": "[GENERAL_AGENT] Summarize results and output as required (Available context: <<context>>). Call terminate when finished.",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
-      "terminateColumns": ""
+      "terminateColumns": "",
+      "selectedToolKeys": []
     }
   ],
   "toolConfig": {
-    "toolName": "auto_general_exec",
-    "toolDescription": "General task execution; Agent chooses suitable tools or answers directly",
+    "toolName": "guided_general_exec",
+    "toolDescription": "General task execution with automatic step planning (Guided Mode)",
     "enableInternalToolcall": true,
     "enableHttpService": true,
     "enableInConversation": false,
@@ -34,7 +41,7 @@
     "inputSchema": [
       {
         "name": "task",
-        "description": "Task / question description",
+        "description": "Task/problem description",
         "type": "string",
         "required": true
       },

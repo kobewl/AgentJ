@@ -1,6 +1,10 @@
 {
   "title": "浏览器调研计划",
-  "planTemplateId": "auto-browser-plan",
+  "planTemplateId": "guided-browser-research",
+  "executionMode": "guided",
+  "enableAutoPlanning": true,
+  "description": "使用浏览器工具完成网页信息收集和分析，适用于网页调研、价格对比、信息收集等场景",
+  "suitableFor": ["网页调研", "价格对比", "信息收集", "竞品分析"],
   "planType": "dynamic_agent",
   "directResponse": false,
   "serviceGroup": "ungrouped",
@@ -55,8 +59,8 @@
     }
   ],
   "toolConfig": {
-    "toolName": "auto_browser_exec",
-    "toolDescription": "自动使用浏览器工具完成网页调研或操作",
+    "toolName": "guided_browser_exec",
+    "toolDescription": "使用浏览器工具完成网页调研或操作（模板引导模式）",
     "enableInternalToolcall": true,
     "enableHttpService": true,
     "enableInConversation": false,

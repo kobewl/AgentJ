@@ -144,6 +144,9 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 	@Lazy
 	private com.wangliang.agentj.user.service.UserPersonalMemoryService userPersonalMemoryService;
 
+	@Autowired
+	private com.wangliang.agentj.planning.service.TemplateSelector templateSelector;
+
 	public LynxeController(ObjectMapper objectMapper) {
 		this.objectMapper = objectMapper;
 		// Register JavaTimeModule to handle LocalDateTime serialization/deserialization
@@ -535,6 +538,14 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 			logger.error("Plan template ID is null or empty");
 			throw new IllegalArgumentException("Plan template ID cannot be null or empty");
 		}
+
+		// 🆕 Auto-select template if planTemplateId is "auto" or "auto-select"
+		if ("auto".equals(planTemplateId) || "auto-select".equals(planTemplateId)) {
+			String userInput = extractUserInput(replacementParams);
+			planTemplateId = templateSelector.selectTemplate(userInput);
+			logger.info("🤖 Auto-selected template: {} for user input: {}", planTemplateId, userInput);
+		}
+
 		String planJson = null;
 		try {
 
@@ -1068,7 +1079,20 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 		if (!(plan instanceof DynamicAgentExecutionPlan dynamicPlan)) {
 			return;
 		}
-		if (!planTemplateId.startsWith("auto-")) {
+
+		// Check if auto planning is enabled via the enableAutoPlanning field
+		// This replaces the old planTemplateId.startsWith("auto-") check
+		Boolean enableAutoPlanning = plan.getEnableAutoPlanning();
+		if (enableAutoPlanning == null || !enableAutoPlanning) {
+			logger.debug("Auto planning not enabled for planTemplateId: {}, skipping", planTemplateId);
+			return;
+		}
+
+		// Check execution mode: only guided mode should trigger auto planning
+		String executionMode = plan.getExecutionMode();
+		if (!"guided".equals(executionMode)) {
+			logger.debug("Execution mode is '{}' (not 'guided'), skipping auto planning for planTemplateId: {}",
+					executionMode, planTemplateId);
 			return;
 		}
 
@@ -1110,7 +1134,8 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 
 		if (!newSteps.isEmpty()) {
 			dynamicPlan.setSteps(newSteps);
-			logger.info("Applied drafted plan with {} steps for planTemplateId {}", newSteps.size(), planTemplateId);
+			logger.info("Applied drafted plan with {} steps for planTemplateId {} (executionMode: {}, enableAutoPlanning: {})",
+					newSteps.size(), planTemplateId, executionMode, enableAutoPlanning);
 		}
 	}
 
@@ -1135,6 +1160,41 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 		}
 		Object value = replacementParams.get(key);
 		return value != null ? value.toString() : null;
+	}
+
+	/**
+	 * Extract user input from replacement params for template selection
+	 * Tries multiple possible keys: task, input, prompt, userRequirement
+	 *
+	 * @param replacementParams Replacement parameters map
+	 * @return Extracted user input or empty string if not found
+	 */
+	private String extractUserInput(Map<String, Object> replacementParams) {
+		if (replacementParams == null || replacementParams.isEmpty()) {
+			return "";
+		}
+
+		// Try common keys in order of priority
+		String[] keys = {"task", "input", "prompt", "userRequirement", "question", "message"};
+		for (String key : keys) {
+			String value = resolveParam(replacementParams, key);
+			if (StringUtils.hasText(value)) {
+				return value;
+			}
+		}
+
+		// If no standard key found, try to get the first string value
+		for (Map.Entry<String, Object> entry : replacementParams.entrySet()) {
+			if (entry.getValue() != null && entry.getValue() instanceof String) {
+				String strValue = (String) entry.getValue();
+				if (StringUtils.hasText(strValue) && strValue.length() < 500) {
+					// Limit length to avoid extremely long values
+					return strValue;
+				}
+			}
+		}
+
+		return "";
 	}
 
 	private String resolveAgentTag(String planTemplateId, ExecutionStep baseStep) {

@@ -1,14 +1,18 @@
 {
-  "title": "默认的用户输入(不要删除这个计划)",
+  "title": "完全自主模式",
+  "executionMode": "autonomous",
+  "enableAutoPlanning": false,
+  "description": "AI拥有所有工具，完全自主决定执行步骤。适用于探索性任务和复杂问题。",
   "steps": [
     {
       "stepRequirement": "<<userRequirement>>",
       "agentName": "ConfigurableDynaAgent",
       "modelName": "",
-      "terminateColumns": ""
+      "terminateColumns": "",
+      "selectedToolKeys": []
     }
   ],
   "directResponse": false,
   "planType": "dynamic_agent",
-  "planTemplateId": "default-plan-id-001000222"
+  "planTemplateId": "autonomous-default"
 }

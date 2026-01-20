@@ -49,6 +49,26 @@ public abstract class AbstractExecutionPlan implements PlanInterface {
 	protected String executionParams;
 
 	/**
+	 * Execution mode: autonomous (完全自主) or guided (模板引导)
+	 */
+	protected String executionMode;
+
+	/**
+	 * Whether to enable automatic planning (trigger PlanDraftingService)
+	 */
+	protected Boolean enableAutoPlanning;
+
+	/**
+	 * Description of what this plan is suitable for
+	 */
+	protected String description;
+
+	/**
+	 * List of suitable use cases for this plan
+	 */
+	protected List<String> suitableFor;
+
+	/**
 	 * Default constructor
 	 */
 	public AbstractExecutionPlan() {
@@ -195,6 +215,46 @@ public abstract class AbstractExecutionPlan implements PlanInterface {
 
 	public void setPlanTemplateId(String planTemplateId) {
 		this.planTemplateId = planTemplateId;
+	}
+
+	@Override
+	public String getExecutionMode() {
+		return executionMode;
+	}
+
+	@Override
+	public void setExecutionMode(String executionMode) {
+		this.executionMode = executionMode;
+	}
+
+	@Override
+	public Boolean getEnableAutoPlanning() {
+		return enableAutoPlanning;
+	}
+
+	@Override
+	public void setEnableAutoPlanning(Boolean enableAutoPlanning) {
+		this.enableAutoPlanning = enableAutoPlanning;
+	}
+
+	@Override
+	public String getDescription() {
+		return description;
+	}
+
+	@Override
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	@Override
+	public List<String> getSuitableFor() {
+		return suitableFor;
+	}
+
+	@Override
+	public void setSuitableFor(List<String> suitableFor) {
+		this.suitableFor = suitableFor;
 	}
 
 	/**
