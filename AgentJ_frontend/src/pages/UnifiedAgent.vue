@@ -1,91 +1,127 @@
 <template>
   <div class="agent-page">
-    <!-- 左侧：输入面板 -->
-    <div class="input-panel">
+    <!-- 左侧：对话面板 -->
+    <div class="chat-panel">
       <div class="panel-header">
         <div class="header-icon">
-          <el-icon :size="24"><Cpu /></el-icon>
+          <el-icon :size="24"><ChatDotRound /></el-icon>
         </div>
         <div class="header-content">
-          <h2 class="panel-title">AI Agent</h2>
-          <p class="panel-subtitle">智能任务执行助手</p>
+          <h2 class="panel-title">AI 智能助手</h2>
+          <p class="panel-subtitle">自动识别任务类型并执行</p>
         </div>
       </div>
 
-      <div class="panel-body">
-        <!-- Agent 类型选择 -->
-        <div class="form-section">
-          <label class="form-label">选择 Agent 类型</label>
-          <div class="agent-type-grid">
-            <div
-              v-for="agent in agentTypes"
-              :key="agent.id"
-              :class="['agent-type-card', { active: selectedAgent === agent.id }]"
-              @click="selectAgent(agent.id)"
-            >
-              <div class="agent-icon">
-                <el-icon :size="20"><component :is="agent.icon" /></el-icon>
+      <!-- 对话历史 -->
+      <div class="messages-container">
+        <div class="messages-list" ref="messagesListRef">
+          <div v-if="conversationHistory.length === 0" class="empty-state">
+            <div class="empty-icon">
+              <el-icon :size="48"><Promotion /></el-icon>
+            </div>
+            <p class="empty-text">我可以帮你完成各种任务：</p>
+            <div class="example-tasks">
+              <div class="task-chip" @click="useExample('帮我查询北京今天的天气')">
+                <el-icon><Search /></el-icon>
+                查询天气
               </div>
-              <div class="agent-info">
-                <span class="agent-name">{{ agent.name }}</span>
-                <span class="agent-desc">{{ agent.description }}</span>
+              <div class="task-chip" @click="useExample('打开 https://github.com 并获取热门项目列表')">
+                <el-icon><Monitor /></el-icon>
+                网页浏览
+              </div>
+              <div class="task-chip" @click="useExample('查询数据库中用户数量统计')">
+                <el-icon><Edit /></el-icon>
+                数据库查询
+              </div>
+            </div>
+          </div>
+
+          <transition-group name="message" tag="div">
+            <div
+              v-for="(msg, index) in conversationHistory"
+              :key="index"
+              :class="['message-item', msg.role]"
+            >
+              <div class="message-avatar">
+                <el-icon v-if="msg.role === 'user'"><User /></el-icon>
+                <el-icon v-else><Cpu /></el-icon>
+              </div>
+              <div class="message-content">
+                <div class="message-header">
+                  <span class="message-role">{{ msg.role === 'user' ? '我' : 'AI 助手' }}</span>
+                  <span class="message-time">{{ formatTime(msg.timestamp) }}</span>
+                </div>
+                <div class="message-text markdown-body" v-html="renderMarkdown(msg.content)"></div>
+              </div>
+            </div>
+          </transition-group>
+
+          <!-- 执行中状态 -->
+          <div v-if="executing" class="message-item assistant streaming">
+            <div class="message-avatar">
+              <el-icon><Cpu /></el-icon>
+            </div>
+            <div class="message-content">
+              <div class="message-header">
+                <span class="message-role">AI 助手</span>
+                <span class="message-time">执行中...</span>
+              </div>
+              <div class="message-text">
+                <div class="typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- 数据源选择（仅数据库类型时显示） -->
-        <div class="form-section" v-if="showDatasource">
-          <label class="form-label">数据源</label>
-          <el-select
-            v-model="datasourceName"
-            placeholder="选择数据源"
-            clearable
-            style="width: 100%"
-          >
-            <el-option
-              v-for="ds in datasources"
-              :key="ds.name"
-              :label="ds.name"
-              :value="ds.name"
-            />
-          </el-select>
-        </div>
-
-        <!-- 任务输入 -->
-        <div class="form-section">
-          <label class="form-label">任务描述</label>
-          <el-input
-            v-model="taskInput"
-            type="textarea"
-            :rows="5"
-            :placeholder="getPlaceholder"
-            class="task-input"
-          />
-        </div>
-
-        <!-- 提交按钮 -->
-        <div class="submit-section">
+      <!-- 输入区域 -->
+      <div class="input-section">
+        <el-input
+          v-model="taskInput"
+          type="textarea"
+          :rows="3"
+          placeholder="描述你想完成的任务，我会自动选择最合适的方式..."
+          :disabled="executing"
+          @keydown.enter.prevent="handleEnterKey"
+          class="task-input"
+        />
+        <div class="input-actions">
           <el-button
-            type="primary"
-            size="large"
+            v-if="executing"
+            type="danger"
+            @click="stopExecution"
             :loading="submitting"
-            :disabled="!taskInput.trim()"
-            @click="submitTask"
-            class="submit-btn"
           >
-            <el-icon v-if="!submitting"><VideoPlay /></el-icon>
-            {{ submitting ? '执行中...' : '开始执行' }}
+            <el-icon><VideoPause /></el-icon>
+            停止执行
+          </el-button>
+          <el-button
+            v-else
+            type="primary"
+            @click="submitTask"
+            :disabled="!taskInput.trim()"
+            :loading="submitting"
+          >
+            <el-icon><VideoPlay /></el-icon>
+            发送
+          </el-button>
+          <el-button @click="clearConversation" :disabled="conversationHistory.length === 0">
+            <el-icon><Delete /></el-icon>
+            清空对话
           </el-button>
         </div>
       </div>
     </div>
 
-    <!-- 右侧：执行状态面板 -->
-    <div class="output-panel">
+    <!-- 右侧：执行详情面板 -->
+    <div class="output-panel" v-if="planId || showOutputPanel">
       <div class="panel-header output-header">
         <div class="header-left">
-          <h3 class="output-title">执行状态</h3>
+          <h3 class="output-title">执行详情</h3>
           <el-tag v-if="planId" :type="statusTagType" size="small">{{ statusText }}</el-tag>
         </div>
         <div class="header-actions">
@@ -97,6 +133,10 @@
             <el-icon><VideoPause /></el-icon>
             停止
           </el-button>
+          <el-button size="small" @click="closeOutputPanel" text>
+            <el-icon><Close /></el-icon>
+            关闭
+          </el-button>
         </div>
       </div>
 
@@ -104,19 +144,19 @@
         <!-- 任务信息 -->
         <div class="task-info" v-if="planId">
           <div class="info-item">
-            <span class="info-label">Plan ID</span>
-            <span class="info-value mono">{{ planId }}</span>
+            <span class="info-label">Conversation ID</span>
+            <span class="info-value mono">{{ conversationId || 'N/A' }}</span>
           </div>
           <div class="info-item">
-            <span class="info-label">Agent</span>
-            <span class="info-value">{{ currentAgentName }}</span>
+            <span class="info-label">Plan ID</span>
+            <span class="info-value mono">{{ planId }}</span>
           </div>
         </div>
 
         <!-- 计划步骤 -->
         <div class="plan-section" v-if="planSteps.length">
           <div class="section-header">
-            <span class="section-title">计划</span>
+            <span class="section-title">执行计划</span>
             <span class="step-count">{{ planCompleted }}/{{ planTotal }} 已完成</span>
           </div>
           <div class="plan-list">
@@ -187,11 +227,11 @@
         </div>
 
         <!-- 空状态 -->
-        <div class="empty-state" v-if="!planId">
+        <div class="empty-state" v-if="!planId && !showOutputPanel">
           <div class="empty-icon">
             <el-icon :size="48"><Promotion /></el-icon>
           </div>
-          <p class="empty-text">选择 Agent 类型，输入任务描述后开始执行</p>
+          <p class="empty-text">开始对话后，这里会显示执行详情</p>
         </div>
       </div>
     </div>
@@ -199,7 +239,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch, nextTick } from 'vue';
 import { ElMessage } from 'element-plus';
 import {
   Cpu,
@@ -211,90 +251,42 @@ import {
   Promotion,
   Search,
   Edit,
-  Connection,
+  User,
+  ChatDotRound,
+  Delete,
+  Close,
   Monitor,
 } from '@element-plus/icons-vue';
 import { executeByToolAsync, getExecutionDetails, getTaskStatus, stopTask, submitUserInput } from '@/api/executor';
-import { listDatasourceConfigs } from '@/api/datasource';
 import { streamSse, type SseMessage } from '@/utils/sse';
-import type { DatasourceConfig } from '@/api/types';
 import ExecutionStepViewer from '@/components/ExecutionStepViewer.vue';
+import { marked } from 'marked';
+import 'highlight.js/styles/github.css';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
-// Agent 类型定义
-const agentTypes = [
-  {
-    id: 'general',
-    name: '通用智能',
-    description: '自动规划执行各类任务',
-    icon: 'Cpu',
-    toolName: 'auto_general_exec',
-  },
-  {
-    id: 'browser',
-    name: '浏览器操作',
-    description: '网页浏览、数据采集',
-    icon: 'Monitor',
-    toolName: 'auto_browser_exec',
-  },
-  {
-    id: 'database-read',
-    name: '数据库查询',
-    description: '查询数据、表结构分析',
-    icon: 'Search',
-    toolName: 'ai_database_read_agent',
-  },
-  {
-    id: 'database-write',
-    name: '数据库写入',
-    description: '数据更新、插入、删除',
-    icon: 'Edit',
-    toolName: 'ai_database_write_agent',
-  },
-];
+// ========== 配置 marked 以支持代码高亮 ==========
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+});
 
-const selectedAgent = ref('general');
+// ========== 响应式数据 ==========
 const taskInput = ref('');
-const datasourceName = ref('');
-const datasources = ref<DatasourceConfig[]>([]);
-
+const conversationId = ref('');
+const conversationHistory = ref<Array<{ role: 'user' | 'assistant'; content: string; timestamp: Date }>>([]);
 const submitting = ref(false);
 const submittingInput = ref(false);
+const executing = ref(false);
 const planId = ref('');
 const statusInfo = ref<any>(null);
 const detailRaw = ref('');
 const planStreamController = ref<AbortController | null>(null);
 const waitForm = ref<Record<string, string>>({});
+const showOutputPanel = ref(false);
+const messagesListRef = ref<HTMLElement>();
 
-// 计算属性
-const showDatasource = computed(() =>
-  ['database-read', 'database-write'].includes(selectedAgent.value)
-);
-
-const currentAgentName = computed(() => {
-  const agent = agentTypes.find(a => a.id === selectedAgent.value);
-  return agent?.name || '通用智能';
-});
-
-const derivedToolName = computed(() => {
-  const agent = agentTypes.find(a => a.id === selectedAgent.value);
-  return agent?.toolName || 'auto_general_exec';
-});
-
-const getPlaceholder = computed(() => {
-  switch (selectedAgent.value) {
-    case 'browser':
-      return '例如：打开 https://example.com 并提取页面标题';
-    case 'database-read':
-      return '例如：查询最近7天的订单数量统计';
-    case 'database-write':
-      return '例如：将 user 表中 age > 60 的用户状态更新为 senior';
-    default:
-      return '描述你想让 AI 完成的任务...';
-  }
-});
-
+// ========== 计算属性 ==========
 const statusText = computed(() => {
   if (!statusInfo.value) return '未开始';
   if (typeof statusInfo.value === 'string') return statusInfo.value;
@@ -341,22 +333,6 @@ const waitFields = computed(() => {
 
 const executionSequence = computed(() => {
   const seq = detailJson.value?.agentExecutionSequence || [];
-  // 调试输出 - 可以在浏览器控制台查看
-  if (seq.length > 0) {
-    console.log('[DEBUG] executionSequence:', JSON.stringify(seq, null, 2));
-    seq.forEach((agent: any, idx: number) => {
-      console.log(`[DEBUG] Agent ${idx}:`, agent.agentName, 'thinkActSteps count:', agent.thinkActSteps?.length || 0);
-      if (agent.thinkActSteps?.length > 0) {
-        agent.thinkActSteps.forEach((step: any, stepIdx: number) => {
-          console.log(`[DEBUG] Step ${stepIdx}:`, {
-            thinkOutput: step.thinkOutput?.substring(0, 100),
-            actToolInfoList: step.actToolInfoList,
-            toolName: step.toolName,
-          });
-        });
-      }
-    });
-  }
   return seq;
 });
 
@@ -383,7 +359,6 @@ const detailText = computed(() => {
   if (!detailJson.value) return '';
   if (detailJson.value.summary) return detailJson.value.summary;
   if (detailJson.value.structureResult) return detailJson.value.structureResult;
-  // 如果有最后一个 agent 的结果
   const seq = detailJson.value.agentExecutionSequence || [];
   if (seq.length > 0) {
     const lastAgent = seq[seq.length - 1];
@@ -440,24 +415,54 @@ const planSteps = computed(() => {
 const planTotal = computed(() => planSteps.value.length);
 const planCompleted = computed(() => planSteps.value.filter(item => item.state === 'done').length);
 
-// 方法
-const selectAgent = (id: string) => {
-  selectedAgent.value = id;
+// ========== Markdown 渲染 ==========
+const renderMarkdown = (content: string) => {
+  return marked(content);
 };
 
-const loadDatasources = async () => {
-  try {
-    const res = await listDatasourceConfigs();
-    const all = (res.data || []) as DatasourceConfig[];
-    datasources.value = all.filter((d) => d.enable);
-    if (!datasourceName.value && datasources.value.length) {
-      datasourceName.value = datasources.value[0].name;
-    }
-  } catch (error) {
-    console.error('加载数据源失败', error);
+// ========== 时间格式化 ==========
+const formatTime = (timestamp: Date) => {
+  const now = new Date();
+  const diff = now.getTime() - timestamp.getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return '刚刚';
+  if (minutes < 60) return `${minutes}分钟前`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}小时前`;
+  const days = Math.floor(hours / 24);
+  return `${days}天前`;
+};
+
+// ========== 滚动到底部 ==========
+const scrollToBottom = async () => {
+  await nextTick();
+  if (messagesListRef.value) {
+    messagesListRef.value.scrollTop = messagesListRef.value.scrollHeight;
   }
 };
 
+// ========== 示例任务 ==========
+const useExample = (example: string) => {
+  taskInput.value = example;
+};
+
+// ========== 清空对话 ==========
+const clearConversation = () => {
+  conversationHistory.value = [];
+  conversationId.value = '';
+  planId.value = '';
+  detailRaw.value = '';
+  statusInfo.value = null;
+  showOutputPanel.value = false;
+  ElMessage.success('对话已清空');
+};
+
+// ========== 关闭输出面板 ==========
+const closeOutputPanel = () => {
+  showOutputPanel.value = false;
+};
+
+// ========== 预填充等待表单 ==========
 const prefillWaitForm = () => {
   if (!waitFields.value.length) return;
   waitFields.value.forEach((f) => {
@@ -467,6 +472,7 @@ const prefillWaitForm = () => {
   });
 };
 
+// ========== 处理任务流消息 ==========
 const handleTaskStreamMessage = (data: SseMessage) => {
   if (!data) return;
   if (data.type === 'error') {
@@ -475,6 +481,7 @@ const handleTaskStreamMessage = (data: SseMessage) => {
   }
   if (data.planId && !planId.value) {
     planId.value = data.planId as string;
+    showOutputPanel.value = true;
   }
   if (data.status !== undefined) {
     statusInfo.value = data.status;
@@ -486,9 +493,11 @@ const handleTaskStreamMessage = (data: SseMessage) => {
   }
   if (data.completed) {
     planStreamController.value = null;
+    executing.value = false;
   }
 };
 
+// ========== 开始任务流 ==========
 const startTaskStream = (id: string) => {
   if (!id) return;
   planStreamController.value?.abort();
@@ -507,55 +516,69 @@ const startTaskStream = (id: string) => {
   });
 };
 
-const buildReplacementParams = () => {
-  const params: Record<string, unknown> = {};
-  if (taskInput.value) {
-    let input = taskInput.value;
-    if (showDatasource.value && datasourceName.value) {
-      input += `\n使用数据源: ${datasourceName.value}`;
-    }
-    params.task = input;
-    params.input = input;
-    params.prompt = input;
-  }
-  if (datasourceName.value) {
-    params.datasourceName = datasourceName.value;
-  }
-  return params;
-};
-
+// ========== 提交任务 ==========
 const submitTask = async () => {
   if (!taskInput.value.trim()) {
     ElMessage.warning('请输入任务描述');
     return;
   }
 
-  // 重置状态
-  planId.value = '';
-  statusInfo.value = null;
-  detailRaw.value = '';
+  // 添加用户消息到历史
+  const userMessage = {
+    role: 'user' as const,
+    content: taskInput.value,
+    timestamp: new Date(),
+  };
+  conversationHistory.value.push(userMessage);
+
+  // 如果没有 conversationId，后端会自动生成
+  const currentConversationId = conversationId.value || undefined;
 
   submitting.value = true;
+  executing.value = true;
+  showOutputPanel.value = true;
+
   try {
     const payload = {
-      toolName: derivedToolName.value,
+      toolName: 'auto_general_exec', // 使用通用智能工具，后端会自动选择模板
       requestSource: 'VUE_DIALOG' as any,
-      conversationId: undefined,
-      replacementParams: buildReplacementParams(),
+      conversationId: currentConversationId,
+      replacementParams: {
+        task: taskInput.value,
+        input: taskInput.value,
+        prompt: taskInput.value,
+      },
     };
+
     const res = await executeByToolAsync(payload);
-    planId.value = (res.data as any)?.planId || '';
-    statusInfo.value = (res.data as any)?.status || 'processing';
-    detailRaw.value = JSON.stringify(res.data, null, 2);
-    startTaskStream(planId.value);
+    const responseData = res.data as any;
+
+    // 保存 conversationId（后端返回）
+    if (responseData.conversationId) {
+      conversationId.value = responseData.conversationId;
+    }
+
+    planId.value = responseData.planId || '';
+    statusInfo.value = responseData.status || 'processing';
+    detailRaw.value = JSON.stringify(responseData, null, 2);
+
+    // 开始流式监听
+    if (planId.value) {
+      startTaskStream(planId.value);
+    }
+
     ElMessage.success('任务已提交');
   } catch (error: any) {
     ElMessage.error(error?.response?.data?.error || '提交失败');
+    executing.value = false;
   } finally {
     submitting.value = false;
+    taskInput.value = '';
+    await scrollToBottom();
   }
 };
 
+// ========== 刷新 ==========
 const refresh = async () => {
   if (!planId.value) return;
   try {
@@ -575,16 +598,26 @@ const refresh = async () => {
   }
 };
 
-const stopNow = async () => {
-  if (!planId.value) return;
-  try {
-    await stopTask(planId.value);
-    ElMessage.success('已发送停止指令');
-  } catch (error) {
-    ElMessage.error('停止失败');
+// ========== 停止执行 ==========
+const stopExecution = async () => {
+  if (planId.value) {
+    try {
+      await stopTask(planId.value);
+      ElMessage.success('已发送停止指令');
+    } catch (error) {
+      ElMessage.error('停止失败');
+    }
   }
+  executing.value = false;
+  planStreamController.value?.abort();
+  planStreamController.value = null;
 };
 
+const stopNow = async () => {
+  await stopExecution();
+};
+
+// ========== 提交等待输入 ==========
 const submitWaitInputs = async () => {
   if (!planId.value || !waitFields.value.length) return;
   submittingInput.value = true;
@@ -599,40 +632,45 @@ const submitWaitInputs = async () => {
   }
 };
 
+// ========== 复制详情 ==========
 const copyDetail = async () => {
   if (!detailText.value) return;
   await navigator.clipboard.writeText(detailText.value);
   ElMessage.success('已复制');
 };
 
-// 生命周期
-onMounted(() => {
-  loadDatasources();
-});
+// ========== 处理回车键 ==========
+const handleEnterKey = (event: KeyboardEvent) => {
+  if (event.shiftKey) {
+    // Shift + Enter 换行
+    return;
+  }
+  event.preventDefault();
+  submitTask();
+};
 
+// ========== 生命周期 ==========
 onBeforeUnmount(() => {
   planStreamController.value?.abort();
 });
 
-// 监听 agent 类型变化时警告
-watch(selectedAgent, (val) => {
-  if (val === 'database-write') {
-    ElMessage.warning('写入模式会修改数据库，请确认操作描述正确');
-  }
-});
+// ========== 监听对话历史变化 ==========
+watch(conversationHistory, () => {
+  scrollToBottom();
+}, { deep: true });
 </script>
 
 <style scoped>
 .agent-page {
   display: grid;
-  grid-template-columns: 420px 1fr;
+  grid-template-columns: 450px 1fr;
   gap: 24px;
   min-height: calc(100vh - 112px);
   padding: 0;
 }
 
-/* 输入面板 */
-.input-panel {
+/* ========== 对话面板 ========== */
+.chat-panel {
   background: var(--bg-primary);
   border-radius: 16px;
   box-shadow: var(--shadow-lg);
@@ -645,7 +683,7 @@ watch(selectedAgent, (val) => {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 24px;
+  padding: 20px 24px;
   background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   color: white;
 }
@@ -672,106 +710,215 @@ watch(selectedAgent, (val) => {
   opacity: 0.9;
 }
 
-.panel-body {
-  padding: 24px;
+/* ========== 消息容器 ========== */
+.messages-container {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  overflow: hidden;
+  background: var(--bg-secondary);
 }
 
-.form-section {
+.messages-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 20px;
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  background: var(--bg-tertiary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+}
+
+.empty-text {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin: 0;
+  text-align: center;
+}
+
+.example-tasks {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-top: 12px;
 }
 
-.form-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-/* Agent 类型选择网格 */
-.agent-type-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.task-chip {
+  display: flex;
+  align-items: center;
   gap: 12px;
-}
-
-.agent-type-card {
-  padding: 16px;
+  padding: 14px 20px;
+  background: var(--bg-primary);
   border: 2px solid var(--border-color);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 14px;
 }
 
-.agent-type-card:hover {
+.task-chip:hover {
   border-color: var(--primary-color);
-  background: var(--bg-tertiary);
+  background: var(--bg-hover);
+  transform: translateX(4px);
 }
 
-.agent-type-card.active {
-  border-color: var(--primary-color);
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(139, 92, 246, 0.1));
+/* ========== 消息项 ========== */
+.message-item {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  animation: messageSlideIn 0.3s ease-out;
 }
 
-.agent-icon {
-  width: 36px;
-  height: 36px;
-  background: var(--primary-color);
-  border-radius: 8px;
+.message-item.user {
+  flex-direction: row-reverse;
+}
+
+.message-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
-.agent-type-card.active .agent-icon {
+.message-item.user .message-avatar {
   background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  color: white;
 }
 
-.agent-info {
+.message-item.assistant .message-avatar {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.message-content {
+  flex: 1;
+  max-width: 85%;
+}
+
+.message-header {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.agent-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.agent-desc {
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
   font-size: 12px;
   color: var(--text-secondary);
 }
 
-.task-input :deep(.el-textarea__inner) {
-  border-radius: 12px;
-  padding: 16px;
-  font-size: 14px;
-  line-height: 1.6;
-  resize: none;
-}
-
-.submit-section {
-  margin-top: auto;
-}
-
-.submit-btn {
-  width: 100%;
-  height: 48px;
-  border-radius: 12px;
-  font-size: 16px;
+.message-role {
   font-weight: 600;
 }
 
-/* 输出面板 */
+.message-item.user .message-role {
+  color: var(--primary-color);
+}
+
+.message-text {
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  line-height: 1.6;
+  word-wrap: break-word;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.message-item.user .message-text {
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  color: white;
+  border: none;
+}
+
+.message-item.streaming .message-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ========== 打字指示器 ========== */
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  animation: typing 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
+/* ========== 输入区域 ========== */
+.input-section {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-primary);
+}
+
+.task-input :deep(.el-textarea__inner) {
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: none;
+  border: 2px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.task-input :deep(.el-textarea__inner:focus) {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.input-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  justify-content: flex-end;
+}
+
+/* ========== 输出面板 ========== */
 .output-panel {
   background: var(--bg-primary);
   border-radius: 16px;
@@ -817,7 +964,7 @@ watch(selectedAgent, (val) => {
   gap: 20px;
 }
 
-/* 任务信息 */
+/* ========== 任务信息 ========== */
 .task-info {
   display: flex;
   gap: 24px;
@@ -848,45 +995,7 @@ watch(selectedAgent, (val) => {
   font-size: 12px;
 }
 
-/* 等待输入 */
-.wait-input-section {
-  padding: 20px;
-  background: #fef3c7;
-  border: 1px solid #f59e0b;
-  border-radius: 12px;
-}
-
-.wait-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: #92400e;
-  margin-bottom: 8px;
-}
-
-.wait-icon {
-  color: #f59e0b;
-}
-
-.wait-desc {
-  color: #78350f;
-  margin: 0 0 16px;
-  font-size: 14px;
-}
-
-.wait-form {
-  margin-bottom: 16px;
-}
-
-/* 执行步骤 */
-.execution-section,
-.result-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
+/* ========== 计划步骤 ========== */
 .plan-section {
   display: flex;
   flex-direction: column;
@@ -968,6 +1077,45 @@ watch(selectedAgent, (val) => {
   color: #ca8a04;
 }
 
+/* ========== 等待输入 ========== */
+.wait-input-section {
+  padding: 20px;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 12px;
+}
+
+.wait-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 8px;
+}
+
+.wait-icon {
+  color: #f59e0b;
+}
+
+.wait-desc {
+  color: #78350f;
+  margin: 0 0 16px;
+  font-size: 14px;
+}
+
+.wait-form {
+  margin-bottom: 16px;
+}
+
+/* ========== 执行步骤 ========== */
+.execution-section,
+.result-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .section-header {
   display: flex;
   align-items: center;
@@ -994,7 +1142,7 @@ watch(selectedAgent, (val) => {
   border-radius: 12px;
 }
 
-/* 结果 */
+/* ========== 结果 ========== */
 .result-content {
   background: #1e1e1e;
   border-radius: 12px;
@@ -1012,56 +1160,93 @@ watch(selectedAgent, (val) => {
   word-break: break-word;
 }
 
-/* 空状态 */
-.empty-state {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  color: var(--text-secondary);
+/* ========== 动画 ========== */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.empty-icon {
-  width: 80px;
-  height: 80px;
-  background: var(--bg-secondary);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-tertiary);
+.message-enter-active,
+.message-leave-active {
+  transition: all 0.3s ease;
 }
 
-.empty-text {
+.message-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.message-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+/* ========== Markdown 样式 ========== */
+.markdown-body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 14px;
-  margin: 0;
+  line-height: 1.45;
+  word-wrap: break-word;
 }
 
-/* 响应式 */
+.markdown-body code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(27, 31, 35, 0.05);
+  border-radius: 3px;
+  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}
+
+.markdown-body pre {
+  word-wrap: normal;
+  background-color: #f6f8fa;
+  border-radius: 6px;
+  padding: 12px;
+  overflow: auto;
+}
+
+.markdown-body pre code {
+  padding: 0;
+  margin: 0;
+  font-size: 14px;
+  background-color: transparent;
+  border: 0;
+  white-space: pre;
+}
+
+.markdown-body p {
+  margin: 0 0 10px;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.5em;
+  margin: 0 0 10px;
+}
+
+/* ========== 响应式 ========== */
 @media (max-width: 1200px) {
   .agent-page {
     grid-template-columns: 1fr;
     gap: 16px;
   }
 
-  .input-panel {
+  .chat-panel {
     max-height: none;
   }
 }
 
 @media (max-width: 768px) {
-  .agent-type-grid {
-    grid-template-columns: 1fr;
-  }
-
   .task-info {
     flex-direction: column;
     gap: 12px;
   }
 }
 </style>
-
-
-
