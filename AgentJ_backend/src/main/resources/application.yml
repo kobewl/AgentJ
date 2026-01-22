@@ -12,6 +12,20 @@ spring:
     memory:
       mysql:
         enabled: true
+  # Redis 配置
+  redis:
+    host: 
+    port: 6379
+    password:
+    database: 0
+    timeout: 5000
+    lettuce:
+      pool:
+        max-active: 8
+        max-wait: -1
+        max-idle: 8
+        min-idle: 0
+
 server:
   port: 8080
 
@@ -43,3 +57,18 @@ namespace:
 lynxe:
   general:
     openBrowser: false
+
+# 工作流引擎配置
+agentj:
+  workflow:
+    # 检查点器类型: memory（默认）, redis, postgresql
+    checkpoint:
+      type: redis
+    # 长期内存Store类型: memory（默认）, redis, postgresql
+    store:
+      type: redis
+      ttl: 86400  # Store数据过期时间（秒），默认24小时
+    # 编译图缓存配置
+    cache:
+      maxSize: 100              # 最大缓存数量
+      expireAfterWriteMinutes: 30  # 写入后过期时间（分钟）

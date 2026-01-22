@@ -45,6 +45,20 @@ public class WorkflowExecution {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
+    @Column(name = "thread_id", length = 255)
+    private String threadId;
+
+    @Column(name = "checkpoint_id", length = 255)
+    private String checkpointId;
+
+    @Column(name = "paused", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Builder.Default
+    private Boolean paused = false;
+
+    @Column(name = "waiting_for_human_input", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Builder.Default
+    private Boolean waitingForHumanInput = false;
+
     @PrePersist
     protected void onCreate() {
         startedAt = LocalDateTime.now();
@@ -60,5 +74,39 @@ public class WorkflowExecution {
         this.errorMessage = error;
         this.status = "FAILED";
         this.completedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 标记为等待人工输入（人在回路）
+     */
+    public void markWaitingForHumanInput(String checkpointId) {
+        this.waitingForHumanInput = true;
+        this.checkpointId = checkpointId;
+        this.status = "WAITING";
+    }
+
+    /**
+     * 从人工输入恢复
+     */
+    public void resumeFromHumanInput() {
+        this.waitingForHumanInput = false;
+        this.paused = false;
+        this.status = "RUNNING";
+    }
+
+    /**
+     * 暂停执行
+     */
+    public void pause(String checkpointId) {
+        this.paused = true;
+        this.checkpointId = checkpointId;
+        this.status = "PAUSED";
+    }
+
+    /**
+     * 检查是否可以继续执行
+     */
+    public boolean canProceed() {
+        return !paused && !waitingForHumanInput;
     }
 }
