@@ -1,22 +1,8 @@
-/*
- * Copyright 2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.wangliang.agentj.recorder.service;
 
 import com.wangliang.agentj.agent.AgentState;
+import com.wangliang.agentj.model.dto.ActToolParam;
+import com.wangliang.agentj.model.dto.ThinkActRecordParams;
 import com.wangliang.agentj.recorder.entity.po.*;
 import com.wangliang.agentj.recorder.entity.vo.ActToolInfo;
 import com.wangliang.agentj.recorder.entity.vo.AgentExecutionRecord;
@@ -42,16 +28,16 @@ import java.util.Optional;
 public class NewRepoPlanExecutionRecorder implements PlanExecutionRecorder {
 
 	@Resource
-	private PlanExecutionRecordRepository planExecutionRecordRepository;
+	private PlanExecutionRecordRepository planExecutionRecordRepository; // 计划记录
 
 	@Resource
-	private AgentExecutionRecordRepository agentExecutionRecordRepository;
+	private AgentExecutionRecordRepository agentExecutionRecordRepository; // 代理执行记录
 
 	@Resource
-	private ThinkActRecordRepository thinkActRecordRepository;
+	private ThinkActRecordRepository thinkActRecordRepository;   // 思考行动记录
 
 	@Resource
-	private ActToolInfoRepository actToolInfoRepository;
+	private ActToolInfoRepository actToolInfoRepository; // 行动工具记录
 
 	private static final Logger logger = LoggerFactory.getLogger(NewRepoPlanExecutionRecorder.class);
 

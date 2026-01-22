@@ -18,7 +18,7 @@ package com.wangliang.agentj.conversation.repository;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * auth: dahua
+ * auth: wangliang
  */
 public class H2ChatMemoryRepository extends JdbcChatMemoryRepository {
 

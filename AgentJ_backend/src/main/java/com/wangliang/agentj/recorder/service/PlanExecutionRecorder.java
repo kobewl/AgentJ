@@ -1,20 +1,7 @@
-/*
- * Copyright 2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.wangliang.agentj.recorder.service;
 
+import com.wangliang.agentj.model.dto.ActToolParam;
+import com.wangliang.agentj.model.dto.ThinkActRecordParams;
 import com.wangliang.agentj.runtime.entity.vo.ExecutionStep;
 
 import java.util.List;
@@ -25,6 +12,7 @@ import java.util.List;
  */
 public interface PlanExecutionRecorder {
 
+	// ========== 第一类：生命周期记录 ==========
 	/**
 	 * Record the start of plan execution.
 	 * information
@@ -42,6 +30,7 @@ public interface PlanExecutionRecorder {
 	 */
 	void recordPlanCompletion(String currentPlanId, String summary);
 
+	// ========== 第二类：步骤执行记录 ==========
 	/**
 	 * Record the start of step execution.
 	 * @param step Execution step
@@ -54,6 +43,7 @@ public interface PlanExecutionRecorder {
 	 */
 	void recordStepEnd(ExecutionStep step, String currentPlanId);
 
+	// ========== 第三类：详细执行过程 ==========
 	/**
 	 * Record complete agent execution at the end. This method handles all agent execution
 	 * record management logic without exposing internal record objects.
@@ -74,137 +64,5 @@ public interface PlanExecutionRecorder {
 	 * with action results without exposing internal record objects.
 	 */
 	void recordActionResult(List<ActToolParam> actToolParamList);
-
-	/**
-	 * Parameter class for recordThinkingAndAction method Based on ThinkActRecordEntity
-	 * structure
-	 */
-	public static class ThinkActRecordParams {
-
-		private final String thinkActId;
-
-		private final String stepId;
-
-		private final String thinkInput;
-
-		private final String thinkOutput;
-
-		private final String errorMessage;
-
-		private final Integer inputCharCount;
-
-		private final Integer outputCharCount;
-
-		private final List<ActToolParam> actToolInfoList;
-
-		public ThinkActRecordParams(String thinkActId, String stepId, String thinkInput, String thinkOutput,
-				String errorMessage, List<ActToolParam> actToolInfoList) {
-			this(thinkActId, stepId, thinkInput, thinkOutput, errorMessage, null, null, actToolInfoList);
-		}
-
-		public ThinkActRecordParams(String thinkActId, String stepId, String thinkInput, String thinkOutput,
-				String errorMessage, Integer inputCharCount, Integer outputCharCount,
-				List<ActToolParam> actToolInfoList) {
-
-			this.thinkActId = thinkActId;
-			this.stepId = stepId;
-			this.thinkInput = thinkInput;
-			this.thinkOutput = thinkOutput;
-			this.errorMessage = errorMessage;
-			this.inputCharCount = inputCharCount;
-			this.outputCharCount = outputCharCount;
-			this.actToolInfoList = actToolInfoList;
-		}
-
-		public String getThinkActId() {
-			return thinkActId;
-		}
-
-		public String getStepId() {
-			return stepId;
-		}
-
-		public String getThinkInput() {
-			return thinkInput;
-		}
-
-		public String getThinkOutput() {
-			return thinkOutput;
-		}
-
-		public String getErrorMessage() {
-			return errorMessage;
-		}
-
-		public List<ActToolParam> getActToolInfoList() {
-			return actToolInfoList;
-		}
-
-		public Integer getInputCharCount() {
-			return inputCharCount;
-		}
-
-		public Integer getOutputCharCount() {
-			return outputCharCount;
-		}
-
-	}
-
-	/**
-	 * Parameter class for action tool information Based on ActToolInfoEntity structure
-	 * but without JPA annotations
-	 */
-	public static class ActToolParam {
-
-		private final String name;
-
-		private final String parameters;
-
-		private String result;
-
-		private final String toolCallId;
-
-		public ActToolParam(String name, String parameters, String toolCallId) {
-			this.name = name;
-			this.parameters = parameters;
-			this.toolCallId = toolCallId;
-			this.result = null; // Result is set after tool execution
-		}
-
-		public ActToolParam(String name, String parameters, String result, String toolCallId) {
-			this.name = name;
-			this.parameters = parameters;
-			this.result = result;
-			this.toolCallId = toolCallId;
-		}
-
-		public void setResult(String result) {
-			this.result = result;
-		}
-
-		// Getters
-		public String getName() {
-			return name;
-		}
-
-		public String getParameters() {
-			return parameters;
-		}
-
-		public String getResult() {
-			return result;
-		}
-
-		public String getToolCallId() {
-			return toolCallId;
-		}
-
-		@Override
-		public String toString() {
-			return "ActToolParam{" + "name='" + name + '\'' + ", parameters='" + parameters + '\'' + ", result='"
-					+ result + '\'' + ", toolCallId='" + toolCallId + '\'' + '}';
-		}
-
-	}
 
 }

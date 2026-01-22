@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * @author dahua
+ * @author wangliang
  * @time 2025/8/5
  * @desc memory config for lynxe
  */

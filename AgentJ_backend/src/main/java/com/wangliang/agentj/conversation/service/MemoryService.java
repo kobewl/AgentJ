@@ -21,7 +21,7 @@ import com.wangliang.agentj.conversation.entity.vo.Memory;
 import java.util.List;
 
 /**
- * @author dahua
+ * @author wangliang
  * @time 2025/8/5
  * @desc memory service interface
  */

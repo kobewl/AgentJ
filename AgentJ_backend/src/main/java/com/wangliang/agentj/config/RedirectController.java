@@ -20,7 +20,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
- * @author dahua
+ * @author wangliang
  * @time 2025/7/31
  * @desc lynxe homepage redirect controller
  */

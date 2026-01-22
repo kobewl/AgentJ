@@ -16,7 +16,7 @@
 package com.wangliang.agentj.event;
 
 /**
- * @author dahua
+ * @author wangliang
  * @time 2025/9/27
  * @desc lynxe plan execution exception cleared event
  */

@@ -23,7 +23,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.stereotype.Component;
 
 /**
- * @author dahua
+ * @author wangliang
  * @time 2025/7/15
  * @desc lynxe event listener registration
  */

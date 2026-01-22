@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @author dahua
+ * @author wangliang
  * @time 2025/8/5
  * @desc memory entity - Stores conversation metadata and references to plan executions
  */

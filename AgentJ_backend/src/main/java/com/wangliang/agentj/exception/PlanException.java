@@ -16,7 +16,7 @@
 package com.wangliang.agentj.exception;
 
 /**
- * @author dahua
+ * @author wangliang
  * @time 2025/7/30
  * @desc lynxe execution event exception runtime
  */

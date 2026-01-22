@@ -19,7 +19,7 @@ package com.wangliang.agentj.event;
 import com.wangliang.agentj.model.entity.DynamicModelEntity;
 
 /**
- * @author dahua
+ * @author wangliang
  * @time 2025/7/15
  * @desc lynxe model change event class
  */

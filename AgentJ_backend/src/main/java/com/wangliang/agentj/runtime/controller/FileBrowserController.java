@@ -1,20 +1,6 @@
-/*
- * Copyright 2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.wangliang.agentj.runtime.controller;
 
+import com.wangliang.agentj.model.dto.FileNode;
 import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -43,86 +27,6 @@ public class FileBrowserController {
 
 	@Autowired
 	private UnifiedDirectoryManager directoryManager;
-
-	/**
-	 * File tree node representation
-	 */
-	public static class FileNode {
-
-		private String name;
-
-		private String path;
-
-		private String type; // "file" or "directory"
-
-		private long size;
-
-		private String lastModified;
-
-		private List<FileNode> children;
-
-		public FileNode() {
-		}
-
-		public FileNode(String name, String path, String type, long size, String lastModified) {
-			this.name = name;
-			this.path = path;
-			this.type = type;
-			this.size = size;
-			this.lastModified = lastModified;
-			this.children = new ArrayList<>();
-		}
-
-		// Getters and setters
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public String getPath() {
-			return path;
-		}
-
-		public void setPath(String path) {
-			this.path = path;
-		}
-
-		public String getType() {
-			return type;
-		}
-
-		public void setType(String type) {
-			this.type = type;
-		}
-
-		public long getSize() {
-			return size;
-		}
-
-		public void setSize(long size) {
-			this.size = size;
-		}
-
-		public String getLastModified() {
-			return lastModified;
-		}
-
-		public void setLastModified(String lastModified) {
-			this.lastModified = lastModified;
-		}
-
-		public List<FileNode> getChildren() {
-			return children;
-		}
-
-		public void setChildren(List<FileNode> children) {
-			this.children = children;
-		}
-
-	}
 
 	/**
 	 * Get file tree for a specific plan ID

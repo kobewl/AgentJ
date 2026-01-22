@@ -16,7 +16,7 @@
 package com.wangliang.agentj.event;
 
 /**
- * @author dahua
+ * @author wangliang
  * @time 2025/7/15
  * @desc lynxe event interface
  */

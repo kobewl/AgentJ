@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wangliang.agentj.config.LynxeProperties;
 import com.wangliang.agentj.conversation.service.MemoryService;
 import com.wangliang.agentj.event.LynxeEventPublisher;
+import com.wangliang.agentj.model.dto.ActToolParam;
+import com.wangliang.agentj.model.dto.ThinkActRecordParams;
 import com.wangliang.agentj.event.PlanExceptionClearedEvent;
 import com.wangliang.agentj.llm.ConversationMemoryLimitService;
 import com.wangliang.agentj.llm.LlmService;
@@ -64,7 +66,7 @@ public class DynamicAgent extends ReActAgent {
 	private ChatResponse response;
 	private StreamingResponseHandler.StreamingResult streamResult;
 	private Prompt userPrompt;
-	private List<PlanExecutionRecorder.ActToolParam> actToolInfoList = new ArrayList<>();
+	private List<ActToolParam> actToolInfoList = new ArrayList<>();
 
 	/**
 	 * 服务依赖
@@ -380,11 +382,11 @@ public class DynamicAgent extends ReActAgent {
 
 					actToolInfoList = new ArrayList<>();
 					for (ToolCall toolCall : toolCalls) {
-						PlanExecutionRecorder.ActToolParam actToolInfo = new PlanExecutionRecorder.ActToolParam(toolCall.name(), toolCall.arguments(), toolcallId);
+						ActToolParam actToolInfo = new ActToolParam(toolCall.name(), toolCall.arguments(), toolcallId);
 						actToolInfoList.add(actToolInfo);
 					}
 
-					PlanExecutionRecorder.ThinkActRecordParams paramsN = new PlanExecutionRecorder.ThinkActRecordParams(thinkActId, stepId, thinkInput,
+					ThinkActRecordParams paramsN = new ThinkActRecordParams(thinkActId, stepId, thinkInput,
 							responseByLLm, null, finalInputCharCount, finalOutputCharCount, actToolInfoList);
 					planExecutionRecorder.recordThinkingAndAction(step, paramsN);
 
@@ -649,7 +651,7 @@ public class DynamicAgent extends ReActAgent {
 			// Process single tool response
 			ToolResponseMessage.ToolResponse toolCallResponse = toolResponseMessage.getResponses().get(0);
 			String toolName = toolCall.name();
-			PlanExecutionRecorder.ActToolParam param = actToolInfoList.get(0);
+			ActToolParam param = actToolInfoList.get(0);
 
 			// Check if tool callback context exists
 			PlanningFactory.ToolCallBackContext toolCallBackContext = getToolCallBackContext(toolName);
@@ -744,7 +746,7 @@ public class DynamicAgent extends ReActAgent {
 								.getFunctionInstance();
 							ToolExecuteResult fallbackResult = fallbackTool.apply(inputObj, new ToolContext(new HashMap<>()));
 						String result = fallbackResult != null ? fallbackResult.getOutput() : "Fallback executed";
-						PlanExecutionRecorder.ActToolParam param = actToolInfoList.isEmpty() ? null
+						ActToolParam param = actToolInfoList.isEmpty() ? null
 								: actToolInfoList.get(0);
 						if (param != null) {
 							param.setResult(result);
@@ -834,7 +836,7 @@ public class DynamicAgent extends ReActAgent {
 			for (int i = 0; i < toolCalls.size() && i < actToolInfoList.size(); i++) {
 				ToolCall toolCall = toolCalls.get(i);
 				String toolName = toolCall.name();
-				PlanExecutionRecorder.ActToolParam param = actToolInfoList.get(i);
+				ActToolParam param = actToolInfoList.get(i);
 
 				// Find corresponding result
 				String processedResult = null;
@@ -884,7 +886,7 @@ public class DynamicAgent extends ReActAgent {
 	/**
 	 * Handle FormInputTool specific logic with exclusive storage
 	 */
-	private AgentExecResult handleFormInputTool(FormInputTool formInputTool, PlanExecutionRecorder.ActToolParam param) {
+	private AgentExecResult handleFormInputTool(FormInputTool formInputTool, ActToolParam param) {
 		// Ensure the form input tool has the correct plan IDs set
 		formInputTool.setCurrentPlanId(getCurrentPlanId());
 		formInputTool.setRootPlanId(getRootPlanId());
@@ -1075,7 +1077,7 @@ public class DynamicAgent extends ReActAgent {
 	/**
 	 * Record action result with simplified parameters
 	 */
-	private void recordActionResult(List<PlanExecutionRecorder.ActToolParam> actToolInfoList) {
+	private void recordActionResult(List<ActToolParam> actToolInfoList) {
 		planExecutionRecorder.recordActionResult(actToolInfoList);
 	}
 
@@ -1088,7 +1090,7 @@ public class DynamicAgent extends ReActAgent {
 	 * @param actToolParams The action tool parameters
 	 */
 	private void executePostToolFlow(ToolCallBiFunctionDef<?> toolInstance,
-			ToolResponseMessage.ToolResponse toolCallResponse, String result, List<PlanExecutionRecorder.ActToolParam> actToolParams) {
+			ToolResponseMessage.ToolResponse toolCallResponse, String result, List<ActToolParam> actToolParams) {
 		// Record the result
 		recordActionResult(actToolParams);
 	}
@@ -1127,14 +1129,14 @@ public class DynamicAgent extends ReActAgent {
 	 * @param thinkOutput Description of what tool was called
 	 * @param errorMessage The actual error message
 	 */
-	private void recordErrorToolThinkingAndAction(PlanExecutionRecorder.ActToolParam param, String thinkInput, String thinkOutput,
+	private void recordErrorToolThinkingAndAction(ActToolParam param, String thinkInput, String thinkOutput,
                                                   String errorMessage) {
 		try {
 			String stepId = step.getStepId();
 			String thinkActId = planIdDispatcher.generateThinkActId();
 			String finalErrorMessage = step.getErrorMessage() != null ? step.getErrorMessage() : errorMessage;
 
-			PlanExecutionRecorder.ThinkActRecordParams errorParams = new PlanExecutionRecorder.ThinkActRecordParams(thinkActId, stepId, thinkInput, thinkOutput,
+			ThinkActRecordParams errorParams = new ThinkActRecordParams(thinkActId, stepId, thinkInput, thinkOutput,
 					finalErrorMessage, List.of(param));
 			planExecutionRecorder.recordThinkingAndAction(step, errorParams);
 			log.info("Recorded thinking and action for error tool, stepId: {}", stepId);
@@ -1186,7 +1188,7 @@ public class DynamicAgent extends ReActAgent {
 			// frontend
 			String toolCallId = planIdDispatcher.generateToolCallId();
 			String parametersJson = objectMapper.writeValueAsString(errorInput);
-			PlanExecutionRecorder.ActToolParam param = new PlanExecutionRecorder.ActToolParam(SystemErrorReportTool.name, parametersJson, toolResult.getOutput(),
+			ActToolParam param = new ActToolParam(SystemErrorReportTool.name, parametersJson, toolResult.getOutput(),
 					toolCallId);
 			String finalErrorMessage = step.getErrorMessage() != null ? step.getErrorMessage() : errorMessage;
 			recordErrorToolThinkingAndAction(param, "LLM timeout after 3 retries",
@@ -1214,7 +1216,7 @@ public class DynamicAgent extends ReActAgent {
 			try {
 				String toolCallId = planIdDispatcher.generateToolCallId();
 				String parametersJson = objectMapper.writeValueAsString(Map.of("errorMessage", errorMessage));
-				PlanExecutionRecorder.ActToolParam param = new PlanExecutionRecorder.ActToolParam(SystemErrorReportTool.name, parametersJson,
+				ActToolParam param = new ActToolParam(SystemErrorReportTool.name, parametersJson,
 						toolResult.getOutput(), toolCallId);
 
 				// Record the action result
