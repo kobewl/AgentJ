@@ -264,29 +264,29 @@ public class SafeConditionNode implements NodeAction {
     /**
      * 条件节点构建器，简化配置创建
      */
-    public static class Builder {
+    public static class FluentBuilder {
         private final SafeConditionNodeConfig config;
 
-        private Builder() {
-            this.config = SafeConditionNodeConfig.builder();
+        private FluentBuilder() {
+            this.config = SafeConditionNodeConfig.builder().build();
         }
 
-        public static Builder create(String nodeId) {
-            return new Builder().nodeId(nodeId);
+        public static FluentBuilder create(String nodeId) {
+            return new FluentBuilder().nodeId(nodeId);
         }
 
-        public Builder nodeId(String nodeId) {
+        public FluentBuilder nodeId(String nodeId) {
             config.setNodeId(nodeId);
             return this;
         }
 
-        public Builder expression(String expr) {
+        public FluentBuilder expression(String expr) {
             config.setConditionType(ConditionType.EXPRESSION);
             config.setExpression(expr);
             return this;
         }
 
-        public Builder comparison(String variable, String operator, Object targetValue) {
+        public FluentBuilder comparison(String variable, String operator, Object targetValue) {
             config.setConditionType(ConditionType.COMPARISON);
             config.setVariable(variable);
             config.setOperator(operator);
@@ -294,22 +294,22 @@ public class SafeConditionNode implements NodeAction {
             return this;
         }
 
-        public Builder trueTarget(String target) {
+        public FluentBuilder trueTarget(String target) {
             config.setTrueTarget(target);
             return this;
         }
 
-        public Builder falseTarget(String target) {
+        public FluentBuilder falseTarget(String target) {
             config.setFalseTarget(target);
             return this;
         }
 
-        public Builder defaultTarget(String target) {
+        public FluentBuilder defaultTarget(String target) {
             config.setDefaultTarget(target);
             return this;
         }
 
-        public Builder cases(Map<String, String> cases) {
+        public FluentBuilder cases(Map<String, String> cases) {
             config.setCases(cases);
             return this;
         }

@@ -1,7 +1,6 @@
 package com.wangliang.agentj.workflow.store;
 
-import com.alibaba.cloud.ai.graph.store.Store;
-import com.alibaba.cloud.ai.graph.store.StoreItem;
+import com.alibaba.cloud.ai.graph.store.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * - 用户档案数据
  *
  * @author AgentJ
- * @see <a href="https://java2ai.com/docs/frameworks/graph-core/core/memory">官方文档</a>
+ * @see <a href="https://java2ai.com/en/docs/frameworks/graph-core/core/memory">官方文档</a>
  */
 @Slf4j
 @Configuration
@@ -112,7 +111,6 @@ public class WorkflowStoreConfig {
                         try (Statement stmt = conn.createStatement()) {
                             stmt.execute(sql);
                         }
-                        // 创建索引
                         try (Statement stmt = conn.createStatement()) {
                             stmt.execute("CREATE INDEX idx_store_namespace ON workflow_store(namespace)");
                         }
@@ -140,29 +138,105 @@ public class WorkflowStoreConfig {
 
         @Override
         public void putItem(StoreItem item) {
-            NamespaceKey nsKey = new NamespaceKey(item.namespace(), item.key());
+            List<String> namespace = item.getNamespace();
+            String key = item.getKey();
+            NamespaceKey nsKey = new NamespaceKey(namespace, key);
             store.put(nsKey, item);
-            log.debug("Stored item in memory: namespace={}, key={}", item.namespace(), item.key());
+            log.debug("Stored item in memory: namespace={}, key={}", namespace, key);
         }
 
         @Override
-        public List<StoreItem> search(List<String> namespace) {
+        public boolean deleteItem(List<String> namespace, String key) {
+            NamespaceKey nsKey = new NamespaceKey(namespace, key);
+            StoreItem removed = store.remove(nsKey);
+            log.debug("Deleted item from memory: namespace={}, key={}, removed={}", namespace, key, removed != null);
+            return removed != null;
+        }
+
+        @Override
+        public StoreSearchResult searchItems(StoreSearchRequest searchRequest) {
             List<StoreItem> results = new ArrayList<>();
-            String namespacePrefix = namespacePrefix(namespace);
+            List<String> searchNamespace = searchRequest.getNamespace();
 
             for (Map.Entry<NamespaceKey, StoreItem> entry : store.entrySet()) {
-                if (entry.getKey().toString().startsWith(namespacePrefix)) {
-                    results.add(entry.getValue());
+                StoreItem item = entry.getValue();
+                List<String> itemNamespace = item.getNamespace();
+
+                // Filter by namespace
+                if (!searchNamespace.isEmpty() && !namespaceMatches(itemNamespace, searchNamespace)) {
+                    continue;
                 }
+
+                // Filter by query text
+                String query = searchRequest.getQuery();
+                if (query != null && !query.isEmpty()) {
+                    String key = item.getKey();
+                    Map<String, Object> value = item.getValue();
+                    String valueStr = value != null ? value.toString() : "";
+                    if (!key.contains(query) && !valueStr.contains(query)) {
+                        continue;
+                    }
+                }
+
+                // Filter by custom filters
+                Map<String, Object> filters = searchRequest.getFilter();
+                if (!filters.isEmpty()) {
+                    Map<String, Object> itemValue = item.getValue();
+                    boolean match = true;
+                    for (Map.Entry<String, Object> filter : filters.entrySet()) {
+                        Object itemFieldValue = itemValue.get(filter.getKey());
+                        if (!Objects.equals(itemFieldValue, filter.getValue())) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (!match) {
+                        continue;
+                    }
+                }
+
+                results.add(item);
             }
-            return results;
+
+            // Apply pagination
+            int offset = searchRequest.getOffset();
+            int limit = searchRequest.getLimit();
+            int total = results.size();
+            List<StoreItem> pagedResults = results.stream()
+                    .skip(offset)
+                    .limit(limit)
+                    .toList();
+
+            return new StoreSearchResult(pagedResults, total, offset, limit);
         }
 
         @Override
-        public void delete(List<String> namespace, String key) {
-            NamespaceKey nsKey = new NamespaceKey(namespace, key);
-            store.remove(nsKey);
-            log.debug("Deleted item from memory: namespace={}, key={}", namespace, key);
+        public List<String> listNamespaces(NamespaceListRequest namespaceRequest) {
+            Set<String> namespaces = new HashSet<>();
+            List<String> prefix = namespaceRequest.getNamespace();
+
+            for (NamespaceKey nsKey : store.keySet()) {
+                List<String> itemNamespace = nsKey.namespace;
+                if (prefix.isEmpty() || namespaceMatches(itemNamespace, prefix)) {
+                    // Add namespace at appropriate depth
+                    int depth = namespaceRequest.getMaxDepth();
+                    if (depth < 0 || itemNamespace.size() <= prefix.size() + depth) {
+                        namespaces.add(String.join(":", itemNamespace));
+                    }
+                }
+            }
+
+            List<String> result = new ArrayList<>(namespaces);
+            // Apply pagination
+            int offset = namespaceRequest.getOffset();
+            int limit = namespaceRequest.getLimit();
+            if (offset >= result.size()) {
+                return Collections.emptyList();
+            }
+            return result.stream()
+                    .skip(offset)
+                    .limit(limit)
+                    .toList();
         }
 
         @Override
@@ -170,8 +244,26 @@ public class WorkflowStoreConfig {
             store.clear();
         }
 
-        protected String namespacePrefix(List<String> namespace) {
-            return String.join(":", namespace) + ":";
+        @Override
+        public long size() {
+            return store.size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return store.isEmpty();
+        }
+
+        private boolean namespaceMatches(List<String> itemNamespace, List<String> prefix) {
+            if (itemNamespace.size() < prefix.size()) {
+                return false;
+            }
+            for (int i = 0; i < prefix.size(); i++) {
+                if (!itemNamespace.get(i).equals(prefix.get(i))) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         @Data
@@ -182,15 +274,6 @@ public class WorkflowStoreConfig {
             public NamespaceKey(List<String> namespace, String key) {
                 this.namespace = new ArrayList<>(namespace);
                 this.key = key;
-            }
-
-            @Override
-            public String toString() {
-                return namespacePrefix() + key;
-            }
-
-            private String namespacePrefix() {
-                return String.join(":", namespace) + ":";
             }
 
             @Override
@@ -214,8 +297,6 @@ public class WorkflowStoreConfig {
     public static class RedisWorkflowStore implements Store {
         private final RedisTemplate<String, Object> redisTemplate;
         private static final String STORE_PREFIX = "workflow:store:";
-        @Value("${agentj.workflow.store.ttl:86400}")
-        private int ttlSeconds; // 默认24小时
 
         public RedisWorkflowStore(RedisTemplate<String, Object> redisTemplate) {
             this.redisTemplate = redisTemplate;
@@ -234,36 +315,81 @@ public class WorkflowStoreConfig {
 
         @Override
         public void putItem(StoreItem item) {
-            String redisKey = buildKey(item.namespace(), item.key());
-            redisTemplate.opsForValue().set(redisKey, item, Duration.ofSeconds(ttlSeconds));
-            log.debug("Stored item in Redis: namespace={}, key={}, ttl={}s", item.namespace(), item.key(), ttlSeconds);
+            List<String> namespace = item.getNamespace();
+            String key = item.getKey();
+            String redisKey = buildKey(namespace, key);
+            redisTemplate.opsForValue().set(redisKey, item, Duration.ofDays(1));
+            log.debug("Stored item in Redis: namespace={}, key={}", namespace, key);
         }
 
         @Override
-        public List<StoreItem> search(List<String> namespace) {
-            String pattern = STORE_PREFIX + String.join(":", namespace) + ":*";
+        public boolean deleteItem(List<String> namespace, String key) {
+            String redisKey = buildKey(namespace, key);
+            Boolean deleted = redisTemplate.delete(redisKey);
+            log.debug("Deleted item from Redis: namespace={}, key={}, deleted={}", namespace, key, deleted);
+            return Boolean.TRUE.equals(deleted);
+        }
+
+        @Override
+        public StoreSearchResult searchItems(StoreSearchRequest searchRequest) {
+            String pattern = STORE_PREFIX + "*";
             Set<String> keys = redisTemplate.keys(pattern);
+
+            if (keys == null || keys.isEmpty()) {
+                return new StoreSearchResult(Collections.emptyList(), 0, 0, 100);
+            }
+
+            List<Object> values = redisTemplate.opsForValue().multiGet(keys);
+            List<StoreItem> allItems = new ArrayList<>();
+
+            for (Object value : values) {
+                if (value instanceof StoreItem) {
+                    allItems.add((StoreItem) value);
+                }
+            }
+
+            // Apply filters (simplified version)
+            List<StoreItem> results = filterItems(allItems, searchRequest);
+
+            int offset = searchRequest.getOffset();
+            int limit = searchRequest.getLimit();
+            int total = results.size();
+            List<StoreItem> pagedResults = results.stream()
+                    .skip(offset)
+                    .limit(limit)
+                    .toList();
+
+            return new StoreSearchResult(pagedResults, total, offset, limit);
+        }
+
+        @Override
+        public List<String> listNamespaces(NamespaceListRequest namespaceRequest) {
+            Set<String> namespaces = new HashSet<>();
+            Set<String> keys = redisTemplate.keys(STORE_PREFIX + "*");
 
             if (keys == null || keys.isEmpty()) {
                 return Collections.emptyList();
             }
 
-            List<Object> values = redisTemplate.opsForValue().multi(new ArrayList<>(keys));
-            List<StoreItem> results = new ArrayList<>();
-
-            for (Object value : values) {
-                if (value instanceof StoreItem) {
-                    results.add((StoreItem) value);
-                }
+            for (String key : keys) {
+                // Extract namespace from key
+                String namespacePart = key.substring(STORE_PREFIX.length());
+                String[] parts = namespacePart.split(":");
+                List<String> namespace = Arrays.asList(parts);
+                namespaces.add(String.join(":", namespace));
             }
-            return results;
-        }
 
-        @Override
-        public void delete(List<String> namespace, String key) {
-            String redisKey = buildKey(namespace, key);
-            redisTemplate.delete(redisKey);
-            log.debug("Deleted item from Redis: namespace={}, key={}", namespace, key);
+            List<String> result = new ArrayList<>(namespaces);
+            int offset = namespaceRequest.getOffset();
+            int limit = namespaceRequest.getLimit();
+
+            if (offset >= result.size()) {
+                return Collections.emptyList();
+            }
+            return result.stream()
+                    .skip(offset)
+                    .limit(limit)
+                    .toList();
         }
 
         @Override
@@ -274,8 +400,58 @@ public class WorkflowStoreConfig {
             }
         }
 
+        @Override
+        public long size() {
+            Set<String> keys = redisTemplate.keys(STORE_PREFIX + "*");
+            return keys == null ? 0 : keys.size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            Set<String> keys = redisTemplate.keys(STORE_PREFIX + "*");
+            return keys == null || keys.isEmpty();
+        }
+
         private String buildKey(List<String> namespace, String key) {
             return STORE_PREFIX + String.join(":", namespace) + ":" + key;
+        }
+
+        private List<StoreItem> filterItems(List<StoreItem> items, StoreSearchRequest request) {
+            List<StoreItem> results = new ArrayList<>();
+            List<String> searchNamespace = request.getNamespace();
+
+            for (StoreItem item : items) {
+                List<String> itemNamespace = item.getNamespace();
+
+                if (!searchNamespace.isEmpty() && !namespaceMatches(itemNamespace, searchNamespace)) {
+                    continue;
+                }
+
+                String query = request.getQuery();
+                if (query != null && !query.isEmpty()) {
+                    String key = item.getKey();
+                    Map<String, Object> value = item.getValue();
+                    String valueStr = value != null ? value.toString() : "";
+                    if (!key.contains(query) && !valueStr.contains(query)) {
+                        continue;
+                    }
+                }
+
+                results.add(item);
+            }
+            return results;
+        }
+
+        private boolean namespaceMatches(List<String> itemNamespace, List<String> prefix) {
+            if (itemNamespace.size() < prefix.size()) {
+                return false;
+            }
+            for (int i = 0; i < prefix.size(); i++) {
+                if (!itemNamespace.get(i).equals(prefix.get(i))) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 
@@ -313,6 +489,8 @@ public class WorkflowStoreConfig {
 
         @Override
         public void putItem(StoreItem item) {
+            List<String> namespace = item.getNamespace();
+            String key = item.getKey();
             String sql = """
                 INSERT INTO workflow_store (namespace, key, value)
                 VALUES (?, ?, ?)
@@ -323,50 +501,88 @@ public class WorkflowStoreConfig {
 
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, String.join(":", item.namespace()));
-                ps.setString(2, item.key());
+                ps.setString(1, String.join(":", namespace));
+                ps.setString(2, key);
                 ps.setBytes(3, objectMapper.writeValueAsBytes(item));
                 ps.executeUpdate();
-                log.debug("Stored item in PostgreSQL: namespace={}, key={}", item.namespace(), item.key());
+                log.debug("Stored item in PostgreSQL: namespace={}, key={}", namespace, key);
             } catch (Exception e) {
                 log.error("Failed to put item to PostgreSQL store", e);
             }
         }
 
         @Override
-        public List<StoreItem> search(List<String> namespace) {
-            String sql = "SELECT value FROM workflow_store WHERE namespace = ?";
-            List<StoreItem> results = new ArrayList<>();
-
-            try (Connection conn = dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, String.join(":", namespace));
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        byte[] data = rs.getBytes("value");
-                        results.add(objectMapper.readValue(data, StoreItem.class));
-                    }
-                }
-            } catch (Exception e) {
-                log.error("Failed to search PostgreSQL store", e);
-            }
-            return results;
-        }
-
-        @Override
-        public void delete(List<String> namespace, String key) {
+        public boolean deleteItem(List<String> namespace, String key) {
             String sql = "DELETE FROM workflow_store WHERE namespace = ? AND key = ?";
 
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, String.join(":", namespace));
                 ps.setString(2, key);
-                ps.executeUpdate();
-                log.debug("Deleted item from PostgreSQL: namespace={}, key={}", namespace, key);
+                int rows = ps.executeUpdate();
+                log.debug("Deleted item from PostgreSQL: namespace={}, key={}, rows={}", namespace, key, rows);
+                return rows > 0;
             } catch (Exception e) {
                 log.error("Failed to delete from PostgreSQL store", e);
             }
+            return false;
+        }
+
+        @Override
+        public StoreSearchResult searchItems(StoreSearchRequest searchRequest) {
+            String sql = "SELECT value FROM workflow_store";
+            List<StoreItem> results = new ArrayList<>();
+
+            try (Connection conn = dataSource.getConnection();
+                 Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sql)) {
+                while (rs.next()) {
+                    byte[] data = rs.getBytes("value");
+                    results.add(objectMapper.readValue(data, StoreItem.class));
+                }
+            } catch (Exception e) {
+                log.error("Failed to search PostgreSQL store", e);
+            }
+
+            // Apply filters (simplified)
+            List<StoreItem> filtered = filterItems(results, searchRequest);
+
+            int offset = searchRequest.getOffset();
+            int limit = searchRequest.getLimit();
+            int total = filtered.size();
+            List<StoreItem> pagedResults = filtered.stream()
+                    .skip(offset)
+                    .limit(limit)
+                    .toList();
+
+            return new StoreSearchResult(pagedResults, total, offset, limit);
+        }
+
+        @Override
+        public List<String> listNamespaces(NamespaceListRequest namespaceRequest) {
+            String sql = "SELECT DISTINCT namespace FROM workflow_store";
+            List<String> namespaces = new ArrayList<>();
+
+            try (Connection conn = dataSource.getConnection();
+                 Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sql)) {
+                while (rs.next()) {
+                    namespaces.add(rs.getString("namespace"));
+                }
+            } catch (Exception e) {
+                log.error("Failed to list namespaces from PostgreSQL store", e);
+            }
+
+            int offset = namespaceRequest.getOffset();
+            int limit = namespaceRequest.getLimit();
+
+            if (offset >= namespaces.size()) {
+                return Collections.emptyList();
+            }
+            return namespaces.stream()
+                    .skip(offset)
+                    .limit(limit)
+                    .toList();
         }
 
         @Override
@@ -379,6 +595,55 @@ public class WorkflowStoreConfig {
             } catch (Exception e) {
                 log.error("Failed to clear PostgreSQL store", e);
             }
+        }
+
+        @Override
+        public long size() {
+            String sql = "SELECT COUNT(*) FROM workflow_store";
+
+            try (Connection conn = dataSource.getConnection();
+                 Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sql)) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+            } catch (Exception e) {
+                log.error("Failed to get PostgreSQL store size", e);
+            }
+            return 0;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return size() == 0;
+        }
+
+        private List<StoreItem> filterItems(List<StoreItem> items, StoreSearchRequest request) {
+            List<StoreItem> results = new ArrayList<>();
+            List<String> searchNamespace = request.getNamespace();
+
+            for (StoreItem item : items) {
+                List<String> itemNamespace = item.getNamespace();
+
+                if (!searchNamespace.isEmpty() && !namespaceMatches(itemNamespace, searchNamespace)) {
+                    continue;
+                }
+
+                results.add(item);
+            }
+            return results;
+        }
+
+        private boolean namespaceMatches(List<String> itemNamespace, List<String> prefix) {
+            if (itemNamespace.size() < prefix.size()) {
+                return false;
+            }
+            for (int i = 0; i < prefix.size(); i++) {
+                if (!itemNamespace.get(i).equals(prefix.get(i))) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 
@@ -409,7 +674,7 @@ public class WorkflowStoreConfig {
          */
         public Optional<Map<String, Object>> getUserPreferences(String userId) {
             Optional<StoreItem> item = store.getItem(List.of("user", "preferences"), userId);
-            return item.map(StoreItem::getValue).map(value -> (Map<String, Object>) value);
+            return item.map(StoreItem::getValue);
         }
 
         /**
@@ -429,17 +694,23 @@ public class WorkflowStoreConfig {
          */
         public Optional<Map<String, Object>> getUserProfile(String userId) {
             Optional<StoreItem> item = store.getItem(List.of("user", "profile"), userId);
-            return item.map(StoreItem::getValue).map(value -> (Map<String, Object>) value);
+            return item.map(StoreItem::getValue);
         }
 
         /**
          * 存储缓存数据
          */
         public void putCache(String cacheKey, Object value) {
+            // Value must be a Map<String, Object> for StoreItem
+            @SuppressWarnings("unchecked")
+            Map<String, Object> valueMap = value instanceof Map
+                ? (Map<String, Object>) value
+                : Map.of("data", value);
+
             StoreItem item = StoreItem.of(
                     List.of("cache"),
                     cacheKey,
-                    value
+                    valueMap
             );
             store.putItem(item);
         }
@@ -447,7 +718,7 @@ public class WorkflowStoreConfig {
         /**
          * 获取缓存数据
          */
-        public Optional<Object> getCache(String cacheKey) {
+        public Optional<Map<String, Object>> getCache(String cacheKey) {
             Optional<StoreItem> item = store.getItem(List.of("cache"), cacheKey);
             return item.map(StoreItem::getValue);
         }
