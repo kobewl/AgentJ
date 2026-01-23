@@ -107,7 +107,7 @@ public class WorkflowController {
     }
 
     @PostMapping(value = "/{id}/execute/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @Operation(summary = "执行工作流（流式）")
+    @Operation(summary = "执行工作流（流式，POST）")
     public Flux<NodeOutput> executeWorkflowStream(
             @PathVariable Long id,
             @RequestBody WorkflowExecuteRequest request) {
@@ -115,6 +115,27 @@ public class WorkflowController {
             return executionServiceV2.executeStream(id, request);
         } catch (Exception e) {
             log.error("Failed to start streaming execution", e);
+            return Flux.error(e);
+        }
+    }
+
+    @GetMapping(value = "/{id}/execute/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "执行工作流（流式，GET，用于EventSource/SSE）")
+    public Flux<NodeOutput> executeWorkflowStreamGet(
+            @PathVariable Long id,
+            @RequestParam(required = false) Map<String, Object> inputs,
+            @RequestParam(required = false) String threadId,
+            @RequestParam(required = false) String storeId,
+            @RequestParam(required = false) String checkpointId) {
+        try {
+            WorkflowExecuteRequest request = new WorkflowExecuteRequest();
+            request.setInputs(inputs != null ? inputs : Map.of());
+            request.setThreadId(threadId);
+            request.setStoreId(storeId);
+            request.setCheckpointId(checkpointId);
+            return executionServiceV2.executeStream(id, request);
+        } catch (Exception e) {
+            log.error("Failed to start streaming execution (GET)", e);
             return Flux.error(e);
         }
     }
@@ -160,7 +181,7 @@ public class WorkflowController {
         }
     }
 
-    @PostMapping("/state/{threadId}/update")
+    @PostMapping("/{workflowId}/state/{threadId}/update")
     @Operation(summary = "更新状态并继续执行（时间旅行）")
     public ResponseEntity<Map<String, String>> updateState(
             @PathVariable Long workflowId,

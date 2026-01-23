@@ -159,8 +159,8 @@
           </template>
 
           <template #node-tool="nodeProps">
-            <div 
-              class="flow-node tool-node" 
+            <div
+              class="flow-node tool-node"
               :class="{ selected: selectedNodeId === nodeProps.id }"
               @click.stop="selectNode(nodeProps.id)"
             >
@@ -169,6 +169,22 @@
               <div class="node-body">
                 <div class="node-title">工具</div>
                 <div class="node-subtitle">{{ nodeProps.data.toolName || '选择工具' }}</div>
+              </div>
+              <Handle type="source" :position="Position.Right" id="source" class="handle-dot" />
+            </div>
+          </template>
+
+          <template #node-human_input="nodeProps">
+            <div
+              class="flow-node human-input-node"
+              :class="{ selected: selectedNodeId === nodeProps.id }"
+              @click.stop="selectNode(nodeProps.id)"
+            >
+              <Handle type="target" :position="Position.Left" id="target" class="handle-dot" />
+              <div class="node-icon"><el-icon :size="20"><User /></el-icon></div>
+              <div class="node-body">
+                <div class="node-title">人工输入</div>
+                <div class="node-subtitle">{{ nodeProps.data.label || '等待人工确认' }}</div>
               </div>
               <Handle type="source" :position="Position.Right" id="source" class="handle-dot" />
             </div>
@@ -327,6 +343,56 @@
             </el-form-item>
           </template>
 
+          <!-- Human Input Node Config -->
+          <template v-if="getNodeType(selectedNodeId) === 'human_input'">
+            <el-form-item label="节点名称">
+              <el-input
+                :value="getNodeDataValue('label')"
+                @input="setNodeDataValue('label', $event)"
+                placeholder="人工输入节点"
+              />
+            </el-form-item>
+            <el-form-item label="提示信息">
+              <el-input
+                :value="getNodeDataValue('prompt')"
+                @input="setNodeDataValue('prompt', $event)"
+                type="textarea"
+                :rows="3"
+                placeholder="向用户显示的提示信息，如：请确认是否继续"
+              />
+            </el-form-item>
+            <el-form-item label="输入类型">
+              <el-select
+                :model-value="getNodeDataValue('inputType') || 'text'"
+                @update:model-value="setNodeDataValue('inputType', $event)"
+                style="width: 100%"
+              >
+                <el-option label="文本输入" value="text" />
+                <el-option label="确认框" value="confirm" />
+                <el-option label="多行文本" value="textarea" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="默认值">
+              <el-input
+                :value="getNodeDataValue('defaultValue')"
+                @input="setNodeDataValue('defaultValue', $event)"
+                placeholder="可选的默认值"
+              />
+            </el-form-item>
+            <el-form-item label="输出变量">
+              <el-input
+                :value="getNodeDataValue('outputKey') || 'user_input'"
+                @input="setNodeDataValue('outputKey', $event)"
+              />
+            </el-form-item>
+            <el-form-item label="必填">
+              <el-switch
+                :model-value="getNodeDataValue('required') !== 'false'"
+                @change="(val: boolean) => setNodeDataValue('required', val ? 'true' : 'false')"
+              />
+            </el-form-item>
+          </template>
+
           <!-- Delete button -->
           <el-form-item v-if="getNodeType(selectedNodeId) !== 'start' && getNodeType(selectedNodeId) !== 'end'">
             <el-button type="danger" @click="deleteSelectedNode" style="width: 100%">
@@ -350,44 +416,169 @@
       v-model="executeDrawerVisible"
       title="运行工作流"
       direction="rtl"
-      size="420px"
+      size="500px"
       :with-header="true"
     >
       <div class="execute-panel">
-        <div class="execute-config">
-          <div class="config-section">
-            <label>用户输入</label>
-            <el-input
-              v-model="userPrompt"
-              type="textarea"
-              :rows="4"
-              placeholder="输入您的问题或指令..."
-            />
-          </div>
-        </div>
+        <!-- Tabs -->
+        <el-tabs v-model="executeTab" class="execute-tabs">
+          <el-tab-pane label="执行" name="execute">
+            <div class="execute-config">
+              <div class="config-section">
+                <label>会话 ID（可选）</label>
+                <el-input
+                  v-model="currentThreadId"
+                  placeholder="留空自动生成新会话"
+                  clearable
+                />
+              </div>
+              <div class="config-section">
+                <label>用户输入</label>
+                <el-input
+                  v-model="userPrompt"
+                  type="textarea"
+                  :rows="4"
+                  placeholder="输入您的问题或指令..."
+                />
+              </div>
+              <div class="config-section">
+                <el-checkbox v-model="enableStream" label="启用流式输出" />
+              </div>
+            </div>
 
-        <div class="execute-actions">
-          <el-button
-            type="primary"
-            size="large"
-            :loading="executing"
-            @click="doExecute"
-            style="width: 100%"
-          >
-            <el-icon v-if="!executing"><VideoPlay /></el-icon>
-            {{ executing ? '运行中...' : '开始运行' }}
-          </el-button>
-        </div>
+            <div class="execute-actions">
+              <el-button
+                type="primary"
+                size="large"
+                :loading="executing"
+                @click="enableStream ? doExecuteStream() : doExecute()"
+                style="width: 100%"
+              >
+                <el-icon v-if="!executing"><VideoPlay /></el-icon>
+                {{ executing ? '运行中...' : enableStream ? '流式运行' : '开始运行' }}
+              </el-button>
+              <el-button
+                v-if="executing && enableStream"
+                type="danger"
+                size="large"
+                @click="stopExecution"
+                style="width: 100%; margin-top: 8px"
+              >
+                停止运行
+              </el-button>
+            </div>
 
-        <div v-if="executeResult" class="execute-result">
-          <div class="result-header">
-            <el-icon color="#67c23a"><CircleCheck /></el-icon>
-            <span>执行结果</span>
-          </div>
-          <div class="result-content">
-            <pre>{{ formatResult(executeResult) }}</pre>
-          </div>
-        </div>
+            <!-- Stream Output -->
+            <div v-if="streamOutput.length > 0" class="stream-output">
+              <div class="result-header">
+                <el-icon color="#409eff"><Loading /></el-icon>
+                <span>流式输出</span>
+                <el-tag size="small" v-if="currentThreadId" style="margin-left: auto">
+                  {{ currentThreadId?.slice?.(0, 8) || currentThreadId }}
+                </el-tag>
+              </div>
+              <div class="stream-content">
+                <div v-for="(line, index) in streamOutput" :key="index" class="stream-line">
+                  {{ line }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Regular Result -->
+            <div v-if="executeResult && !enableStream" class="execute-result">
+              <div class="result-header">
+                <el-icon color="#67c23a"><CircleCheck /></el-icon>
+                <span>执行结果</span>
+                <el-tag size="small" v-if="currentThreadId" style="margin-left: auto">
+                  {{ currentThreadId?.slice?.(0, 8) || currentThreadId }}
+                </el-tag>
+              </div>
+              <div class="result-content">
+                <pre>{{ formatResult(executeResult) }}</pre>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="会话管理" name="session">
+            <div class="session-panel">
+              <div class="session-header">
+                <el-input
+                  v-model="currentThreadId"
+                  placeholder="输入会话 ID"
+                  clearable
+                  style="flex: 1"
+                />
+                <el-button
+                  type="primary"
+                  @click="loadStateHistory"
+                  :loading="loadingHistory"
+                  :disabled="!currentThreadId"
+                >
+                  加载历史
+                </el-button>
+              </div>
+
+              <div v-if="stateHistory.length > 0" class="state-history-list">
+                <div class="history-section-title">状态历史</div>
+
+                <!-- Human-in-the-Loop Controls -->
+                <div class="hitl-controls">
+                  <el-button
+                    type="warning"
+                    @click="doPauseExecution"
+                    :icon="VideoPause"
+                    size="small"
+                  >
+                    暂停执行
+                  </el-button>
+                  <el-button
+                    type="success"
+                    @click="openResumeDialog"
+                    :icon="VideoPlay"
+                    size="small"
+                  >
+                    恢复执行
+                  </el-button>
+                </div>
+
+                <div
+                  v-for="(snapshot, index) in stateHistory"
+                  :key="snapshot.checkpointId || index"
+                  class="history-snapshot-item"
+                  :class="{ selected: selectedCheckpointId === snapshot.checkpointId }"
+                  @click="selectedCheckpointId = snapshot.checkpointId || ''"
+                >
+                  <div class="snapshot-header">
+                    <el-icon><Clock /></el-icon>
+                    <span class="snapshot-time">{{ formatTime(snapshot.createdAt) }}</span>
+                    <el-tag size="small" v-if="snapshot.checkpointId">
+                      {{ snapshot.checkpointId?.slice?.(0, 8) || snapshot.checkpointId }}
+                    </el-tag>
+                  </div>
+                  <div class="snapshot-state">
+                    <pre>{{ JSON.stringify(snapshot.state, null, 2) }}</pre>
+                  </div>
+                </div>
+
+                <div class="replay-actions" v-if="selectedCheckpointId">
+                  <el-button
+                    type="warning"
+                    @click="doReplay"
+                    :icon="Refresh"
+                    style="width: 100%"
+                  >
+                    从此检查点重放
+                  </el-button>
+                </div>
+              </div>
+
+              <div v-else-if="currentThreadId && !loadingHistory" class="empty-state">
+                <el-icon :size="48" color="#dcdfe6"><Document /></el-icon>
+                <p>暂无历史记录</p>
+              </div>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
       </div>
     </el-drawer>
   </div>
@@ -406,8 +597,8 @@ import '@vue-flow/controls/dist/style.css';
 import '@vue-flow/minimap/dist/style.css';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
-  Plus, Check, VideoPlay, ChatLineRound, Switch, Tools,
-  Refresh, Close, CircleCheck, SetUp, Delete, Upload
+  Plus, Check, VideoPlay, VideoPause, ChatLineRound, Switch, Tools,
+  Refresh, Close, CircleCheck, SetUp, Delete, Upload, User, Clock, Document, Loading
 } from '@element-plus/icons-vue';
 import * as workflowApi from '@/api/workflow';
 import type { Workflow, NodeType, ModelInfo } from '@/api/workflow';
@@ -443,6 +634,16 @@ const workflowList = ref<Workflow[]>([]);
 const userPrompt = ref('');
 const executeResult = ref<any>(null);
 const availableModels = ref<ModelInfo[]>([]);
+const streamOutput = ref<string[]>([]);
+const enableStream = ref(false);
+let eventSource: EventSource | null = null;
+
+// Session management state
+const executeTab = ref<'execute' | 'session'>('execute');
+const currentThreadId = ref<string>('');
+const stateHistory = ref<workflowApi.StateSnapshot[]>([]);
+const selectedCheckpointId = ref<string>('');
+const loadingHistory = ref(false);
 
 // Computed helpers - must use computed() for reactivity in template
 const statusTagType = computed(() => {
@@ -498,6 +699,7 @@ const getIcon = (iconName: string) => {
     robot: ChatLineRound,
     branch: Switch,
     tool: Tools,
+    user: User,
   };
   return icons[iconName] || ChatLineRound;
 };
@@ -515,6 +717,11 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
+  // Clean up EventSource connection
+  if (eventSource) {
+    eventSource.close();
+    eventSource = null;
+  }
 });
 
 function handleKeyDown(e: KeyboardEvent) {
@@ -536,6 +743,7 @@ async function loadNodeTypes() {
       { type: 'llm', label: 'LLM', description: '大语言模型', icon: 'robot', color: '#1890ff' },
       { type: 'condition', label: '条件', description: '条件分支', icon: 'branch', color: '#faad14' },
       { type: 'tool', label: '工具', description: '调用工具', icon: 'tool', color: '#722ed1' },
+      { type: 'human_input', label: '人工输入', description: '等待人工确认/输入', icon: 'user', color: '#eb2f96' },
     ];
   }
 }
@@ -756,6 +964,8 @@ async function doExecute() {
   }
 
   executing.value = true;
+  streamOutput.value = [];
+  executeResult.value = null;
   try {
     const inputs = {
       input: userPrompt.value,
@@ -769,12 +979,198 @@ async function doExecute() {
   }
 }
 
+async function doExecuteStream() {
+  if (!userPrompt.value.trim()) {
+    ElMessage.warning('请输入您的问题或指令');
+    return;
+  }
+
+  executing.value = true;
+  streamOutput.value = [];
+  executeResult.value = null;
+
+  // Generate thread ID if not provided
+  if (!currentThreadId.value) {
+    currentThreadId.value = `thread_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  }
+
+  try {
+    // Close any existing connection
+    if (eventSource) {
+      eventSource.close();
+    }
+
+    // Use the API helper to create EventSource with proper params
+    eventSource = await workflowApi.executeWorkflowStream(
+      workflowId.value!,
+      {
+        inputs: { input: userPrompt.value },
+        threadId: currentThreadId.value
+      }
+    );
+
+    eventSource.onmessage = (event) => {
+      const data = event.data;
+      if (data === '[DONE]') {
+        executing.value = false;
+        eventSource?.close();
+        ElMessage.success('流式执行完成');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(data);
+        streamOutput.value.push(JSON.stringify(parsed, null, 2));
+      } catch {
+        streamOutput.value.push(data);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('SSE error:', error);
+      executing.value = false;
+      eventSource?.close();
+      ElMessage.error('流式连接中断');
+    };
+
+  } catch (e: any) {
+    ElMessage.error('启动流式执行失败: ' + e.message);
+    executing.value = false;
+  }
+}
+
+function stopExecution() {
+  if (eventSource) {
+    eventSource.close();
+    eventSource = null;
+  }
+  executing.value = false;
+  ElMessage.info('已停止执行');
+}
+
 function formatResult(result: any): string {
   if (typeof result === 'string') return result;
   if (result.final_output) return result.final_output;
   if (result.llm_output) return result.llm_output;
   if (result.output) return result.output;
   return JSON.stringify(result, null, 2);
+}
+
+// Session management methods
+async function loadStateHistory() {
+  if (!currentThreadId.value) {
+    ElMessage.warning('请输入会话 ID');
+    return;
+  }
+
+  loadingHistory.value = true;
+  try {
+    const history = await workflowApi.getStateHistory(currentThreadId.value);
+    stateHistory.value = history;
+    ElMessage.success(`加载了 ${history.length} 条历史记录`);
+  } catch (e: any) {
+    ElMessage.error('加载历史失败: ' + e.message);
+  } finally {
+    loadingHistory.value = false;
+  }
+}
+
+async function doReplay() {
+  if (!workflowId.value || !currentThreadId.value || !selectedCheckpointId.value) {
+    ElMessage.warning('请先选择要重放的检查点');
+    return;
+  }
+
+  executing.value = true;
+  try {
+    const result = await workflowApi.replayWorkflow(
+      workflowId.value,
+      currentThreadId.value,
+      selectedCheckpointId.value,
+      { input: userPrompt.value }
+    );
+    executeResult.value = result;
+    ElMessage.success('重放成功');
+  } catch (e: any) {
+    ElMessage.error('重放失败: ' + e.message);
+  } finally {
+    executing.value = false;
+  }
+}
+
+function formatTime(dateStr: string): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+}
+
+// Human-in-the-Loop methods
+async function doPauseExecution() {
+  if (!currentThreadId.value) {
+    ElMessage.warning('请输入会话 ID');
+    return;
+  }
+
+  try {
+    await workflowApi.pauseExecution(currentThreadId.value, selectedCheckpointId.value);
+    ElMessage.success('执行已暂停，等待人工输入');
+  } catch (e: any) {
+    ElMessage.error('暂停失败: ' + e.message);
+  }
+}
+
+async function openResumeDialog() {
+  if (!currentThreadId.value) {
+    ElMessage.warning('请输入会话 ID');
+    return;
+  }
+
+  try {
+    const { value } = await ElMessageBox.prompt(
+      '请输入恢复执行所需的数据（JSON 格式）',
+      '恢复执行',
+      {
+        confirmButtonText: '继续执行',
+        cancelButtonText: '取消',
+        inputType: 'textarea',
+        inputPlaceholder: '{"user_input": "your input here"}',
+        inputValidator: (val) => {
+          if (!val) return '请输入数据';
+          try {
+            JSON.parse(val);
+            return true;
+          } catch {
+            return '请输入有效的 JSON 格式';
+          }
+        }
+      }
+    );
+
+    await doResumeExecution(JSON.parse(value));
+  } catch {
+    // User cancelled
+  }
+}
+
+async function doResumeExecution(userInputs: Record<string, any>) {
+  if (!currentThreadId.value) {
+    ElMessage.warning('请输入会话 ID');
+    return;
+  }
+
+  try {
+    await workflowApi.resumeExecution(currentThreadId.value, userInputs);
+    ElMessage.success('执行已恢复');
+    // Reload history to see updated state
+    await loadStateHistory();
+  } catch (e: any) {
+    ElMessage.error('恢复失败: ' + e.message);
+  }
 }
 </script>
 
@@ -1057,12 +1453,14 @@ function formatResult(result: any): string {
 .llm-node .node-icon { background: linear-gradient(135deg, #1890ff, #40a9ff); }
 .condition-node .node-icon { background: linear-gradient(135deg, #faad14, #ffc53d); }
 .tool-node .node-icon { background: linear-gradient(135deg, #722ed1, #9254de); }
+.human-input-node .node-icon { background: linear-gradient(135deg, #eb2f96, #f759ab); }
 
 .start-node { border-color: #52c41a; }
 .end-node { border-color: #ff4d4f; }
 .llm-node { border-color: #1890ff; }
 .condition-node { border-color: #faad14; }
 .tool-node { border-color: #722ed1; }
+.human-input-node { border-color: #eb2f96; }
 
 /* Handle Styles - fixed position to prevent jittering */
 .handle-dot {
@@ -1101,11 +1499,22 @@ function formatResult(result: any): string {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 20px;
+}
+
+.execute-tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.execute-tabs :deep(.el-tabs__content) {
+  flex: 1;
+  overflow-y: auto;
 }
 
 .execute-config {
   flex: 1;
+  padding: 20px;
 }
 
 .config-section {
@@ -1121,14 +1530,14 @@ function formatResult(result: any): string {
 }
 
 .execute-actions {
-  padding: 16px 0;
+  padding: 16px 20px;
 }
 
 .execute-result {
   background: #f5f7fa;
   border-radius: 8px;
   padding: 16px;
-  margin-top: 16px;
+  margin: 0 20px 20px;
 }
 
 .result-header {
@@ -1154,6 +1563,127 @@ function formatResult(result: any): string {
   word-wrap: break-word;
   font-size: 13px;
   line-height: 1.6;
+}
+
+/* Stream Output */
+.stream-output {
+  background: #f0f9ff;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 0 20px 20px;
+  border: 1px solid #b3d8ff;
+}
+
+.stream-content {
+  background: #fff;
+  border-radius: 6px;
+  padding: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.stream-line {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #303133;
+  margin-bottom: 4px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Session Panel */
+.session-panel {
+  padding: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.session-header {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.state-history-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.history-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.hitl-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.history-snapshot-item {
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.history-snapshot-item:hover {
+  background: #ecf5ff;
+}
+
+.history-snapshot-item.selected {
+  border-color: #409eff;
+  background: #ecf5ff;
+}
+
+.snapshot-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.snapshot-time {
+  font-size: 12px;
+  color: #606266;
+  flex: 1;
+}
+
+.snapshot-state {
+  background: #fff;
+  border-radius: 6px;
+  padding: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.snapshot-state pre {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #606266;
+}
+
+.replay-actions {
+  margin-top: 16px;
 }
 
 /* Vue Flow Overrides */

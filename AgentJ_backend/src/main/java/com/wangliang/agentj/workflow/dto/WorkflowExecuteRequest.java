@@ -36,4 +36,9 @@ public class WorkflowExecuteRequest {
      * Store ID for long-term memory (optional)
      */
     private String storeId;
+
+    /**
+     * Checkpoint ID for time travel/replay (optional)
+     */
+    private String checkpointId;
 }
