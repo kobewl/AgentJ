@@ -106,3 +106,5 @@ nul
 # Claude Code settings
 .claude/
 .claude/settings.local.json
+AgentJ_backend/tmp/code_output/1/index.html
+AgentJ_backend/tmp/code_deploy/html_6a7a109982d344a7/index.html

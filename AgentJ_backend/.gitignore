@@ -105,3 +105,6 @@ spring.log
 **/*.env
 /extensions/
 /uploads/
+/tmp/
+/tmp/code_deploy/
+/tmp/code_output/

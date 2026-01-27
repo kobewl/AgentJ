@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.core.io.Resource;
@@ -306,8 +307,11 @@ public class CodeGenService {
 			CodeChatHistoryEntity hist = history.get(i);
 			if ("user".equals(hist.getMessageType())) {
 				messages.add(new UserMessage(hist.getMessage()));
+			} else if ("ai".equals(hist.getMessageType())) {
+				// 将 AI 的响应也加入上下文，以便在增量修改时 AI 能基于之前的代码进行修改
+				// 而不是重新生成整个代码
+				messages.add(new AssistantMessage(hist.getMessage()));
 			}
-			// AI 的响应不添加到上下文中，避免 token 浪费
 		}
 
 		// 构建当前用户消息（包含元素信息）
