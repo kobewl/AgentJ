@@ -36,7 +36,8 @@ public class AuthInterceptor implements HandlerInterceptor {
 			"/swagger-ui.html",
 			"/swagger-ui",
 			"/v3/api-docs",
-			"/error"
+			"/error",
+			"/static"
 	);
 
 	private final TokenStore tokenStore;
@@ -55,8 +56,18 @@ public class AuthInterceptor implements HandlerInterceptor {
 			return true;
 		}
 
+		// 先尝试从 Authorization header 获取 token
+		String token = null;
 		String authHeader = request.getHeader("Authorization");
-		String token = extractToken(authHeader);
+		if (authHeader != null) {
+			token = extractToken(authHeader);
+		}
+
+		// 如果 header 中没有，尝试从 URL 参数获取（用于 EventSource 请求）
+		if (token == null || token.isEmpty()) {
+			token = request.getParameter("token");
+		}
+
 		Long userId = tokenStore.validateAndGetUser(token);
 		if (userId == null) {
 			log.warn("Unauthorized request path={}, token={}", path, token);

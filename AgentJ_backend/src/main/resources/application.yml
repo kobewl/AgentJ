@@ -74,3 +74,11 @@ agentj:
     cache:
       maxSize: 100              # 最大缓存数量
       expireAfterWriteMinutes: 30  # 写入后过期时间（分钟）
+  # 代码生成配置
+  codegen:
+    # 代码输出目录
+    output-dir: ./tmp/code_output
+    # 部署目录
+    deploy-dir: ./tmp/code_deploy
+    # 最大应用数
+    max-apps: 1000

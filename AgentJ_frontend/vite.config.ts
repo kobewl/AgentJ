@@ -12,6 +12,18 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
+    proxy: {
+      // 代理 API 请求到后端
+      '/api': {
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      // 代理静态资源请求到后端（用于代码预览）
+      '/static': {
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     target: 'es2015',

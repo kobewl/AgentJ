@@ -30,6 +30,7 @@ AgentJ 是一个基于 Spring AI 和 Vue 3 的 AI 智能体工作台平台，集
 - 💾 **记忆管理** - 用户个人记忆存储，支持长期记忆和上下文关联
 - 🔧 **配置中心** - 统一配置管理，支持热更新和参数验证
 - 🎯 **统一代理** - 多代理协作，支持工具调用和执行计划
+- ✨ **AI 代码生成** - 基于自然语言生成 HTML/CSS/JS 代码，支持可视化编辑和实时预览 ⭐
 
 ### 技术特性
 
@@ -217,6 +218,7 @@ AgentJ/
 │   │   └── com/wangliang/agentj/
 │   │       ├── agent/          # 智能体核心
 │   │       ├── auth/           # 身份认证
+│   │       ├── codegen/        # AI 代码生成 ⭐
 │   │       ├── config/         # 配置管理
 │   │       ├── conversation/   # 对话管理
 │   │       ├── cron/           # 定时任务
@@ -237,6 +239,7 @@ AgentJ/
     │   ├── components/         # 公共组件
     │   ├── layouts/            # 布局组件
     │   ├── pages/              # 页面组件
+    │   │   └── CodeGen/        # 代码生成模块 ⭐
     │   ├── router/             # 路由配置
     │   ├── styles/             # 全局样式
     │   └── utils/              # 工具函数
@@ -290,6 +293,21 @@ AgentJ 集成了完整的 RAG（检索增强生成）系统，支持：
 - 向量化存储和检索
 - 基于知识库的智能问答
 
+### AI 代码生成 ⭐
+
+基于 Spring AI 实现的智能代码生成功能，支持：
+
+- **自然语言生成代码** - 通过对话方式描述需求，AI 自动生成 HTML/CSS/JS 代码
+- **SSE 流式响应** - 实时代码生成，用户体验流畅
+- **可视化编辑** - 在预览区域直接点击元素进行选中修改
+- **对话记忆** - 保持对话上下文（最近20条），支持增量修改
+- **应用管理** - 创建、编辑、删除、部署代码生成应用
+- **Markdown 渲染** - AI 响应使用 Markdown 格式渲染，支持代码高亮
+- **代码下载** - 支持下载生成的代码（ZIP 格式）
+- **静态部署** - 将生成的代码部署为静态网页访问
+
+详细文档请参考 [AgentJ 代码生成功能集成](AgentJ_backend/docs/README.md) 或 [Obsidian 文档](https://github.com/yourusername/AgentJ/blob/main/docs/40_代码生成功能集成.md)
+
 ## 配置说明
 
 ### 后端配置
@@ -321,6 +339,24 @@ AgentJ 集成了完整的 RAG（检索增强生成）系统，支持：
 - `GET /api/plan-template/template-selector/stats` - 获取缓存统计信息
 - `POST /api/plan-template/template-selector/clear-cache` - 清除所有缓存
 - `POST /api/plan-template/template-selector/clear-selection-cache` - 清除选择结果缓存
+
+### 新增API - AI 代码生成 ⭐
+
+**应用管理**
+- `POST /api/codegen/app` - 创建应用
+- `GET /api/codegen/app/:id` - 获取应用详情
+- `GET /api/codegen/app` - 获取用户的应用列表
+- `PUT /api/codegen/app/:id` - 更新应用信息
+- `DELETE /api/codegen/app/:id` - 删除应用
+- `POST /api/codegen/app/:id/deploy` - 部署应用
+- `GET /api/codegen/app/:id/download` - 下载应用代码
+
+**代码生成**
+- `GET /api/codegen/generate/stream` - SSE 流式生成代码
+- `GET /api/codegen/chat/history/:appId` - 获取对话历史
+
+**静态资源**
+- `GET /static/html/:deployKey/*` - 访问部署的静态页面
 
 ## 技术亮点
 

@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赛博朋克博客 - 数字梦境</title>
+    <style>
+        /* 重置样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 赛博朋克主题变量 */
+        :root {
+            --neon-cyan: #00ffff;
+            --neon-pink: #ff00ff;
+            --neon-green: #00ff00;
+            --neon-yellow: #ffff00;
+            --dark-bg: #0a0a0a;
+            --darker-bg: #050505;
+            --text-gray: #888;
+            --text-light: #ccc;
+            --border-glow: 0 0 10px;
+            --text-glow: 0 0 5px;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1a0033 50%, var(--darker-bg) 100%);
+            color: var(--text-light);
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 背景网格效果 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* 头部样式 */
+        header {
+            text-align: center;
+            padding: 4rem 2rem;
+            position: relative;
+            border-bottom: 2px solid var(--neon-cyan);
+            box-shadow: var(--border-glow) var(--neon-cyan);
+        }
+
+        .glitch-text {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--neon-cyan);
+            text-shadow: 
+                var(--text-glow) var(--neon-cyan),
+                2px 2px 0 var(--neon-pink),
+                -2px -2px 0 var(--neon-yellow);
+            margin-bottom: 1rem;
+            position: relative;
+            animation: glitch 3s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+
+        .subtitle {
+            color: var(--neon-pink);
+            font-size: 1.2rem;
+            text-shadow: var(--text-glow) var(--neon-pink);
+            margin-bottom: 1rem;
+        }
+
+        .terminal-line {
+            color: var(--neon-green);
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* 导航栏 */
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid var(--neon-cyan);
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn:hover {
+            background: var(--neon-cyan);
+            color: var(--darker-bg);
+            box-shadow: var(--border-glow) var(--neon-cyan);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background: var(--neon-cyan);
+            color: var(--darker-bg);
+            box-shadow: var(--border-glow) var(--neon-cyan);
+        }
+
+        /* 主要内容区域 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* 博客文章卡片 */
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .blog-card {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--neon-pink);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .blog-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .blog-card:hover::before {
+            left: 100%;
+        }
+
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--border-glow) var(--neon-pink);
+        }
+
+        .blog-title {
+            color: var(--neon-cyan);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            text-shadow: var(--text-glow) var(--neon-cyan);
+        }
+
+        .blog-meta {
+            color: var(--text-gray);
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .blog-excerpt {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .read-more {
+            background: transparent;
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .read-more:hover {
+            background: var(--neon-green);
+            color: var(--darker-bg);
+            box-shadow: var(--border-glow) var(--neon-green);
+        }
+
+        /* 关于我页面 */
+        .about-section {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--neon-yellow);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .about-title {
+            color: var(--neon-yellow);
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-shadow: var(--text-glow) var(--neon-yellow);
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .avatar {
+            width: 200px;
+            height: 200px;
+            border: 3px solid var(--neon-cyan);
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-pink));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: var(--darker-bg);
+            text-shadow: none;
+            box-shadow: var(--border-glow) var(--neon-cyan);
+        }
+
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .skill-tag {
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        /* 联系页面 */
+        .contact-section {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--neon-green);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .contact-form {
+            display: grid;
+            gap: 1.5rem;
+            max-width: 600px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            color: var(--neon-green);
+            font-weight: bold;
+        }
+
+        .form-input, .form-textarea {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--neon-green);
+            color: var(--text-light);
+            padding: 0.8rem;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            box-shadow: var(--border-glow) var(--neon-green);
+        }
+
+        .form-textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            align-self: flex-start;
+        }
+
+        .submit-btn:hover {
+            background: var(--neon-green);
+            color: var(--darker-bg);
+            box-shadow: var(--border-glow) var(--neon-green);
+        }
+
+        /* 文章详情页 */
+        .article-detail {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .article-title {
+            color: var(--neon-cyan);
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: var(--text-glow) var(--neon-cyan);
+        }
+
+        .article-content {
+            line-height: 1.8;
+            margin-top: 2rem;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 2px solid var(--neon-pink);
+            color: var(--neon-pink);
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: var(--neon-pink);
+            color: var(--darker-bg);
+            box-shadow: var(--border-glow) var(--neon-pink);
+        }
+
+        /* 页脚 */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+            border-top: 2px solid var(--neon-cyan);
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+
+        .footer-glow {
+            color: var(--neon-cyan);
+            text-shadow: var(--text-glow) var(--neon-cyan);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .glitch-text {
+                font-size: 2rem;
+            }
+            
+            .about-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .avatar {
+                margin: 0 auto;
+            }
+            
+            nav {
+                gap: 1rem;
+            }
+            
+            .nav-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            header {
+                padding: 2rem 1rem;
+            }
+            
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--darker-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+
+        .loading-text {
+            color: var(--neon-cyan);
+            font-size: 2rem;
+            text-shadow: var(--text-glow) var(--neon-cyan);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--darker-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-pink);
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载动画 -->
+    <div class="loading" id="loading">
+        <div class="loading-text">INITIALIZING...</div>
+    </div>
+
+    <!-- 头部 -->
+    <header>
+        <h1 class="glitch-text">CYBER DREAMS</h1>
+        <p class="subtitle">数字梦境 • 赛博空间 • 未来科技</p>
+        <p class="terminal-line">> System initialized. Welcome to the matrix.</p>
+    </header>
+
+    <!-- 导航栏 -->
+    <nav>
+        <button class="nav-btn active" data-page="blog">博客</button>
+        <button class="nav-btn" data-page="about">关于我</button>
+        <button class="nav-btn" data-page="contact">联系我</button>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <div class="container">
+        <!-- 博客列表 -->
+        <div id="blog-section">
+            <div class="blog-grid">
+                <!-- 博客卡片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+
+        <!-- 关于我页面 -->
+        <div id="about-section" style="display: none;">
+            <div class="about-section">
+                <h2 class="about-title">关于我</h2>
+                <div class="about-content">
+                    <div class="avatar">🤖</div>
+                    <div>
+                        <p>我是一名赛博朋克爱好者，专注于数字艺术、未来科技和虚拟现实的研究。在这个数字化的时代，我探索着人类与技术的边界。</p>
+                        <p>我的博客记录了我在赛博空间中的思考、创作和对未来世界的想象。</p>
+                        <div class="skills">
+                            <span class="skill-tag">JavaScript</span>
+                            <span class="skill-tag">WebGL</span>
+                            <span class="skill-tag">AI/ML</span>
+                            <span class="skill-tag">VR/AR</span>
+                            <span class="skill-tag">Cyberpunk</span>
+                            <span class="skill-tag">Digital Art</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 联系我页面 -->
+        <div id="contact-section" style="display: none;">
+            <div class="contact-section">
+                <h2 class="about-title">联系我</h2>
+                <form class="contact-form" id="contact-form">
+                    <div class="form-group">
+                        <label class="form-label">姓名</label>
+                        <input type="text" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">邮箱</label>
+                        <input type="email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">消息</label>
+                        <textarea class="form-textarea" required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">发送消息</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 文章详情页 -->
+        <div id="article-detail" style="display: none;">
+            <!-- 文章内容将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer>
+        <p>&copy; 2024 <span class="footer-glow">CYBER DREAMS</span>. All rights reserved.</p>
+        <p>在数字的海洋中，我们都是追梦人</p>
+    </footer>
+
+    <script>
+        // 博客数据
+        const blogPosts = [
+            {
+                id: 1,
+                title: "赛博朋克美学的数字表达",
+                date: "2024-01-15",
+                category: "设计",
+                excerpt: "探索赛博朋克风格在数字艺术中的表现方式，从霓虹色彩到未来城市景观的视觉语言...",
+                content: `
+                    <p>赛博朋克美学是一种独特的视觉风格，它融合了高科技与低生活的矛盾美感。在这个数字时代，我们可以通过各种工具和技术来表达这种美学。</p>
+                    
+                    <h3>霓虹色彩的魅力</h3>
+                    <p>赛博朋克风格最显著的特征之一就是其鲜艳的霓虹色彩。青色、粉色、黄色和绿色的组合创造出一种未来感十足的视觉效果...</p>
+                    
+                    <h3>数字艺术工具</h3>
+                    <p>现代数字艺术工具让我们能够轻松创造出赛博朋克风格的作品。从Photoshop到专业的3D建模软件，技术的进步为艺术创作提供了无限可能...</p>
+                    
+                    <h3>未来展望</h3>
+                    <p>随着虚拟现实和增强现实技术的发展，赛博朋克美学将在更多领域得到应用，为我们带来更加沉浸式的体验...</p>
+                `
+            },
+            {
+                id: 2,
+                title: "人工智能与艺术创作",
+                date: "2024-01-10",
+                category: "科技",
+                excerpt: "AI技术正在改变艺术创作的方式，从生成艺术到音乐创作，人工智能为创意表达开辟了新的可能性...",
+                content: `
+                    <p>人工智能技术的发展正在深刻地影响着艺术创作领域。从生成对抗网络(GAN)到大型语言模型，AI正在成为艺术家们的新工具。</p>
+                    
+                    <h3>AI生成艺术</h3>
+                    <p>通过训练深度学习模型，AI可以生成令人惊叹的艺术作品。这些作品既保留了传统艺术的美感，又融入了算法的独特视角...</p>
+                    
+                    <h3>人机协作</h3>
+                    <p>最有趣的不是AI完全取代人类创作，而是人机协作产生的新艺术形式。艺术家与AI的对话正在创造出前所未有的作品...</p>
+                    
+                    <h3>伦理思考</h3>
+                    <p>随着AI在艺术领域的应用越来越广泛，我们也需要思考相关的伦理问题，包括版权、原创性和艺术的本质...</p>
+                `
+            },
+            {
+                id: 3,
+                title: "虚拟现实中的赛博空间",
+                date: "2024-01-05",
+                category: "VR/AR",
+                excerpt: "VR技术让我们能够真正进入赛博朋克世界，体验未来城市的沉浸式环境，探索数字与现实的边界...",
+                content: `
+                    <p>虚拟现实技术为我们提供了一个进入赛博朋克世界的窗口。在这个数字空间中，我们可以体验到前所未有的沉浸感。</p>
+                    
+                    <h3>沉浸式体验</h3>
+                    <p>通过VR设备，用户可以完全沉浸在赛博朋克风格的环境中。从霓虹闪烁的街道到高科技的室内空间，每一个细节都经过精心设计...</p>
+                    
+                    <h3>交互设计</h3>
+                    <p>在虚拟环境中，交互设计变得尤为重要。用户如何与数字世界进行互动，直接影响着体验的质量和深度...</p>
+                    
+                    <h3>技术挑战</h3>
+                    <p>虽然VR技术已经取得了很大进步，但要完全实现赛博朋克世界的愿景，我们还需要克服许多技术挑战...</p>
+                `
+            },
+            {
+                id: 4,
+                title: "数字身份与网络人格",
+                date: "2023-12-28",
+                category: "哲学",
+                excerpt: "在数字化时代，我们的身份越来越虚拟化，网络人格与现实自我之间的关系值得我们深思...",
+                content: `
+                    <p>在社交媒体和虚拟世界盛行的今天，我们的身份正在经历前所未有的变化。数字身份和网络人格成为了我们存在的重要部分。</p>
+                    
+                    <h3>多重身份</h3>
+                    <p>人们在不同的网络平台上展现出不同的人格特征。这种多重身份的现象反映了数字时代的复杂性...</p>
+                    
+                    <h3>真实与虚拟</h3>
+                    <p>网络人格与现实自我之间的关系是一个值得探讨的话题。它们是完全分离的，还是相互影响的？...</p>
+                    
+                    <h3>未来展望</h3>
+                    <p>随着元宇宙概念的兴起，数字身份的重要性将进一步提升。我们需要思考如何在虚拟世界中保持真实的自我...</p>
+                `
+            },
+            {
+                id: 5,
+                title: "区块链与数字艺术",
+                date: "2023-12-20",
+                category: "区块链",
+                excerpt: "NFT技术为数字艺术带来了新的可能性，艺术家们可以通过区块链技术保护自己的作品并获得收益...",
+                content: `
+                    <p>区块链技术和NFT的出现为数字艺术领域带来了革命性的变化。艺术家们现在可以通过去中心化的方式展示和交易自己的作品。</p>
+                    
+                    <h3>NFT的兴起</h3>
+                    <p>非同质化代币(NFT)让数字艺术作品具有了唯一性和可验证的所有权，这为数字艺术市场注入了新的活力...</p>
+                    
+                    <h3>艺术民主化</h3>
+                    <p>区块链技术降低了艺术市场的准入门槛，让更多艺术家有机会展示自己的作品并获得应有的回报...</p>
+                    
+                    <h3>挑战与机遇</h3>
+                    <p>虽然NFT为数字艺术带来了机遇，但也面临着环境、版权和市场波动等挑战...</p>
+                `
+            }
+        ];
+
+        // 当前页面状态
+        let currentPage = 'blog';
+        let currentArticle = null;
+
+        // DOM元素
+        const blogSection = document.getElementById('blog-section');
+        const aboutSection = document.getElementById('about-section');
+        const contactSection = document.getElementById('contact-section');
+        const articleDetail = document.getElementById('article-detail');
+        const loading = document.getElementById('loading');
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', () => {
+            // 隐藏加载动画
+            setTimeout(() => {
+                loading.style.opacity = '0';
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                }, 500);
+            }, 1500);
+
+            // 渲染博客列表
+            renderBlogList();
+
+            // 绑定导航事件
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', handleNavigation);
+            });
+
+            // 绑定联系表单事件
+            document.getElementById('contact-form').addEventListener('submit', handleContactSubmit);
+        });
+
+        // 导航处理
+        function handleNavigation(e) {
+            const page = e.target.dataset.page;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            e.target.classList.add('active');
+
+            // 隐藏所有section
+            blogSection.style.display = 'none';
+            aboutSection.style.display = 'none';
+            contactSection.style.display = 'none';
+            articleDetail.style.display = 'none';
+
+            // 显示对应section
+            if (page === 'blog') {
+                blogSection.style.display = 'block';
+                currentPage = 'blog';
+                currentArticle = null;
+            } else if (page === 'about') {
+                aboutSection.style.display = 'block';
+                currentPage = 'about';
+            } else if (page === 'contact') {
+                contactSection.style.display = 'block';
+                currentPage = 'contact';
+            }
+        }
+
+        // 渲染博客列表
+        function renderBlogList() {
+            const blogGrid = document.querySelector('.blog-grid');
+            blogGrid.innerHTML = '';
+
+            blogPosts.forEach(post => {
+                const card = document.createElement('div');
+                card.className = 'blog-card';
+                card.innerHTML = `
+                    <h3 class="blog-title">${post.title}</h3>
+                    <div class="blog-meta">
+                        <span>${post.date}</span>
+                        <span>${post.category}</span>
+                    </div>
+                    <p class="blog-excerpt">${post.excerpt}</p>
+                    <button class="read-more" data-id="${post.id}">阅读更多</button>
+                `;
+                
+                card.querySelector('.read-more').addEventListener('click', () => {
+                    showArticle(post.id);
+                });
+                
+                blogGrid.appendChild(card);
+            });
+        }
+
+        // 显示文章详情
+        function showArticle(articleId) {
+            const post = blogPosts.find(p => p.id === articleId);
+            if (!post) return;
+
+            currentArticle = post;
+            currentPage = 'article';
+
+            // 隐藏所有section
+            blogSection.style.display = 'none';
+            aboutSection.style.display = 'none';
+            contactSection.style.display = 'none';
+            articleDetail.style.display = 'block';
+
+            // 渲染文章内容
+            articleDetail.innerHTML = `
+                <button class="back-btn">← 返回博客</button>
+                <div class="article-detail">
+                    <h1 class="article-title">${post.title}</h1>
+                    <div class="blog-meta">
+                        <span>${post.date}</span>
+                        <span>${post.category}</span>
+                    </div>
+                    <div class="article-content">${post.content}</div>
+                </div>
+            `;
+
+            // 绑定返回按钮事件
+            articleDetail.querySelector('.back-btn').addEventListener('click', () => {
+                blogSection.style.display = 'block';
+                articleDetail.style.display = 'none';
+                currentPage = 'blog';
+                currentArticle = null;
+            });
+
+            // 滚动到顶部
+            window.scrollTo(0, 0);
+        }
+
+        // 联系表单提交处理
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            
+            // 简单的表单验证和反馈
+            const form = e.target;
+            const inputs = form.querySelectorAll('input, textarea');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.style.borderColor = '#ff0000';
+                    isValid = false;
+                } else {
+                    input.style.borderColor = 'var(--neon-green)';
+                }
+            });
+
+            if (isValid) {
+                // 模拟提交成功
+                alert('消息已发送！感谢您的联系。');
+                form.reset();
+            }
+        }
+
+        // 键盘导航支持
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && currentPage === 'article') {
+                blogSection.style.display = 'block';
+                articleDetail.style.display = 'none';
+                currentPage = 'blog';
+                currentArticle = null;
+            }
+        });
+    </script>
+</body>
+</html>

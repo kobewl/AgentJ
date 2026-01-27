@@ -15,6 +15,8 @@ const UnifiedAgent = () => import('@/pages/UnifiedAgent.vue');
 const CronTasks = () => import('@/pages/CronTasks.vue');
 const WorkflowDesigner = () => import('@/pages/WorkflowDesigner.vue');
 const Login = () => import('@/pages/Login.vue');
+const CodeGenList = () => import('@/pages/CodeGen/CodeGenList.vue');
+const CodeGenEditor = () => import('@/pages/CodeGen/CodeGenEditor.vue');
 
 export const menuRoutes: RouteRecordRaw[] = [
   {
@@ -88,6 +90,18 @@ export const menuRoutes: RouteRecordRaw[] = [
     name: 'WorkflowDesigner',
     component: WorkflowDesigner,
     meta: { title: '工作流设计', icon: 'Share' },
+  },
+  {
+    path: '/codegen',
+    name: 'CodeGenList',
+    component: CodeGenList,
+    meta: { title: 'AI 代码生成', icon: 'MagicStick' },
+  },
+  {
+    path: '/codegen/editor/:id',
+    name: 'CodeGenEditor',
+    component: CodeGenEditor,
+    meta: { title: '代码编辑器' },
   },
 ];
 
