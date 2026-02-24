@@ -1,6 +1,6 @@
 # User Module
 
-This module provides simple user management functionality following the adapter pattern used in the Lynxe project.
+This module provides simple user management functionality following the adapter pattern used in the AgentJ project.
 
 ## Structure
 
@@ -52,9 +52,9 @@ user/
 
 The service comes with one predefined user:
 - **ID**: 1 (Long)
-- **Username**: lynxe_user
-- **Email**: user@lynxe.ai
-- **Display Name**: Lynxe User
+- **Username**: agentj_user
+- **Email**: user@agentj.ai
+- **Display Name**: AgentJ User
 - **Status**: active
 
 ## Database Schema

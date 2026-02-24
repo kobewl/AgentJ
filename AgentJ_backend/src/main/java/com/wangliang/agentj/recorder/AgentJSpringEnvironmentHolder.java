@@ -5,12 +5,12 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LynxeSpringEnvironmentHolder implements EnvironmentAware {
+public class AgentJSpringEnvironmentHolder implements EnvironmentAware {
 
 	private static Environment environment;
 
 	public void setEnvironment(Environment environment) {
-		LynxeSpringEnvironmentHolder.environment = environment;
+		AgentJSpringEnvironmentHolder.environment = environment;
 	}
 
 	public static Environment getEnvironment() {

@@ -16,7 +16,7 @@
 
 package com.wangliang.agentj.config.startUp;
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,12 +40,12 @@ public class AppStartupListener implements ApplicationListener<ApplicationReadyE
 	private String serverPort;
 
 	@Autowired
-	private LynxeProperties lynxeProperties;
+	private AgentJProperties agentjProperties;
 
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 		// Only execute when configuration allows auto-opening browser
-		if (!lynxeProperties.getOpenBrowserAuto()) {
+		if (!agentjProperties.getOpenBrowserAuto()) {
 			logger.info("Auto-open browser feature is disabled");
 			return;
 		}

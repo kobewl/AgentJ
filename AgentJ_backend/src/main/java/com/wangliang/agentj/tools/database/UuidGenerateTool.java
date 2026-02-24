@@ -16,7 +16,7 @@
 package com.wangliang.agentj.tools.database;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.tools.AbstractBaseTool;
 import com.wangliang.agentj.tools.code.ToolExecuteResult;
 import com.wangliang.agentj.tools.i18n.ToolI18nService;
@@ -33,7 +33,7 @@ public class UuidGenerateTool extends AbstractBaseTool<UuidGenerateRequest> {
 
 	private final ToolI18nService toolI18nService;
 
-	public UuidGenerateTool(LynxeProperties lynxeProperties, ObjectMapper objectMapper,
+	public UuidGenerateTool(AgentJProperties agentjProperties, ObjectMapper objectMapper,
                             ToolI18nService toolI18nService) {
 		// Constructor for dependency injection
 		this.toolI18nService = toolI18nService;

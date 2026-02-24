@@ -1,9 +1,9 @@
 package com.wangliang.agentj.runtime.executor.factory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.conversation.service.MemoryService;
-import com.wangliang.agentj.event.LynxeEventPublisher;
+import com.wangliang.agentj.event.AgentJEventPublisher;
 import com.wangliang.agentj.llm.ConversationMemoryLimitService;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.llm.StreamingResponseHandler;
@@ -35,7 +35,7 @@ public class PlanExecutorFactory implements IPlanExecutorFactory {
 
 	private final PlanExecutionRecorder recorder;
 
-	private final LynxeProperties lynxeProperties;
+	private final AgentJProperties agentjProperties;
 
 	private final ObjectMapper objectMapper;
 
@@ -57,7 +57,7 @@ public class PlanExecutorFactory implements IPlanExecutorFactory {
 
 	private final PlanIdDispatcher planIdDispatcher;
 
-	private final LynxeEventPublisher lynxeEventPublisher;
+	private final AgentJEventPublisher agentjEventPublisher;
 
 	private final ParallelToolExecutionService parallelToolExecutionService;
 
@@ -67,18 +67,18 @@ public class PlanExecutorFactory implements IPlanExecutorFactory {
 
 	private final ServiceGroupIndexService serviceGroupIndexService;
 
-	public PlanExecutorFactory(LlmService llmService, PlanExecutionRecorder recorder, LynxeProperties lynxeProperties,
+	public PlanExecutorFactory(LlmService llmService, PlanExecutionRecorder recorder, AgentJProperties agentjProperties,
 			ObjectMapper objectMapper, LevelBasedExecutorPool levelBasedExecutorPool,
 			DynamicModelRepository dynamicModelRepository, FileUploadService fileUploadService,
 			AgentInterruptionHelper agentInterruptionHelper, PlanningFactory planningFactory,
 			ToolCallingManager toolCallingManager, UserInputService userInputService,
 			StreamingResponseHandler streamingResponseHandler, PlanIdDispatcher planIdDispatcher,
-			LynxeEventPublisher lynxeEventPublisher, ParallelToolExecutionService parallelToolExecutionService,
+			AgentJEventPublisher agentjEventPublisher, ParallelToolExecutionService parallelToolExecutionService,
 			MemoryService memoryService, ConversationMemoryLimitService conversationMemoryLimitService,
 			ServiceGroupIndexService serviceGroupIndexService) {
 		this.llmService = llmService;
 		this.recorder = recorder;
-		this.lynxeProperties = lynxeProperties;
+		this.agentjProperties = agentjProperties;
 		this.objectMapper = objectMapper;
 		this.levelBasedExecutorPool = levelBasedExecutorPool;
 		this.dynamicModelRepository = dynamicModelRepository;
@@ -89,7 +89,7 @@ public class PlanExecutorFactory implements IPlanExecutorFactory {
 		this.userInputService = userInputService;
 		this.streamingResponseHandler = streamingResponseHandler;
 		this.planIdDispatcher = planIdDispatcher;
-		this.lynxeEventPublisher = lynxeEventPublisher;
+		this.agentjEventPublisher = agentjEventPublisher;
 		this.parallelToolExecutionService = parallelToolExecutionService;
 		this.memoryService = memoryService;
 		this.conversationMemoryLimitService = conversationMemoryLimitService;
@@ -102,9 +102,9 @@ public class PlanExecutorFactory implements IPlanExecutorFactory {
 	 */
 	private PlanExecutorInterface createDynamicToolExecutor() {
 		log.debug("Creating dynamic agent plan executor");
-		return new DynamicToolPlanExecutor(null, recorder, llmService, lynxeProperties, levelBasedExecutorPool,
+		return new DynamicToolPlanExecutor(null, recorder, llmService, agentjProperties, levelBasedExecutorPool,
 				dynamicModelRepository, fileUploadService, agentInterruptionHelper, planningFactory, toolCallingManager,
-				userInputService, streamingResponseHandler, planIdDispatcher, lynxeEventPublisher, objectMapper,
+				userInputService, streamingResponseHandler, planIdDispatcher, agentjEventPublisher, objectMapper,
 				parallelToolExecutionService, memoryService, conversationMemoryLimitService, serviceGroupIndexService);
 	}
 

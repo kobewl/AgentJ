@@ -1,7 +1,7 @@
 package com.wangliang.agentj.agent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.planning.PlanningFactory;
 import com.wangliang.agentj.recorder.service.PlanExecutionRecorder;
@@ -62,7 +62,7 @@ public abstract class BaseAgent {
 
 	// 服务依赖字段
 	protected LlmService llmService;
-	protected final LynxeProperties lynxeProperties;
+	protected final AgentJProperties agentjProperties;
 	protected ObjectMapper objectMapper;
 
 	// 执行控制相关
@@ -128,7 +128,7 @@ public abstract class BaseAgent {
 		// Get current date time, format as yyyy-MM-dd
 		String currentDateTime = java.time.LocalDate.now().toString(); // Format as
 																		// yyyy-MM-dd
-		boolean isDebugModel = lynxeProperties.getDebugDetail();
+		boolean isDebugModel = agentjProperties.getDebugDetail();
 		String detailOutput = "";
 		if (isDebugModel) {
 			detailOutput = "1. When using tool calls, you must provide explanations describing the reason for using this tool and the thinking behind it\n" +
@@ -140,7 +140,7 @@ public abstract class BaseAgent {
 							"2. Do not provide reasoning or descriptions before tool calls!";
 		}
 		String parallelToolCallsResponse = "";
-		if (lynxeProperties.getParallelToolCalls()) {
+		if (agentjProperties.getParallelToolCalls()) {
 			parallelToolCallsResponse = "# Response Rules:\n" +
 										"- You must select and call from the provided tools. You can make repeated calls to a single tool, call multiple tools simultaneously, or use a mixed calling approach to improve problem-solving efficiency and accuracy.\n" +
 										"- In your response, you must call at least one tool, which is an indispensable operation step.\n" +
@@ -207,12 +207,12 @@ public abstract class BaseAgent {
 	public abstract PlanningFactory.ToolCallBackContext getToolCallBackContext(String toolKey);
 
 	public BaseAgent(LlmService llmService, PlanExecutionRecorder planExecutionRecorder,
-			LynxeProperties lynxeProperties, Map<String, Object> initialAgentSetting, ExecutionStep step,
+			AgentJProperties agentjProperties, Map<String, Object> initialAgentSetting, ExecutionStep step,
 			PlanIdDispatcher planIdDispatcher) {
 		this.llmService = llmService;
 		this.planExecutionRecorder = planExecutionRecorder;
-		this.lynxeProperties = lynxeProperties;
-		this.maxSteps = lynxeProperties.getMaxSteps();
+		this.agentjProperties = agentjProperties;
+		this.maxSteps = agentjProperties.getMaxSteps();
 		this.step = step;
 		this.planIdDispatcher = planIdDispatcher;
 		this.initSettingData = Collections.unmodifiableMap(new HashMap<>(initialAgentSetting));
@@ -452,8 +452,8 @@ public abstract class BaseAgent {
 		return initSettingData;
 	}
 
-	public LynxeProperties getLynxeProperties() {
-		return lynxeProperties;
+	public AgentJProperties getAgentJProperties() {
+		return agentjProperties;
 	}
 
 	public static class AgentExecResult {
@@ -507,7 +507,7 @@ public abstract class BaseAgent {
 			log.info("Generating final summary for agent execution");
 
 			// Get all memory entries for the current plan
-			List<Message> memoryEntries = llmService.getAgentMemory(lynxeProperties.getMaxMemory())
+			List<Message> memoryEntries = llmService.getAgentMemory(agentjProperties.getMaxMemory())
 				.get(getCurrentPlanId());
 
 			if (memoryEntries == null || memoryEntries.isEmpty()) {

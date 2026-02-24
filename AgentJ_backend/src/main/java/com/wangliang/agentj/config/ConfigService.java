@@ -14,6 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -35,6 +40,8 @@ public class ConfigService implements IConfigService, ApplicationListener<Contex
 	private final Map<String, ConfigCacheEntry<String>> configCache = new ConcurrentHashMap<>();
 
 	private boolean initialized = false;
+
+	private static final String CLEANUP_MARKER_FILE = "tmp/agentj_config_cleanup.done";
 
 	@Override
 	public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -62,26 +69,32 @@ public class ConfigService implements IConfigService, ApplicationListener<Contex
 			.map(field -> field.getAnnotation(ConfigProperty.class).path())
 			.collect(Collectors.toSet());
 
-		// Remove obsolete configurations that are no longer defined in LynxeProperties
-		if (bean instanceof LynxeProperties) {
-			log.info("Cleaning up obsolete configurations not defined in LynxeProperties...");
-			List<ConfigEntity> allConfigs = configRepository.findAll();
-			List<ConfigEntity> obsoleteConfigs = allConfigs.stream()
-				.filter(config -> !validConfigPaths.contains(config.getConfigPath()))
-				.collect(Collectors.toList());
-
-			if (!obsoleteConfigs.isEmpty()) {
-				log.info("Found {} obsolete configurations to remove:", obsoleteConfigs.size());
-				obsoleteConfigs.forEach(config -> {
-					log.info("  - Removing obsolete config: {} ({})", config.getConfigPath(), config.getDescription());
-					configRepository.delete(config);
-					// Remove from cache as well
-					configCache.remove(config.getConfigPath());
-				});
-				log.info("✅ Obsolete configuration cleanup completed");
+		// Remove obsolete configurations that are no longer defined in AgentJProperties
+		if (bean instanceof AgentJProperties) {
+			if (shouldSkipCleanup()) {
+				log.info("Skipping obsolete configuration cleanup (marker exists)");
 			}
 			else {
-				log.info("✅ No obsolete configurations found");
+				log.info("Cleaning up obsolete configurations not defined in AgentJProperties...");
+				List<ConfigEntity> allConfigs = configRepository.findAll();
+				List<ConfigEntity> obsoleteConfigs = allConfigs.stream()
+					.filter(config -> !validConfigPaths.contains(config.getConfigPath()))
+					.collect(Collectors.toList());
+
+				if (!obsoleteConfigs.isEmpty()) {
+					log.info("Found {} obsolete configurations to remove:", obsoleteConfigs.size());
+					obsoleteConfigs.forEach(config -> {
+						log.info("  - Removing obsolete config: {} ({})", config.getConfigPath(), config.getDescription());
+						configRepository.delete(config);
+						// Remove from cache as well
+						configCache.remove(config.getConfigPath());
+					});
+					log.info("✅ Obsolete configuration cleanup completed");
+				}
+				else {
+					log.info("✅ No obsolete configurations found");
+				}
+				writeCleanupMarker();
 			}
 		}
 
@@ -224,6 +237,31 @@ public class ConfigService implements IConfigService, ApplicationListener<Contex
 		}
 
 		throw new IllegalArgumentException("Unsupported type: " + targetType);
+	}
+
+	private boolean shouldSkipCleanup() {
+		Path marker = resolveCleanupMarker();
+		return Files.exists(marker);
+	}
+
+	private void writeCleanupMarker() {
+		Path marker = resolveCleanupMarker();
+		try {
+			Files.createDirectories(marker.getParent());
+			String payload = "cleanup_completed_at=" + Instant.now().toString() + "\n";
+			Files.write(marker, payload.getBytes(StandardCharsets.UTF_8));
+		}
+		catch (Exception e) {
+			log.warn("Failed to write cleanup marker file: {}", marker, e);
+		}
+	}
+
+	private Path resolveCleanupMarker() {
+		String override = environment.getProperty("agentj.config.cleanup.marker");
+		if (override != null && !override.trim().isEmpty()) {
+			return Paths.get(override.trim());
+		}
+		return Paths.get(CLEANUP_MARKER_FILE);
 	}
 
 	public List<ConfigEntity> getAllConfigs() {

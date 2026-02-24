@@ -37,7 +37,7 @@ public class MoveToAndClickAction extends BrowserAction {
 		}
 
 		Page page = getCurrentPage(); // Get the Playwright Page instance
-		boolean isDebug = getBrowserUseTool().getLynxeProperties().getDebugDetail();
+		boolean isDebug = getBrowserUseTool().getAgentJProperties().getDebugDetail();
 
 		String clickResultMessage = clickAndSwitchToNewTabIfOpened(page, () -> {
 			try {

@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.tools.convertToMarkdown;
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.runtime.executor.ImageRecognitionExecutorPool;
 import com.wangliang.agentj.tools.code.ToolExecuteResult;
@@ -52,7 +52,7 @@ public class ImageOcrProcessor {
 
 	private final LlmService llmService;
 
-	private final LynxeProperties lynxeProperties;
+	private final AgentJProperties agentjProperties;
 
 	private final ImageRecognitionExecutorPool imageRecognitionExecutorPool;
 
@@ -60,10 +60,10 @@ public class ImageOcrProcessor {
 	private String imageFormatName = "JPEG";
 
 	public ImageOcrProcessor(UnifiedDirectoryManager directoryManager, LlmService llmService,
-                             LynxeProperties lynxeProperties, ImageRecognitionExecutorPool imageRecognitionExecutorPool) {
+                             AgentJProperties agentjProperties, ImageRecognitionExecutorPool imageRecognitionExecutorPool) {
 		this.directoryManager = directoryManager;
 		this.llmService = llmService;
-		this.lynxeProperties = lynxeProperties;
+		this.agentjProperties = agentjProperties;
 		this.imageRecognitionExecutorPool = imageRecognitionExecutorPool;
 		log.info("ImageOcrProcessor initialized with all dependencies");
 	}
@@ -279,7 +279,7 @@ public class ImageOcrProcessor {
 
 			// Get the ChatClient from LlmService
 			ChatClient chatClient = llmService.getDefaultDynamicAgentChatClient();
-			// Use configured model name from LynxeProperties
+			// Use configured model name from AgentJProperties
 			String modelName = getConfiguredModelName();
 			ChatOptions chatOptions = ChatOptions.builder().model(modelName).build();
 
@@ -439,12 +439,12 @@ public class ImageOcrProcessor {
 	}
 
 	/**
-	 * Get configured model name from LynxeProperties
+	 * Get configured model name from AgentJProperties
 	 * @return configured model name or default value
 	 */
 	private String getConfiguredModelName() {
-		if (lynxeProperties != null) {
-			String configuredModelName = lynxeProperties.getImageRecognitionModelName();
+		if (agentjProperties != null) {
+			String configuredModelName = agentjProperties.getImageRecognitionModelName();
 			if (configuredModelName != null && !configuredModelName.trim().isEmpty()) {
 				return configuredModelName;
 			}
@@ -453,12 +453,12 @@ public class ImageOcrProcessor {
 	}
 
 	/**
-	 * Get configured max retry attempts from LynxeProperties
+	 * Get configured max retry attempts from AgentJProperties
 	 * @return configured max retry attempts or default value
 	 */
 	private int getConfiguredMaxRetryAttempts() {
-		if (lynxeProperties != null) {
-			Integer configuredMaxRetryAttempts = lynxeProperties.getImageRecognitionMaxRetryAttempts();
+		if (agentjProperties != null) {
+			Integer configuredMaxRetryAttempts = agentjProperties.getImageRecognitionMaxRetryAttempts();
 			if (configuredMaxRetryAttempts != null && configuredMaxRetryAttempts > 0) {
 				return configuredMaxRetryAttempts;
 			}

@@ -50,7 +50,7 @@ public abstract class BrowserAction {
 	 * configured
 	 */
 	protected Integer getBrowserTimeoutMs() {
-		Integer timeout = getBrowserUseTool().getLynxeProperties().getBrowserRequestTimeout();
+		Integer timeout = getBrowserUseTool().getAgentJProperties().getBrowserRequestTimeout();
 		return (timeout != null ? timeout : 30) * 1000; // Convert to milliseconds
 	}
 
@@ -59,7 +59,7 @@ public abstract class BrowserAction {
 	 * @return Timeout in seconds, returns default value of 30 seconds if not configured
 	 */
 	protected Integer getBrowserTimeoutSec() {
-		Integer timeout = getBrowserUseTool().getLynxeProperties().getBrowserRequestTimeout();
+		Integer timeout = getBrowserUseTool().getAgentJProperties().getBrowserRequestTimeout();
 		return timeout != null ? timeout : 30; // Default timeout is 30 seconds
 	}
 

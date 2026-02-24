@@ -25,30 +25,30 @@ import org.springframework.stereotype.Component;
 /**
  * @author wangliang
  * @time 2025/7/15
- * @desc lynxe event listener registration
+ * @desc agentj event listener registration
  */
 @Component
-public class LynxeListenerRegister implements BeanPostProcessor {
+public class AgentJListenerRegister implements BeanPostProcessor {
 
 	@Autowired
 	@Lazy
-	private LynxeEventPublisher lynxeEventPublisher;
+	private AgentJEventPublisher agentjEventPublisher;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		if (bean instanceof LynxeListener) {
-			ResolvableType resolvableType = ResolvableType.forClass(bean.getClass()).as(LynxeListener.class);
+		if (bean instanceof AgentJListener) {
+			ResolvableType resolvableType = ResolvableType.forClass(bean.getClass()).as(AgentJListener.class);
 			ResolvableType eventType = resolvableType.getGeneric(0);
 			Class<?> eventClass = eventType.resolve();
-			Class<? extends LynxeEvent> lynxeEventClass;
+			Class<? extends AgentJEvent> agentjEventClass;
 			try {
-				lynxeEventClass = (Class<? extends LynxeEvent>) eventClass;
+				agentjEventClass = (Class<? extends AgentJEvent>) eventClass;
 			}
 			catch (Exception e) {
-				throw new IllegalArgumentException("The listener can only listen to LynxeEvent type");
+				throw new IllegalArgumentException("The listener can only listen to AgentJEvent type");
 			}
-			lynxeEventPublisher.registerListener(lynxeEventClass, (LynxeListener) bean);
+			agentjEventPublisher.registerListener(agentjEventClass, (AgentJListener) bean);
 		}
 		return bean;
 	}

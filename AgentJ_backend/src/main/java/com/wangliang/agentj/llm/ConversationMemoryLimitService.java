@@ -1,6 +1,6 @@
 package com.wangliang.agentj.llm;
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -20,7 +20,7 @@ import java.util.List;
  * Service to automatically limit conversation memory size based on character count. Uses
  * LLM to summarize older dialog rounds while maintaining recent 5000 characters.
  *
- * @author lynxe
+ * @author agentj
  */
 @Service
 public class ConversationMemoryLimitService {
@@ -34,7 +34,7 @@ public class ConversationMemoryLimitService {
 	private static final int SUMMARY_MAX_CHARS = 4000;
 
 	@Autowired
-	private LynxeProperties lynxeProperties;
+	private AgentJProperties agentjProperties;
 
 	private LlmService llmService;
 
@@ -517,11 +517,11 @@ public class ConversationMemoryLimitService {
 	}
 
 	/**
-	 * Get the configured maximum character count from LynxeProperties.
+	 * Get the configured maximum character count from AgentJProperties.
 	 * @return Maximum character count
 	 */
 	public int getMaxCharacterCount() {
-		return lynxeProperties != null ? lynxeProperties.getConversationMemoryMaxChars() : 30000;
+		return agentjProperties != null ? agentjProperties.getConversationMemoryMaxChars() : 30000;
 	}
 
 }

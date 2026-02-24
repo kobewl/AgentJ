@@ -1,6 +1,6 @@
 package com.wangliang.agentj.agent;
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.recorder.service.PlanExecutionRecorder;
 import com.wangliang.agentj.runtime.entity.vo.ExecutionStep;
@@ -20,12 +20,12 @@ public abstract class ReActAgent extends BaseAgent {
 	 * @param llmService LLM service instance for handling natural language interactions
 	 * @param planExecutionRecorder plan execution recorder for recording execution
 	 * process
-	 * @param lynxeProperties Lynxe configuration properties
+	 * @param agentjProperties AgentJ configuration properties
 	 */
 	public ReActAgent(LlmService llmService, PlanExecutionRecorder planExecutionRecorder,
-                      LynxeProperties lynxeProperties, Map<String, Object> initialAgentSetting, ExecutionStep step,
+                      AgentJProperties agentjProperties, Map<String, Object> initialAgentSetting, ExecutionStep step,
                       PlanIdDispatcher planIdDispatcher) {
-		super(llmService, planExecutionRecorder, lynxeProperties, initialAgentSetting, step, planIdDispatcher);
+		super(llmService, planExecutionRecorder, agentjProperties, initialAgentSetting, step, planIdDispatcher);
 	}
 
 	/**

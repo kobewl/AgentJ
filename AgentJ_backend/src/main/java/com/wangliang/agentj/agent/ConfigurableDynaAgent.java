@@ -16,9 +16,9 @@
 package com.wangliang.agentj.agent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.conversation.service.MemoryService;
-import com.wangliang.agentj.event.LynxeEventPublisher;
+import com.wangliang.agentj.event.AgentJEventPublisher;
 import com.wangliang.agentj.llm.ConversationMemoryLimitService;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.llm.StreamingResponseHandler;
@@ -54,7 +54,7 @@ public class ConfigurableDynaAgent extends DynamicAgent {
      *
      * @param llmService               LLM service
      * @param planExecutionRecorder    Plan execution recorder
-     * @param lynxeProperties          Lynxe properties
+     * @param agentjProperties          AgentJ properties
      * @param name                     Agent name (configurable)
      * @param description              Agent description (configurable)
      * @param nextStepPrompt           Next step prompt (configurable)
@@ -67,17 +67,17 @@ public class ConfigurableDynaAgent extends DynamicAgent {
      * @param planIdDispatcher         Plan ID dispatcher
      */
     public ConfigurableDynaAgent(LlmService llmService, PlanExecutionRecorder planExecutionRecorder,
-                                 LynxeProperties lynxeProperties, String name, String description, String nextStepPrompt,
+                                 AgentJProperties agentjProperties, String name, String description, String nextStepPrompt,
                                  List<String> availableToolKeys, ToolCallingManager toolCallingManager,
                                  Map<String, Object> initialAgentSetting, UserInputService userInputService, String modelName,
                                  StreamingResponseHandler streamingResponseHandler, ExecutionStep step, PlanIdDispatcher planIdDispatcher,
-                                 LynxeEventPublisher lynxeEventPublisher, AgentInterruptionHelper agentInterruptionHelper,
+                                 AgentJEventPublisher agentjEventPublisher, AgentInterruptionHelper agentInterruptionHelper,
                                  ObjectMapper objectMapper, ParallelToolExecutionService parallelToolExecutionService,
                                  MemoryService memoryService, ConversationMemoryLimitService conversationMemoryLimitService,
                                  ServiceGroupIndexService serviceGroupIndexService) {
-        super(llmService, planExecutionRecorder, lynxeProperties, name, description, nextStepPrompt, availableToolKeys,
+        super(llmService, planExecutionRecorder, agentjProperties, name, description, nextStepPrompt, availableToolKeys,
                 toolCallingManager, initialAgentSetting, userInputService, modelName, streamingResponseHandler, step,
-                planIdDispatcher, lynxeEventPublisher, agentInterruptionHelper, objectMapper,
+                planIdDispatcher, agentjEventPublisher, agentInterruptionHelper, objectMapper,
                 parallelToolExecutionService, memoryService, conversationMemoryLimitService, serviceGroupIndexService);
         this.serviceGroupIndexService = serviceGroupIndexService;
     }

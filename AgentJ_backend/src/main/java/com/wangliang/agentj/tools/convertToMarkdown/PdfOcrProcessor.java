@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.tools.convertToMarkdown;
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.runtime.executor.ImageRecognitionExecutorPool;
 import com.wangliang.agentj.tools.code.ToolExecuteResult;
@@ -57,7 +57,7 @@ public class PdfOcrProcessor {
 
 	private final LlmService llmService;
 
-	private final LynxeProperties lynxeProperties;
+	private final AgentJProperties agentjProperties;
 
 	private final ImageRecognitionExecutorPool imageRecognitionExecutorPool;
 
@@ -69,10 +69,10 @@ public class PdfOcrProcessor {
 	private String imageFormatName = "JPEG";
 
 	public PdfOcrProcessor(UnifiedDirectoryManager directoryManager, LlmService llmService,
-			LynxeProperties lynxeProperties, ImageRecognitionExecutorPool imageRecognitionExecutorPool) {
+			AgentJProperties agentjProperties, ImageRecognitionExecutorPool imageRecognitionExecutorPool) {
 		this.directoryManager = directoryManager;
 		this.llmService = llmService;
-		this.lynxeProperties = lynxeProperties;
+		this.agentjProperties = agentjProperties;
 		this.imageRecognitionExecutorPool = imageRecognitionExecutorPool;
 		log.info("PdfOcrProcessor initialized with all dependencies");
 	}
@@ -266,7 +266,7 @@ public class PdfOcrProcessor {
 
 							PDFRenderer pdfRenderer = new PDFRenderer(docRef);
 
-							// Use optimized DPI and image type from LynxeProperties
+							// Use optimized DPI and image type from AgentJProperties
 							float dpi = getOptimizedDpi();
 							ImageType imageType = getConfiguredImageType();
 
@@ -463,7 +463,7 @@ public class PdfOcrProcessor {
 
 			// Get the ChatClient from LlmService
 			ChatClient chatClient = llmService.getDefaultDynamicAgentChatClient();
-			// Use configured model name from LynxeProperties
+			// Use configured model name from AgentJProperties
 			String modelName = getConfiguredModelName();
 			ChatOptions chatOptions = ChatOptions.builder().model(modelName).build();
 
@@ -643,12 +643,12 @@ public class PdfOcrProcessor {
 	}
 
 	/**
-	 * Get configured DPI from LynxeProperties
+	 * Get configured DPI from AgentJProperties
 	 * @return configured DPI or default value
 	 */
 	private float getConfiguredDpi() {
-		if (lynxeProperties != null) {
-			Float configuredDpi = lynxeProperties.getImageRecognitionDpi();
+		if (agentjProperties != null) {
+			Float configuredDpi = agentjProperties.getImageRecognitionDpi();
 			if (configuredDpi != null && configuredDpi > 0) {
 				return configuredDpi;
 			}
@@ -797,12 +797,12 @@ public class PdfOcrProcessor {
 	}
 
 	/**
-	 * Get configured ImageType from LynxeProperties
+	 * Get configured ImageType from AgentJProperties
 	 * @return configured ImageType or default RGB
 	 */
 	private ImageType getConfiguredImageType() {
-		if (lynxeProperties != null) {
-			String configuredImageType = lynxeProperties.getImageRecognitionImageType();
+		if (agentjProperties != null) {
+			String configuredImageType = agentjProperties.getImageRecognitionImageType();
 			if (configuredImageType != null) {
 				try {
 					return ImageType.valueOf(configuredImageType.toUpperCase());
@@ -816,12 +816,12 @@ public class PdfOcrProcessor {
 	}
 
 	/**
-	 * Get configured model name from LynxeProperties
+	 * Get configured model name from AgentJProperties
 	 * @return configured model name or default value
 	 */
 	private String getConfiguredModelName() {
-		if (lynxeProperties != null) {
-			String configuredModelName = lynxeProperties.getImageRecognitionModelName();
+		if (agentjProperties != null) {
+			String configuredModelName = agentjProperties.getImageRecognitionModelName();
 			if (configuredModelName != null && !configuredModelName.trim().isEmpty()) {
 				return configuredModelName;
 			}
@@ -830,12 +830,12 @@ public class PdfOcrProcessor {
 	}
 
 	/**
-	 * Get configured max retry attempts from LynxeProperties
+	 * Get configured max retry attempts from AgentJProperties
 	 * @return configured max retry attempts or default value
 	 */
 	private int getConfiguredMaxRetryAttempts() {
-		if (lynxeProperties != null) {
-			Integer configuredMaxRetryAttempts = lynxeProperties.getImageRecognitionMaxRetryAttempts();
+		if (agentjProperties != null) {
+			Integer configuredMaxRetryAttempts = agentjProperties.getImageRecognitionMaxRetryAttempts();
 			if (configuredMaxRetryAttempts != null && configuredMaxRetryAttempts > 0) {
 				return configuredMaxRetryAttempts;
 			}

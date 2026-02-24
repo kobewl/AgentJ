@@ -26,7 +26,7 @@ import java.util.Map;
  * Configuration properties for level-based executor pools
  */
 @Component
-@ConfigurationProperties(prefix = "lynxe.executor.level-based")
+@ConfigurationProperties(prefix = "agentj.executor.level-based")
 public class LevelBasedExecutorConfig {
 
 	/**

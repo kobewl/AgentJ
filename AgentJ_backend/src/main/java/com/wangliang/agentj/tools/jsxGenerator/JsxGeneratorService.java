@@ -16,7 +16,7 @@
 package com.wangliang.agentj.tools.jsxGenerator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -45,7 +45,7 @@ public class JsxGeneratorService implements ApplicationRunner, IJsxGeneratorServ
 	private static final Logger log = LoggerFactory.getLogger(JsxGeneratorService.class);
 
 	@Autowired
-	private LynxeProperties lynxeProperties;
+	private AgentJProperties agentjProperties;
 
 	@Autowired
 	private UnifiedDirectoryManager unifiedDirectoryManager;
@@ -555,8 +555,8 @@ public class JsxGeneratorService implements ApplicationRunner, IJsxGeneratorServ
 	}
 
 	@Override
-	public LynxeProperties getLynxeProperties() {
-		return lynxeProperties;
+	public AgentJProperties getAgentJProperties() {
+		return agentjProperties;
 	}
 
 	@PreDestroy

@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.ServiceWorkerPolicy;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
 import com.wangliang.agentj.tools.innerStorage.SmartContentSavingService;
 import jakarta.annotation.PreDestroy;
@@ -49,7 +49,7 @@ public class ChromeDriverService implements IChromeDriverService {
 
 	private final Lock driverLock = new ReentrantLock();
 
-	private LynxeProperties lynxeProperties;
+	private AgentJProperties agentjProperties;
 
 	private SmartContentSavingService innerStorageService;
 
@@ -73,9 +73,9 @@ public class ChromeDriverService implements IChromeDriverService {
 		return sharedDir;
 	}
 
-	public ChromeDriverService(LynxeProperties lynxeProperties, SmartContentSavingService innerStorageService,
+	public ChromeDriverService(AgentJProperties agentjProperties, SmartContentSavingService innerStorageService,
 			UnifiedDirectoryManager unifiedDirectoryManager) {
-		this.lynxeProperties = lynxeProperties;
+		this.agentjProperties = agentjProperties;
 		this.innerStorageService = innerStorageService;
 		this.unifiedDirectoryManager = unifiedDirectoryManager;
 		// Use UnifiedDirectoryManager to get the shared directory for playwright
@@ -527,7 +527,7 @@ public class ChromeDriverService implements IChromeDriverService {
 				}
 
 				// Set headless mode based on configuration
-				headlessMode = lynxeProperties.getBrowserHeadless();
+				headlessMode = agentjProperties.getBrowserHeadless();
 				if (headlessMode) {
 					log.info("Enable Playwright headless mode");
 					launchOptions.setHeadless(true);
@@ -755,7 +755,7 @@ public class ChromeDriverService implements IChromeDriverService {
 
 			// Configure page timeouts with error handling
 			try {
-				Integer timeout = lynxeProperties.getBrowserRequestTimeout();
+				Integer timeout = agentjProperties.getBrowserRequestTimeout();
 				if (timeout != null && timeout > 0) {
 					log.info("Setting browser page timeout to {} seconds", timeout);
 					page.setDefaultTimeout(timeout * 1000); // Convert to milliseconds
@@ -883,12 +883,12 @@ public class ChromeDriverService implements IChromeDriverService {
 		cleanupAllPlaywrightProcesses();
 	}
 
-	public void setLynxeProperties(LynxeProperties lynxeProperties) {
-		this.lynxeProperties = lynxeProperties;
+	public void setAgentJProperties(AgentJProperties agentjProperties) {
+		this.agentjProperties = agentjProperties;
 	}
 
-	public LynxeProperties getLynxeProperties() {
-		return lynxeProperties;
+	public AgentJProperties getAgentJProperties() {
+		return agentjProperties;
 	}
 
 	public SmartContentSavingService getInnerStorageService() {

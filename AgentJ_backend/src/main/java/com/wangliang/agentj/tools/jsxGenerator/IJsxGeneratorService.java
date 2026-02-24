@@ -16,7 +16,7 @@
 package com.wangliang.agentj.tools.jsxGenerator;
 
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 
 import java.io.IOException;
 import java.util.Map;
@@ -159,10 +159,10 @@ public interface IJsxGeneratorService {
 	String getLastOperationResult(String planId);
 
 	/**
-	 * Get Lynxe properties
-	 * @return Lynxe properties
+	 * Get AgentJ properties
+	 * @return AgentJ properties
 	 */
-	LynxeProperties getLynxeProperties();
+	AgentJProperties getAgentJProperties();
 
 	/**
 	 * Clean up resources

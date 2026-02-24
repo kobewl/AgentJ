@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.runtime.executor;
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +31,7 @@ public class ImageRecognitionExecutorPool {
 
 	private static final Logger log = LoggerFactory.getLogger(ImageRecognitionExecutorPool.class);
 
-	private final LynxeProperties lynxeProperties;
+	private final AgentJProperties agentjProperties;
 
 	private volatile ExecutorService executorService;
 
@@ -44,8 +44,8 @@ public class ImageRecognitionExecutorPool {
 	 */
 	private static final long CONFIG_CHECK_INTERVAL_MILLIS = 10_000;
 
-	public ImageRecognitionExecutorPool(LynxeProperties lynxeProperties) {
-		this.lynxeProperties = lynxeProperties;
+	public ImageRecognitionExecutorPool(AgentJProperties agentjProperties) {
+		this.agentjProperties = agentjProperties;
 
 		// Initialize thread pool with current configuration
 		this.currentPoolSize = getConfiguredPoolSize();
@@ -92,12 +92,12 @@ public class ImageRecognitionExecutorPool {
 	}
 
 	/**
-	 * Get the configured pool size from LynxeProperties
+	 * Get the configured pool size from AgentJProperties
 	 * @return configured pool size or default value if not configured
 	 */
 	private int getConfiguredPoolSize() {
-		if (lynxeProperties != null) {
-			Integer configuredPoolSize = lynxeProperties.getImageRecognitionPoolSize();
+		if (agentjProperties != null) {
+			Integer configuredPoolSize = agentjProperties.getImageRecognitionPoolSize();
 			if (configuredPoolSize != null && configuredPoolSize > 0) {
 				log.debug("Using configured image recognition pool size: {}", configuredPoolSize);
 				return configuredPoolSize;

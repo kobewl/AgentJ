@@ -44,15 +44,15 @@ public class DnsCacheConfig {
 
 	@Lazy
 	@Autowired(required = false)
-	private LynxeProperties lynxeProperties;
+	private AgentJProperties agentjProperties;
 
 	/**
-	 * Get configured LLM read timeout from LynxeProperties, defaulting to 120 seconds if
+	 * Get configured LLM read timeout from AgentJProperties, defaulting to 120 seconds if
 	 * not configured
 	 */
 	private int getLlmReadTimeoutSeconds() {
-		if (lynxeProperties != null && lynxeProperties.getLlmReadTimeout() != null) {
-			return lynxeProperties.getLlmReadTimeout();
+		if (agentjProperties != null && agentjProperties.getLlmReadTimeout() != null) {
+			return agentjProperties.getLlmReadTimeout();
 		}
 		return 120; // Default 120 seconds (2 minutes)
 	}

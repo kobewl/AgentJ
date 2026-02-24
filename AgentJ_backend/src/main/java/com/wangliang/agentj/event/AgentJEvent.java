@@ -18,10 +18,8 @@ package com.wangliang.agentj.event;
 /**
  * @author wangliang
  * @time 2025/7/15
- * @desc lynxe event listener
+ * @desc agentj event interface
  */
-public interface LynxeListener<T extends LynxeEvent> {
-
-	void onEvent(T event);
+public interface AgentJEvent {
 
 }

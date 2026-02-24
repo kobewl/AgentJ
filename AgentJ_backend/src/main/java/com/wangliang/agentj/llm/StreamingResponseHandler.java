@@ -1,6 +1,6 @@
 package com.wangliang.agentj.llm;
 
-import com.wangliang.agentj.event.LynxeEventPublisher;
+import com.wangliang.agentj.event.AgentJEventPublisher;
 import com.wangliang.agentj.event.PlanExceptionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class StreamingResponseHandler {
 	private static final Logger streamingProgressLogger = LoggerFactory.getLogger("STREAMING_PROGRESS_LOGGER");
 
 	@Autowired
-	private LynxeEventPublisher lynxeEventPublisher;
+	private AgentJEventPublisher agentjEventPublisher;
 
 	@Autowired
 	private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
@@ -337,7 +337,7 @@ public class StreamingResponseHandler {
 				else {
 					log.error("Aggregation Error: {}", e.getMessage(), e);
 				}
-				lynxeEventPublisher.publish(new PlanExceptionEvent(planId, e));
+				agentjEventPublisher.publish(new PlanExceptionEvent(planId, e));
 			}).doOnCancel(() -> {
 				if (shouldEarlyTerminate.get()) {
 					log.info("Stream cancelled due to early termination (thinking-only response detected)");

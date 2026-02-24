@@ -15,7 +15,7 @@
  */
 package com.wangliang.agentj.tools.textOperator;
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
 import com.wangliang.agentj.tools.innerStorage.SmartContentSavingService;
 import jakarta.annotation.PreDestroy;
@@ -44,7 +44,7 @@ public class TextFileService implements ApplicationRunner, ITextFileService {
 	 * File state class for storing current file path and last operation result
 	 */
 	@Autowired
-	private LynxeProperties lynxeProperties;
+	private AgentJProperties agentjProperties;
 
 	@Autowired
 	private SmartContentSavingService innerStorageService;
@@ -134,8 +134,8 @@ public class TextFileService implements ApplicationRunner, ITextFileService {
 		return getFileState(planId).getCurrentFilePath();
 	}
 
-	public LynxeProperties getLynxeProperties() {
-		return lynxeProperties;
+	public AgentJProperties getAgentJProperties() {
+		return agentjProperties;
 	}
 
 	public String getLastOperationResult(String planId) {

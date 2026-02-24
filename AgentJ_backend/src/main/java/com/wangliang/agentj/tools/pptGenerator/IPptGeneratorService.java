@@ -16,7 +16,7 @@
 package com.wangliang.agentj.tools.pptGenerator;
 
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.tools.textOperator.FileState;
 
 import java.io.IOException;
@@ -85,10 +85,10 @@ public interface IPptGeneratorService {
 	void cleanupForPlan(String planId);
 
 	/**
-	 * Get the Lynxe configuration properties
-	 * @return Lynxe configuration properties
+	 * Get the AgentJ configuration properties
+	 * @return AgentJ configuration properties
 	 */
-	LynxeProperties getLynxeProperties();
+	AgentJProperties getAgentJProperties();
 
 	/**
 	 * Get template list

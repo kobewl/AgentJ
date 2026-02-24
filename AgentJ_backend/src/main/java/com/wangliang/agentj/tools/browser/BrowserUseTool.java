@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.PlaywrightException;
 import com.microsoft.playwright.TimeoutError;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.tools.AbstractBaseTool;
 import com.wangliang.agentj.tools.browser.actions.*;
 import com.wangliang.agentj.tools.code.ToolExecuteResult;
@@ -80,7 +80,7 @@ public class BrowserUseTool extends AbstractBaseTool<BrowserRequestVO> {
 	 * @return Timeout in seconds, returns default value of 30 seconds if not configured
 	 */
 	private Integer getBrowserTimeout() {
-		Integer timeout = getLynxeProperties().getBrowserRequestTimeout();
+		Integer timeout = getAgentJProperties().getBrowserRequestTimeout();
 		return timeout != null ? timeout : 30; // Default timeout is 30 seconds
 	}
 
@@ -489,7 +489,7 @@ public class BrowserUseTool extends AbstractBaseTool<BrowserRequestVO> {
 					.setTimeout(getBrowserTimeout() * 1000); // Convert to milliseconds
 
 				// Use compressUrl based on configuration
-				Boolean enableShortUrl = getLynxeProperties().getEnableShortUrl();
+				Boolean enableShortUrl = getAgentJProperties().getEnableShortUrl();
 				boolean compressUrl = enableShortUrl != null ? enableShortUrl : true; // Default
 																						// to
 																						// true
@@ -625,8 +625,8 @@ public class BrowserUseTool extends AbstractBaseTool<BrowserRequestVO> {
 		}
 	}
 
-	public LynxeProperties getLynxeProperties() {
-		return (LynxeProperties) this.chromeDriverService.getLynxeProperties();
+	public AgentJProperties getAgentJProperties() {
+		return (AgentJProperties) this.chromeDriverService.getAgentJProperties();
 	}
 
 	@Override

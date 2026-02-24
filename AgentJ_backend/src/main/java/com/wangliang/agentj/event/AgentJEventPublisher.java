@@ -25,20 +25,20 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class LynxeEventPublisher {
+public class AgentJEventPublisher {
 
-	private static final Logger logger = LoggerFactory.getLogger(LynxeEventPublisher.class);
+	private static final Logger logger = LoggerFactory.getLogger(AgentJEventPublisher.class);
 
 	// Listeners cannot be dynamically registered, no need for thread safety
-	private Map<Class<? extends LynxeEvent>, List<LynxeListener<? super LynxeEvent>>> listeners = new HashMap<>();
+	private Map<Class<? extends AgentJEvent>, List<AgentJListener<? super AgentJEvent>>> listeners = new HashMap<>();
 
-	public void publish(LynxeEvent event) {
-		Class<? extends LynxeEvent> eventClass = event.getClass();
-		for (Map.Entry<Class<? extends LynxeEvent>, List<LynxeListener<? super LynxeEvent>>> entry : listeners
+	public void publish(AgentJEvent event) {
+		Class<? extends AgentJEvent> eventClass = event.getClass();
+		for (Map.Entry<Class<? extends AgentJEvent>, List<AgentJListener<? super AgentJEvent>>> entry : listeners
 			.entrySet()) {
 			// Parent classes can also be notified here
 			if (entry.getKey().isAssignableFrom(eventClass)) {
-				for (LynxeListener<? super LynxeEvent> listener : entry.getValue()) {
+				for (AgentJListener<? super AgentJEvent> listener : entry.getValue()) {
 					try {
 						listener.onEvent(event);
 					}
@@ -50,15 +50,15 @@ public class LynxeEventPublisher {
 		}
 	}
 
-	void registerListener(Class<? extends LynxeEvent> eventClass, LynxeListener<? super LynxeEvent> listener) {
-		List<LynxeListener<? super LynxeEvent>> lynxeListeners = listeners.get(eventClass);
-		if (lynxeListeners == null) {
-			List<LynxeListener<? super LynxeEvent>> list = new ArrayList<>();
+	void registerListener(Class<? extends AgentJEvent> eventClass, AgentJListener<? super AgentJEvent> listener) {
+		List<AgentJListener<? super AgentJEvent>> agentjListeners = listeners.get(eventClass);
+		if (agentjListeners == null) {
+			List<AgentJListener<? super AgentJEvent>> list = new ArrayList<>();
 			list.add(listener);
 			listeners.put(eventClass, list);
 		}
 		else {
-			lynxeListeners.add(listener);
+			agentjListeners.add(listener);
 		}
 	}
 

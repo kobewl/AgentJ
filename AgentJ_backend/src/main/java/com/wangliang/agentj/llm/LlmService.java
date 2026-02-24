@@ -1,6 +1,6 @@
 package com.wangliang.agentj.llm;
 
-import com.wangliang.agentj.event.LynxeListener;
+import com.wangliang.agentj.event.AgentJListener;
 import com.wangliang.agentj.event.ModelChangeEvent;
 import com.wangliang.agentj.model.entity.DynamicModelEntity;
 import com.wangliang.agentj.model.repository.DynamicModelRepository;
@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class LlmService implements LynxeListener<ModelChangeEvent> {
+public class LlmService implements AgentJListener<ModelChangeEvent> {
 
 	private static final Logger log = LoggerFactory.getLogger(LlmService.class);
 
@@ -384,7 +384,7 @@ public class LlmService implements LynxeListener<ModelChangeEvent> {
 		if (headers == null) {
 			headers = new HashMap<>();
 		}
-		headers.put("User-Agent", "Lynxe/4.8.0");
+		headers.put("User-Agent", "AgentJ/4.8.0");
 		defaultOptions.setHttpHeaders(headers);
 		var openAiApi = openAiApi(restClientBuilderProvider.getIfAvailable(RestClient::builder),
 				webClientBuilderProvider.getIfAvailable(WebClient::builder), dynamicModelEntity);

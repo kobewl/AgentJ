@@ -3,7 +3,7 @@ package com.wangliang.agentj.runtime.executor;
 import com.wangliang.agentj.agent.AgentState;
 import com.wangliang.agentj.agent.BaseAgent;
 import com.wangliang.agentj.agent.entity.DynamicAgentEntity;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.recorder.service.PlanExecutionRecorder;
 import com.wangliang.agentj.runtime.entity.vo.*;
@@ -41,7 +41,7 @@ public abstract class AbstractPlanExecutor implements PlanExecutorInterface {
 
 	protected LlmService llmService;
 
-	protected final LynxeProperties lynxeProperties;
+	protected final AgentJProperties agentjProperties;
 
 	protected final FileUploadService fileUploadService;
 
@@ -57,12 +57,12 @@ public abstract class AbstractPlanExecutor implements PlanExecutorInterface {
 	public static final String EXECUTION_ENV_STRING_KEY = "current_step_env_data";
 
 	public AbstractPlanExecutor(List<DynamicAgentEntity> agents, PlanExecutionRecorder recorder, LlmService llmService,
-                                LynxeProperties lynxeProperties, LevelBasedExecutorPool levelBasedExecutorPool,
+                                AgentJProperties agentjProperties, LevelBasedExecutorPool levelBasedExecutorPool,
                                 FileUploadService fileUploadService, AgentInterruptionHelper agentInterruptionHelper) {
 		this.agents = agents;
 		this.recorder = recorder;
 		this.llmService = llmService;
-		this.lynxeProperties = lynxeProperties;
+		this.agentjProperties = agentjProperties;
 		this.levelBasedExecutorPool = levelBasedExecutorPool;
 		this.fileUploadService = fileUploadService;
 		this.agentInterruptionHelper = agentInterruptionHelper;

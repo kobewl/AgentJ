@@ -16,7 +16,7 @@
 package com.wangliang.agentj.tools.database;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.tools.AbstractBaseTool;
 import com.wangliang.agentj.tools.code.ToolExecuteResult;
 import com.wangliang.agentj.tools.excelProcessor.IExcelProcessingService;
@@ -51,7 +51,7 @@ public class DatabaseTableToExcelTool extends AbstractBaseTool<DatabaseTableToEx
 
 	private final ToolI18nService toolI18nService;
 
-	public DatabaseTableToExcelTool(LynxeProperties lynxeProperties, DataSourceService dataSourceService,
+	public DatabaseTableToExcelTool(AgentJProperties agentjProperties, DataSourceService dataSourceService,
                                     IExcelProcessingService excelProcessingService, UnifiedDirectoryManager directoryManager,
                                     ToolI18nService toolI18nService) {
 		this.dataSourceService = dataSourceService;
@@ -410,10 +410,10 @@ public class DatabaseTableToExcelTool extends AbstractBaseTool<DatabaseTableToEx
 		}
 	}
 
-	public static DatabaseTableToExcelTool getInstance(LynxeProperties lynxeProperties,
+	public static DatabaseTableToExcelTool getInstance(AgentJProperties agentjProperties,
 			DataSourceService dataSourceService, IExcelProcessingService excelProcessingService,
 			UnifiedDirectoryManager directoryManager, ToolI18nService toolI18nService) {
-		return new DatabaseTableToExcelTool(lynxeProperties, dataSourceService, excelProcessingService,
+		return new DatabaseTableToExcelTool(agentjProperties, dataSourceService, excelProcessingService,
 				directoryManager, toolI18nService);
 	}
 

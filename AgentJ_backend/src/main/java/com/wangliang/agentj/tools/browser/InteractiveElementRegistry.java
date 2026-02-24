@@ -82,15 +82,15 @@ public class InteractiveElementRegistry {
 					continue
 				}
 				const index = ID.count++
-				let lLynxeId
+				let lAgentJId
 				if (element.setAttribute) {
-					lLynxeId = CURRENT_TIMESTAMP + "-" + index;
-					element.setAttribute("lynxe-id", lLynxeId)
+					lAgentJId = CURRENT_TIMESTAMP + "-" + index;
+					element.setAttribute("agentj-id", lAgentJId)
 				}
 				const text = (element.textContent || '').trim()
 				const outerHtml = element.outerHTML
 				const xpath = getXPathTree(element)
-				RES.push({tagName, text, outerHtml, index, xpath, lLynxeId})
+				RES.push({tagName, text, outerHtml, index, xpath, lAgentJId})
 				}
 				return RES
 			}

@@ -55,13 +55,10 @@ agent:
 namespace:
   value: default
 
-# 禁用自动打开浏览器
-lynxe:
+# 禁用自动打开浏览器 + 工作流引擎配置 + 代码生成配置
+agentj:
   general:
     openBrowser: false
-
-# 工作流引擎配置
-agentj:
   workflow:
     # 检查点器类型: memory（默认）, redis, postgresql
     checkpoint:
@@ -74,7 +71,6 @@ agentj:
     cache:
       maxSize: 100              # 最大缓存数量
       expireAfterWriteMinutes: 30  # 写入后过期时间（分钟）
-  # 代码生成配置
   codegen:
     # 代码输出目录
     output-dir: ./tmp/code_output

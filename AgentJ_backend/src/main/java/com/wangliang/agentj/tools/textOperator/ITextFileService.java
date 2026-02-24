@@ -16,7 +16,7 @@
 package com.wangliang.agentj.tools.textOperator;
 
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.tools.innerStorage.SmartContentSavingService;
 
 import java.io.IOException;
@@ -84,10 +84,10 @@ public interface ITextFileService {
 	String getCurrentFilePath(String planId);
 
 	/**
-	 * Get Lynxe properties
-	 * @return Lynxe properties
+	 * Get AgentJ properties
+	 * @return AgentJ properties
 	 */
-	LynxeProperties getLynxeProperties();
+	AgentJProperties getAgentJProperties();
 
 	/**
 	 * Get last operation result

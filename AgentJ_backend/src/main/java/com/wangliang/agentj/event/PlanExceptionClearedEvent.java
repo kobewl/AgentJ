@@ -18,9 +18,9 @@ package com.wangliang.agentj.event;
 /**
  * @author wangliang
  * @time 2025/9/27
- * @desc lynxe plan execution exception cleared event
+ * @desc agentj plan execution exception cleared event
  */
-public class PlanExceptionClearedEvent implements LynxeEvent {
+public class PlanExceptionClearedEvent implements AgentJEvent {
 
 	private String planId;
 

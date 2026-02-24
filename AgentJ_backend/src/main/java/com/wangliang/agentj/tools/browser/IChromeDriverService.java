@@ -16,7 +16,7 @@
 package com.wangliang.agentj.tools.browser;
 
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
 import com.wangliang.agentj.tools.innerStorage.SmartContentSavingService;
 
@@ -50,16 +50,16 @@ public interface IChromeDriverService {
 	void cleanup();
 
 	/**
-	 * Set Lynxe properties
-	 * @param lynxeProperties Lynxe properties
+	 * Set AgentJ properties
+	 * @param agentjProperties AgentJ properties
 	 */
-	void setLynxeProperties(LynxeProperties lynxeProperties);
+	void setAgentJProperties(AgentJProperties agentjProperties);
 
 	/**
-	 * Get Lynxe properties
-	 * @return Lynxe properties
+	 * Get AgentJ properties
+	 * @return AgentJ properties
 	 */
-	LynxeProperties getLynxeProperties();
+	AgentJProperties getAgentJProperties();
 
 	/**
 	 * Get internal storage service

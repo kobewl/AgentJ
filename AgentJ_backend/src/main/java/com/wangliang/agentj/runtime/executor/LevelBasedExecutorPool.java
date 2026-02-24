@@ -16,7 +16,7 @@
 
 package com.wangliang.agentj.runtime.executor;
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public class LevelBasedExecutorPool {
 	private ScheduledExecutorService poolSizeMonitor;
 
 	@Autowired(required = false)
-	private LynxeProperties lynxeProperties;
+	private AgentJProperties agentjProperties;
 
 	/**
 	 * Get or create an executor for the specified depth level
@@ -300,20 +300,20 @@ public class LevelBasedExecutorPool {
 	}
 
 	/**
-	 * Get the configured pool size from LynxeProperties, defaulting to 5 if not
+	 * Get the configured pool size from AgentJProperties, defaulting to 5 if not
 	 * configured
 	 */
 	private int getConfiguredPoolSize() {
 		try {
-			if (lynxeProperties != null) {
-				Integer poolSize = lynxeProperties.getExecutorPoolSize();
+			if (agentjProperties != null) {
+				Integer poolSize = agentjProperties.getExecutorPoolSize();
 				if (poolSize != null && poolSize > 0) {
 					return poolSize;
 				}
 			}
 		}
 		catch (Exception e) {
-			log.warn("Error getting executor pool size from LynxeProperties: {}. Using default value: 5",
+			log.warn("Error getting executor pool size from AgentJProperties: {}. Using default value: 5",
 					e.getMessage());
 		}
 		return 5; // Default value

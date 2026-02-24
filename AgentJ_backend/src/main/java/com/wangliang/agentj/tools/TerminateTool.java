@@ -17,7 +17,7 @@ package com.wangliang.agentj.tools;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.tools.code.ToolExecuteResult;
 import com.wangliang.agentj.tools.i18n.ToolI18nService;
 import com.wangliang.agentj.tools.shortUrl.ShortUrlService;
@@ -43,7 +43,7 @@ public class TerminateTool extends AbstractBaseTool<Map<String, Object>> impleme
 
 	private final ShortUrlService shortUrlService;
 
-	private final LynxeProperties lynxeProperties;
+	private final AgentJProperties agentjProperties;
 
 	private final ToolI18nService toolI18nService;
 
@@ -155,7 +155,7 @@ public class TerminateTool extends AbstractBaseTool<Map<String, Object>> impleme
 		this.objectMapper = new ObjectMapper();
 		this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 		this.shortUrlService = null;
-		this.lynxeProperties = null;
+		this.agentjProperties = null;
 		this.toolI18nService = null;
 	}
 
@@ -170,7 +170,7 @@ public class TerminateTool extends AbstractBaseTool<Map<String, Object>> impleme
 			this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 		}
 		this.shortUrlService = null;
-		this.lynxeProperties = null;
+		this.agentjProperties = null;
 		this.toolI18nService = null;
 	}
 
@@ -186,12 +186,12 @@ public class TerminateTool extends AbstractBaseTool<Map<String, Object>> impleme
 			this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 		}
 		this.shortUrlService = shortUrlService;
-		this.lynxeProperties = null;
+		this.agentjProperties = null;
 		this.toolI18nService = null;
 	}
 
 	public TerminateTool(String planId, String expectedReturnInfo, ObjectMapper objectMapper,
-                         ShortUrlService shortUrlService, LynxeProperties lynxeProperties, ToolI18nService toolI18nService) {
+                         ShortUrlService shortUrlService, AgentJProperties agentjProperties, ToolI18nService toolI18nService) {
 		this.currentPlanId = planId;
 		this.expectedReturnInfo = expectedReturnInfo;
 		if (objectMapper != null) {
@@ -202,7 +202,7 @@ public class TerminateTool extends AbstractBaseTool<Map<String, Object>> impleme
 			this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 		}
 		this.shortUrlService = shortUrlService;
-		this.lynxeProperties = lynxeProperties;
+		this.agentjProperties = agentjProperties;
 		this.toolI18nService = toolI18nService;
 	}
 
@@ -230,8 +230,8 @@ public class TerminateTool extends AbstractBaseTool<Map<String, Object>> impleme
 		}
 
 		// Check if short URL feature is enabled
-		if (lynxeProperties != null) {
-			Boolean enableShortUrl = lynxeProperties.getEnableShortUrl();
+		if (agentjProperties != null) {
+			Boolean enableShortUrl = agentjProperties.getEnableShortUrl();
 			if (enableShortUrl == null || !enableShortUrl) {
 				return text; // Skip replacement if disabled
 			}
@@ -271,8 +271,8 @@ public class TerminateTool extends AbstractBaseTool<Map<String, Object>> impleme
 		}
 
 		// Check if short URL feature is enabled
-		if (lynxeProperties != null) {
-			Boolean enableShortUrl = lynxeProperties.getEnableShortUrl();
+		if (agentjProperties != null) {
+			Boolean enableShortUrl = agentjProperties.getEnableShortUrl();
 			if (enableShortUrl == null || !enableShortUrl) {
 				return input; // Skip replacement if disabled
 			}

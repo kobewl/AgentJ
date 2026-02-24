@@ -68,7 +68,7 @@ public class ToolCallingManagerConfiguration {
 	 */
 	@Bean
 	@ConditionalOnMissingBean
-	@ConditionalOnProperty(name = "lynxe.tool-calling.use-observable", havingValue = "false", matchIfMissing = true)
+	@ConditionalOnProperty(name = "agentj.tool-calling.use-observable", havingValue = "false", matchIfMissing = true)
 	public ToolCallingManager defaultToolCallingManager(ToolCallbackResolver toolCallbackResolver,
 			ToolExecutionExceptionProcessor toolExecutionExceptionProcessor,
 			ObjectProvider<ObservationRegistry> observationRegistry) {
@@ -84,12 +84,12 @@ public class ToolCallingManagerConfiguration {
 	 * Configure ObservableToolCallingManager Bean (enhanced version with monitoring
 	 * support)
 	 *
-	 * Set lynxe.tool-calling.use-observable=true to enable. This version includes ARMS
+	 * Set agentj.tool-calling.use-observable=true to enable. This version includes ARMS
 	 * monitoring and observation capabilities
 	 */
 	@Bean
 	@ConditionalOnMissingBean
-	@ConditionalOnProperty(name = "lynxe.tool-calling.use-observable", havingValue = "true")
+	@ConditionalOnProperty(name = "agentj.tool-calling.use-observable", havingValue = "true")
 	public ToolCallingManager observableToolCallingManager(ToolCallbackResolver toolCallbackResolver,
 			ToolExecutionExceptionProcessor toolExecutionExceptionProcessor,
 			ObjectProvider<ObservationRegistry> observationRegistry) {

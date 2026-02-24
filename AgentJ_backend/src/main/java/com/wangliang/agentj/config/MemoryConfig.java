@@ -29,13 +29,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 /**
  * @author wangliang
  * @time 2025/8/5
- * @desc memory config for lynxe
+ * @desc memory config for agentj
  */
 @Configuration
 public class MemoryConfig {
 
 	// import memory auto configuration
-	// lynxe only support memory for mysql and postgresql now
+	// agentj only support memory for mysql and postgresql now
 	@Value("${spring.ai.memory.mysql.enabled}")
 	private boolean mysqlEnabled;
 

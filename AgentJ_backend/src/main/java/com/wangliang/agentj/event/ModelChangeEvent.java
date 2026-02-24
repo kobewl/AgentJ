@@ -21,9 +21,9 @@ import com.wangliang.agentj.model.entity.DynamicModelEntity;
 /**
  * @author wangliang
  * @time 2025/7/15
- * @desc lynxe model change event class
+ * @desc agentj model change event class
  */
-public class ModelChangeEvent implements LynxeEvent {
+public class ModelChangeEvent implements AgentJEvent {
 
 	private DynamicModelEntity dynamicModelEntity;
 

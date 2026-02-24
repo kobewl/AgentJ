@@ -1,6 +1,6 @@
 package com.wangliang.agentj.runtime.service;
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.conversation.service.MemoryService;
 import com.wangliang.agentj.planning.PlanningFactory;
 import com.wangliang.agentj.planning.service.PlanFinalizer;
@@ -31,14 +31,14 @@ public class PlanningCoordinator {
 
 	private final MemoryService memoryService;
 
-	private final LynxeProperties lynxeProperties;
+	private final AgentJProperties agentjProperties;
 
 	public PlanningCoordinator(PlanningFactory planningFactory, PlanExecutorFactory planExecutorFactory,
-                               PlanFinalizer planFinalizer, MemoryService memoryService, LynxeProperties lynxeProperties) {
+                               PlanFinalizer planFinalizer, MemoryService memoryService, AgentJProperties agentjProperties) {
 		this.planExecutorFactory = planExecutorFactory;
 		this.planFinalizer = planFinalizer;
 		this.memoryService = memoryService;
-		this.lynxeProperties = lynxeProperties;
+		this.agentjProperties = agentjProperties;
 	}
 
 	/**
@@ -87,7 +87,7 @@ public class PlanningCoordinator {
 			// VUE_SIDEBAR requests)
 			// Both VUE_DIALOG and VUE_SIDEBAR should use the same conversation memory
 			// If conversation memory is disabled, always generate a new conversationId
-			if (lynxeProperties != null && !lynxeProperties.getEnableConversationMemory()) {
+			if (agentjProperties != null && !agentjProperties.getEnableConversationMemory()) {
 				if (requestSource == RequestSource.VUE_DIALOG || requestSource == RequestSource.VUE_SIDEBAR) {
 					String generatedConversationId = memoryService.generateConversationId();
 					context.setConversationId(generatedConversationId);

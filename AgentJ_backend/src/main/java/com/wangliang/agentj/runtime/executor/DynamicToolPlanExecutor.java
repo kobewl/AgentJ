@@ -5,9 +5,9 @@ import com.wangliang.agentj.agent.BaseAgent;
 import com.wangliang.agentj.agent.ConfigurableDynaAgent;
 import com.wangliang.agentj.agent.ToolCallbackProvider;
 import com.wangliang.agentj.agent.entity.DynamicAgentEntity;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.conversation.service.MemoryService;
-import com.wangliang.agentj.event.LynxeEventPublisher;
+import com.wangliang.agentj.event.AgentJEventPublisher;
 import com.wangliang.agentj.llm.ConversationMemoryLimitService;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.llm.StreamingResponseHandler;
@@ -35,7 +35,7 @@ public class DynamicToolPlanExecutor extends AbstractPlanExecutor {
 	 * @param recorder Plan execution recorder
 	 * @param agentService Agent service
 	 * @param llmService LLM service
-	 * @param lynxeProperties Lynxe properties
+	 * @param agentjProperties AgentJ properties
 	 * @param levelBasedExecutorPool Level-based executor pool for depth-based execution
 	 * @param dynamicModelRepository Dynamic model repository
 	 */
@@ -49,7 +49,7 @@ public class DynamicToolPlanExecutor extends AbstractPlanExecutor {
 
 	private final PlanIdDispatcher planIdDispatcher;
 
-	private final LynxeEventPublisher lynxeEventPublisher;
+	private final AgentJEventPublisher agentjEventPublisher;
 
 	private final ObjectMapper objectMapper;
 
@@ -62,23 +62,23 @@ public class DynamicToolPlanExecutor extends AbstractPlanExecutor {
 	private final ServiceGroupIndexService serviceGroupIndexService;
 
 	public DynamicToolPlanExecutor(List<DynamicAgentEntity> agents, PlanExecutionRecorder recorder,
-                                   LlmService llmService, LynxeProperties lynxeProperties, LevelBasedExecutorPool levelBasedExecutorPool,
+                                   LlmService llmService, AgentJProperties agentjProperties, LevelBasedExecutorPool levelBasedExecutorPool,
                                    DynamicModelRepository dynamicModelRepository, FileUploadService fileUploadService,
                                    AgentInterruptionHelper agentInterruptionHelper, PlanningFactory planningFactory,
                                    ToolCallingManager toolCallingManager, UserInputService userInputService,
                                    StreamingResponseHandler streamingResponseHandler, PlanIdDispatcher planIdDispatcher,
-                                   LynxeEventPublisher lynxeEventPublisher, ObjectMapper objectMapper,
+                                   AgentJEventPublisher agentjEventPublisher, ObjectMapper objectMapper,
                                    ParallelToolExecutionService parallelToolExecutionService, MemoryService memoryService,
                                    ConversationMemoryLimitService conversationMemoryLimitService,
                                    ServiceGroupIndexService serviceGroupIndexService) {
-		super(agents, recorder, llmService, lynxeProperties, levelBasedExecutorPool, fileUploadService,
+		super(agents, recorder, llmService, agentjProperties, levelBasedExecutorPool, fileUploadService,
 				agentInterruptionHelper);
 		this.planningFactory = planningFactory;
 		this.toolCallingManager = toolCallingManager;
 		this.userInputService = userInputService;
 		this.streamingResponseHandler = streamingResponseHandler;
 		this.planIdDispatcher = planIdDispatcher;
-		this.lynxeEventPublisher = lynxeEventPublisher;
+		this.agentjEventPublisher = agentjEventPublisher;
 		this.objectMapper = objectMapper;
 		this.parallelToolExecutionService = parallelToolExecutionService;
 		this.memoryService = memoryService;
@@ -138,9 +138,9 @@ public class DynamicToolPlanExecutor extends AbstractPlanExecutor {
 		String description = "A configurable dynamic agent";
 		String nextStepPrompt = "Based on the current environment information and prompt to make a next step decision";
 
-		ConfigurableDynaAgent agent = new ConfigurableDynaAgent(llmService, getRecorder(), lynxeProperties, name,
+		ConfigurableDynaAgent agent = new ConfigurableDynaAgent(llmService, getRecorder(), agentjProperties, name,
 				description, nextStepPrompt, selectedToolKeys, toolCallingManager, initialAgentSetting,
-				userInputService, modelName, streamingResponseHandler, step, planIdDispatcher, lynxeEventPublisher,
+				userInputService, modelName, streamingResponseHandler, step, planIdDispatcher, agentjEventPublisher,
 				agentInterruptionHelper, objectMapper, parallelToolExecutionService, memoryService,
 				conversationMemoryLimitService, serviceGroupIndexService);
 

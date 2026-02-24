@@ -5,9 +5,9 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * CORS configuration for Lynxe API endpoints
+ * CORS configuration for AgentJ API endpoints
  *
- * @author Lynxe Team
+ * @author AgentJ Team
  */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {

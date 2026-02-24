@@ -16,7 +16,7 @@
 package com.wangliang.agentj.tools.database;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.tools.AbstractBaseTool;
 import com.wangliang.agentj.tools.code.ToolExecuteResult;
 import com.wangliang.agentj.tools.database.action.GetDatasourceInfoAction;
@@ -40,7 +40,7 @@ public class DatabaseMetadataTool extends AbstractBaseTool<DatabaseRequest> {
 
 	private final ToolI18nService toolI18nService;
 
-	public DatabaseMetadataTool(LynxeProperties lynxeProperties, DataSourceService dataSourceService,
+	public DatabaseMetadataTool(AgentJProperties agentjProperties, DataSourceService dataSourceService,
                                 ObjectMapper objectMapper, ToolI18nService toolI18nService) {
 		this.dataSourceService = dataSourceService;
 		this.objectMapper = objectMapper;

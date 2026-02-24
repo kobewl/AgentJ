@@ -2,7 +2,7 @@ package com.wangliang.agentj.planning;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wangliang.agentj.agent.ToolCallbackProvider;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.conversation.service.MemoryService;
 import com.wangliang.agentj.cron.service.CronService;
 import com.wangliang.agentj.llm.LlmService;
@@ -85,7 +85,7 @@ public class PlanningFactory {
 
     private final PlanExecutionRecorder recorder;
 
-    private final LynxeProperties lynxeProperties;
+    private final AgentJProperties agentjProperties;
 
     private final TextFileService textFileService;
 
@@ -165,13 +165,13 @@ public class PlanningFactory {
     private ToolI18nService toolI18nService;
 
     public PlanningFactory(ChromeDriverService chromeDriverService, PlanExecutionRecorder recorder,
-                           LynxeProperties lynxeProperties, TextFileService textFileService, McpService mcpService,
+                           AgentJProperties agentjProperties, TextFileService textFileService, McpService mcpService,
                            SmartContentSavingService innerStorageService, UnifiedDirectoryManager unifiedDirectoryManager,
                            DataSourceService dataSourceService, TableProcessingService tableProcessingService,
                            IExcelProcessingService excelProcessingService) {
         this.chromeDriverService = chromeDriverService;
         this.recorder = recorder;
-        this.lynxeProperties = lynxeProperties;
+        this.agentjProperties = agentjProperties;
         this.textFileService = textFileService;
         this.mcpService = mcpService;
         this.innerStorageService = innerStorageService;
@@ -187,7 +187,7 @@ public class PlanningFactory {
      * @return configured PlanFinalizer instance
      */
     public PlanFinalizer createPlanFinalizer() {
-        return new PlanFinalizer(llmService, recorder, lynxeProperties, streamingResponseHandler,
+        return new PlanFinalizer(llmService, recorder, agentjProperties, streamingResponseHandler,
                 taskInterruptionManager, memoryService);
     }
 
@@ -233,14 +233,14 @@ public class PlanningFactory {
                     toolI18nService));
             toolDefinitions.add(DatabaseWriteTool.getInstance(dataSourceService, objectMapper, toolI18nService));
             toolDefinitions.add(DatabaseMetadataTool.getInstance(dataSourceService, objectMapper, toolI18nService));
-            toolDefinitions.add(DatabaseTableToExcelTool.getInstance(lynxeProperties, dataSourceService,
+            toolDefinitions.add(DatabaseTableToExcelTool.getInstance(agentjProperties, dataSourceService,
                     excelProcessingService, unifiedDirectoryManager, toolI18nService));
             toolDefinitions.add(UuidGenerateTool.getInstance(objectMapper, toolI18nService));
             toolDefinitions.add(new TerminateTool(planId, expectedReturnInfo, objectMapper, shortUrlService,
-                    lynxeProperties, toolI18nService));
+                    agentjProperties, toolI18nService));
             toolDefinitions.add(new DebugTool(toolI18nService));
             toolDefinitions.add(DatabaseMetadataTool.getInstance(dataSourceService, objectMapper, toolI18nService));
-            toolDefinitions.add(DatabaseTableToExcelTool.getInstance(lynxeProperties, dataSourceService,
+            toolDefinitions.add(DatabaseTableToExcelTool.getInstance(agentjProperties, dataSourceService,
                     excelProcessingService, unifiedDirectoryManager, toolI18nService));
             toolDefinitions.add(new FileImportOperator(textFileService, null, toolI18nService));
             toolDefinitions.add(new FileSplitterTool(textFileService, objectMapper, toolI18nService));
@@ -261,15 +261,15 @@ public class PlanningFactory {
                     unifiedDirectoryManager, parallelExecutionService, toolI18nService));
             toolDefinitions.add(new CronTool(cronService, objectMapper, toolI18nService));
             toolDefinitions.add(new MarkdownConverterTool(unifiedDirectoryManager,
-                    new PdfOcrProcessor(unifiedDirectoryManager, llmService, lynxeProperties,
-                            new ImageRecognitionExecutorPool(lynxeProperties)),
-                    new ImageOcrProcessor(unifiedDirectoryManager, llmService, lynxeProperties,
-                            new ImageRecognitionExecutorPool(lynxeProperties)),
+                    new PdfOcrProcessor(unifiedDirectoryManager, llmService, agentjProperties,
+                            new ImageRecognitionExecutorPool(agentjProperties)),
+                    new ImageOcrProcessor(unifiedDirectoryManager, llmService, agentjProperties,
+                            new ImageRecognitionExecutorPool(agentjProperties)),
                     excelProcessingService, objectMapper, toolI18nService));
             // toolDefinitions.add(new ExcelProcessorTool(excelProcessingService));
         } else {
             toolDefinitions.add(new TerminateTool(planId, expectedReturnInfo, objectMapper, shortUrlService,
-                    lynxeProperties, toolI18nService));
+                    agentjProperties, toolI18nService));
         }
 
         List<McpServiceEntity> functionCallbacks = mcpService.getFunctionCallbacks(planId);

@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.tools.filesystem.UnifiedDirectoryManager;
 import com.wangliang.agentj.tools.textOperator.FileState;
 import org.apache.commons.io.IOUtils;
@@ -50,7 +50,7 @@ public class PptGeneratorService implements IPptGeneratorService {
 	private static final Logger log = LoggerFactory.getLogger(PptGeneratorService.class);
 
 	@Autowired
-	private LynxeProperties lynxeProperties;
+	private AgentJProperties agentjProperties;
 
 	@Autowired
 	private UnifiedDirectoryManager unifiedDirectoryManager;
@@ -388,8 +388,8 @@ public class PptGeneratorService implements IPptGeneratorService {
 	}
 
 	@Override
-	public LynxeProperties getLynxeProperties() {
-		return lynxeProperties;
+	public AgentJProperties getAgentJProperties() {
+		return agentjProperties;
 	}
 
 	@Override

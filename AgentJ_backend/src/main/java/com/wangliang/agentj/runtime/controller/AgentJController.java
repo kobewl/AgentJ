@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.conversation.entity.vo.Memory;
 import com.wangliang.agentj.conversation.service.MemoryService;
-import com.wangliang.agentj.event.LynxeListener;
+import com.wangliang.agentj.event.AgentJListener;
 import com.wangliang.agentj.event.PlanExceptionClearedEvent;
 import com.wangliang.agentj.event.PlanExceptionEvent;
 import com.wangliang.agentj.exception.PlanException;
@@ -61,9 +61,9 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/executor")
-public class LynxeController implements LynxeListener<PlanExceptionEvent> {
+public class AgentJController implements AgentJListener<PlanExceptionEvent> {
 
-	private static final Logger logger = LoggerFactory.getLogger(LynxeController.class);
+	private static final Logger logger = LoggerFactory.getLogger(AgentJController.class);
 
 	private final ObjectMapper objectMapper;
 
@@ -108,7 +108,7 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 
 	@Autowired
 	@Lazy
-	private LynxeProperties lynxeProperties;
+	private AgentJProperties agentjProperties;
 
 	@Autowired
 	@Lazy
@@ -132,7 +132,7 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 	@Autowired
 	private com.wangliang.agentj.planning.service.TemplateSelector templateSelector;
 
-	public LynxeController(ObjectMapper objectMapper) {
+	public AgentJController(ObjectMapper objectMapper) {
 		this.objectMapper = objectMapper;
 		// Register JavaTimeModule to handle LocalDateTime serialization/deserialization
 		this.objectMapper.registerModule(new JavaTimeModule());
@@ -1341,7 +1341,7 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 	 */
 	private String validateOrGenerateConversationId(String conversationId, RequestSource requestSource) {
 		// If conversation memory is disabled, always generate a new conversationId
-		if (lynxeProperties != null && !lynxeProperties.getEnableConversationMemory()) {
+		if (agentjProperties != null && !agentjProperties.getEnableConversationMemory()) {
 			if (requestSource == RequestSource.VUE_DIALOG || requestSource == RequestSource.VUE_SIDEBAR) {
 				conversationId = memoryService.generateConversationId();
 				logger.info("Conversation memory disabled, generated new conversation ID for {} request: {}",
@@ -1581,11 +1581,11 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 
 				// Retrieve conversation history if conversationId exists and conversation
 				// memory is enabled
-				if (lynxeProperties != null && lynxeProperties.getEnableConversationMemory() && memoryService != null
+				if (agentjProperties != null && agentjProperties.getEnableConversationMemory() && memoryService != null
 						&& conversationId != null && !conversationId.trim().isEmpty()) {
 					try {
 						org.springframework.ai.chat.memory.ChatMemory conversationMemory = llmService
-							.getConversationMemoryWithLimit(lynxeProperties.getMaxMemory(), conversationId);
+							.getConversationMemoryWithLimit(agentjProperties.getMaxMemory(), conversationId);
 						List<Message> conversationHistory = conversationMemory.get(conversationId);
 						if (conversationHistory != null && !conversationHistory.isEmpty()) {
 							logger.debug("Adding {} conversation history messages for conversationId: {}",
@@ -1605,10 +1605,10 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 				messages.add(userMessage);
 
 				// Save user message to conversation memory
-				if (lynxeProperties != null && lynxeProperties.getEnableConversationMemory() && conversationId != null
+				if (agentjProperties != null && agentjProperties.getEnableConversationMemory() && conversationId != null
 						&& !conversationId.trim().isEmpty()) {
 					try {
-						llmService.addToConversationMemoryWithLimit(lynxeProperties.getMaxMemory(), conversationId,
+						llmService.addToConversationMemoryWithLimit(agentjProperties.getMaxMemory(), conversationId,
 								userMessage, resolvedUserId);
 						logger.debug("Saved user message to conversation memory for conversationId: {}",
 								conversationId);
@@ -1672,11 +1672,11 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 						}
 
 						// Save assistant response to conversation memory
-						if (lynxeProperties != null && lynxeProperties.getEnableConversationMemory()
+						if (agentjProperties != null && agentjProperties.getEnableConversationMemory()
 								&& finalConversationId != null && !finalConversationId.trim().isEmpty()) {
 							try {
 								AssistantMessage assistantMessage = new AssistantMessage(finalText);
-								llmService.addToConversationMemoryWithLimit(lynxeProperties.getMaxMemory(),
+								llmService.addToConversationMemoryWithLimit(agentjProperties.getMaxMemory(),
 										finalConversationId, assistantMessage, resolvedUserId);
 								logger.debug("Saved assistant response to conversation memory for conversationId: {}",
 										finalConversationId);

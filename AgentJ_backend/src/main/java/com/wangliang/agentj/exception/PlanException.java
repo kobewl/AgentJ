@@ -18,7 +18,7 @@ package com.wangliang.agentj.exception;
 /**
  * @author wangliang
  * @time 2025/7/30
- * @desc lynxe execution event exception runtime
+ * @desc agentj execution event exception runtime
  */
 public class PlanException extends RuntimeException {
 

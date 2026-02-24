@@ -1,6 +1,6 @@
 package com.wangliang.agentj.planning.service;
 
-import com.wangliang.agentj.config.LynxeProperties;
+import com.wangliang.agentj.config.AgentJProperties;
 import com.wangliang.agentj.conversation.service.MemoryService;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.llm.StreamingResponseHandler;
@@ -36,7 +36,7 @@ public class PlanFinalizer {
 
 	private final PlanExecutionRecorder recorder;
 
-	private final LynxeProperties lynxeProperties;
+	private final AgentJProperties agentjProperties;
 
 	private final StreamingResponseHandler streamingResponseHandler;
 
@@ -44,12 +44,12 @@ public class PlanFinalizer {
 
 	private final MemoryService memoryService;
 
-	public PlanFinalizer(LlmService llmService, PlanExecutionRecorder recorder, LynxeProperties lynxeProperties,
+	public PlanFinalizer(LlmService llmService, PlanExecutionRecorder recorder, AgentJProperties agentjProperties,
 			StreamingResponseHandler streamingResponseHandler, TaskInterruptionManager taskInterruptionManager,
 			MemoryService memoryService) {
 		this.llmService = llmService;
 		this.recorder = recorder;
-		this.lynxeProperties = lynxeProperties;
+		this.agentjProperties = agentjProperties;
 		this.streamingResponseHandler = streamingResponseHandler;
 		this.taskInterruptionManager = taskInterruptionManager;
 		this.memoryService = memoryService;
@@ -65,7 +65,7 @@ public class PlanFinalizer {
 				context.getPlan().getPlanExecutionStateStringFormat(false), "title", context.getTitle());
 
 		String summaryPrompt = """
-				You are lynxe, an AI assistant capable of responding to user requests. You need to respond to the user's request based on the execution results of this step-by-step execution plan.
+				You are agentj, an AI assistant capable of responding to user requests. You need to respond to the user's request based on the execution results of this step-by-step execution plan.
 
 
 				Step-by-step plan execution details:
@@ -88,7 +88,7 @@ public class PlanFinalizer {
 		Map<String, Object> promptVariables = Map.of("title", title);
 
 		String directResponsePrompt = """
-				You are lynxe, an AI assistant capable of responding to user requests. Currently in direct feedback mode, you need to directly respond to the user's simple requests without complex planning and decomposition.
+				You are agentj, an AI assistant capable of responding to user requests. Currently in direct feedback mode, you need to directly respond to the user's simple requests without complex planning and decomposition.
 
 				The current user request is:
 
@@ -117,7 +117,7 @@ public class PlanFinalizer {
 		configureMemoryAdvisors(requestSpec, context);
 
 		Flux<ChatResponse> responseFlux = requestSpec.stream().chatResponse();
-		boolean isDebugModel = lynxeProperties.getDebugDetail() != null && lynxeProperties.getDebugDetail();
+		boolean isDebugModel = agentjProperties.getDebugDetail() != null && agentjProperties.getDebugDetail();
 		return streamingResponseHandler.processStreamingTextResponse(responseFlux, operationName,
 				context.getCurrentPlanId(), isDebugModel, inputCharCount);
 	}
@@ -362,7 +362,7 @@ public class PlanFinalizer {
 
 		try {
 			AssistantMessage assistantMessage = new AssistantMessage(result);
-			llmService.addToConversationMemoryWithLimit(lynxeProperties.getMaxMemory(), context.getConversationId(),
+			llmService.addToConversationMemoryWithLimit(agentjProperties.getMaxMemory(), context.getConversationId(),
 					assistantMessage, com.wangliang.agentj.user.context.UserContextHolder.getUserId());
 			log.info("Saved agent execution result to conversation memory for conversationId: {}, result length: {}",
 					context.getConversationId(), result.length());

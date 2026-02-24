@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 /**
  * @author wangliang
  * @time 2025/7/31
- * @desc lynxe homepage redirect controller
+ * @desc agentj homepage redirect controller
  */
 @Controller
 public class RedirectController {

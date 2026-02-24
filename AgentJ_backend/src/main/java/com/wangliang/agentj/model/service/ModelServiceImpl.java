@@ -16,7 +16,7 @@
 package com.wangliang.agentj.model.service;
 
 import cn.hutool.core.util.StrUtil;
-import com.wangliang.agentj.event.LynxeEventPublisher;
+import com.wangliang.agentj.event.AgentJEventPublisher;
 import com.wangliang.agentj.event.ModelChangeEvent;
 import com.wangliang.agentj.llm.LlmService;
 import com.wangliang.agentj.model.entity.DynamicModelEntity;
@@ -56,7 +56,7 @@ public class ModelServiceImpl implements ModelService {
 	private final DynamicModelRepository repository;
 
 	@Autowired
-	private LynxeEventPublisher publisher;
+	private AgentJEventPublisher publisher;
 
 	@Autowired
 	private LlmService llmService;

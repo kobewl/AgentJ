@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.core.env.Environment;
 
 @Component
-@ConfigurationProperties(prefix = "lynxe")
-public class LynxeProperties {
+@ConfigurationProperties(prefix = "agentj")
+public class AgentJProperties {
 
 	@Lazy
 	@Autowired
@@ -22,15 +22,15 @@ public class LynxeProperties {
 	// Browser Settings
 	// Begin-------------------------------------------------------------------------------------------
 
-	@ConfigProperty(group = "lynxe", subGroup = "browser", key = "headless", path = "lynxe.browser.headless",
-			description = "lynxe.browser.headless.description", defaultValue = "false",
+	@ConfigProperty(group = "agentj", subGroup = "browser", key = "headless", path = "agentj.browser.headless",
+			description = "agentj.browser.headless.description", defaultValue = "false",
 			inputType = ConfigInputType.CHECKBOX,
-			options = { @ConfigOption(value = "true", label = "lynxe.browser.headless.option.true"),
-					@ConfigOption(value = "false", label = "lynxe.browser.headless.option.false") })
+			options = { @ConfigOption(value = "true", label = "agentj.browser.headless.option.true"),
+					@ConfigOption(value = "false", label = "agentj.browser.headless.option.false") })
 	private volatile Boolean browserHeadless;
 
 	public Boolean getBrowserHeadless() {
-		String configPath = "lynxe.browser.headless";
+		String configPath = "agentj.browser.headless";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			browserHeadless = Boolean.valueOf(value);
@@ -42,13 +42,13 @@ public class LynxeProperties {
 		this.browserHeadless = browserHeadless;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "browser", key = "requestTimeout",
-			path = "lynxe.browser.requestTimeout", description = "lynxe.browser.requestTimeout.description",
+	@ConfigProperty(group = "agentj", subGroup = "browser", key = "requestTimeout",
+			path = "agentj.browser.requestTimeout", description = "agentj.browser.requestTimeout.description",
 			defaultValue = "180", inputType = ConfigInputType.NUMBER)
 	private volatile Integer browserRequestTimeout;
 
 	public Integer getBrowserRequestTimeout() {
-		String configPath = "lynxe.browser.requestTimeout";
+		String configPath = "agentj.browser.requestTimeout";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			browserRequestTimeout = Integer.valueOf(value);
@@ -60,15 +60,15 @@ public class LynxeProperties {
 		this.browserRequestTimeout = browserRequestTimeout;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "general", key = "debugDetail", path = "lynxe.general.debugDetail",
-			description = "lynxe.general.debugDetail.description", defaultValue = "false",
+	@ConfigProperty(group = "agentj", subGroup = "general", key = "debugDetail", path = "agentj.general.debugDetail",
+			description = "agentj.general.debugDetail.description", defaultValue = "false",
 			inputType = ConfigInputType.CHECKBOX,
-			options = { @ConfigOption(value = "true", label = "lynxe.general.debugDetail.option.true"),
-					@ConfigOption(value = "false", label = "lynxe.general.debugDetail.option.false") })
+			options = { @ConfigOption(value = "true", label = "agentj.general.debugDetail.option.true"),
+					@ConfigOption(value = "false", label = "agentj.general.debugDetail.option.false") })
 	private volatile Boolean debugDetail;
 
 	public Boolean getDebugDetail() {
-		String configPath = "lynxe.general.debugDetail";
+		String configPath = "agentj.general.debugDetail";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			debugDetail = Boolean.valueOf(value);
@@ -85,21 +85,21 @@ public class LynxeProperties {
 
 	// General Settings
 	// Begin---------------------------------------------------------------------------------------
-	@ConfigProperty(group = "lynxe", subGroup = "general", key = "openBrowser", path = "lynxe.general.openBrowser",
-			description = "lynxe.general.openBrowser.description", defaultValue = "true",
+	@ConfigProperty(group = "agentj", subGroup = "general", key = "openBrowser", path = "agentj.general.openBrowser",
+			description = "agentj.general.openBrowser.description", defaultValue = "true",
 			inputType = ConfigInputType.CHECKBOX,
-			options = { @ConfigOption(value = "true", label = "lynxe.general.openBrowser.option.true"),
-					@ConfigOption(value = "false", label = "lynxe.general.openBrowser.option.false") })
-	@Value("${lynxe.general.openBrowser:#{null}}")
+			options = { @ConfigOption(value = "true", label = "agentj.general.openBrowser.option.true"),
+					@ConfigOption(value = "false", label = "agentj.general.openBrowser.option.false") })
+	@Value("${agentj.general.openBrowser:#{null}}")
 	private volatile Boolean openBrowserAuto;
 
 	public Boolean getOpenBrowserAuto() {
 		// 如果配置文件/环境变量显式指定，优先使用
-		if (environment.containsProperty("lynxe.general.openBrowser")) {
+		if (environment.containsProperty("agentj.general.openBrowser")) {
 			return openBrowserAuto;
 		}
 
-		String configPath = "lynxe.general.openBrowser";
+		String configPath = "agentj.general.openBrowser";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			openBrowserAuto = Boolean.valueOf(value);
@@ -115,15 +115,15 @@ public class LynxeProperties {
 		this.openBrowserAuto = openBrowserAuto;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "browser", key = "enableShortUrl",
-			path = "lynxe.browser.enableShortUrl", description = "lynxe.browser.enableShortUrl.description",
+	@ConfigProperty(group = "agentj", subGroup = "browser", key = "enableShortUrl",
+			path = "agentj.browser.enableShortUrl", description = "agentj.browser.enableShortUrl.description",
 			defaultValue = "true", inputType = ConfigInputType.CHECKBOX,
-			options = { @ConfigOption(value = "true", label = "lynxe.browser.enableShortUrl.option.true"),
-					@ConfigOption(value = "false", label = "lynxe.browser.enableShortUrl.option.false") })
+			options = { @ConfigOption(value = "true", label = "agentj.browser.enableShortUrl.option.true"),
+					@ConfigOption(value = "false", label = "agentj.browser.enableShortUrl.option.false") })
 	private volatile Boolean enableShortUrl;
 
 	public Boolean getEnableShortUrl() {
-		String configPath = "lynxe.browser.enableShortUrl";
+		String configPath = "agentj.browser.enableShortUrl";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			enableShortUrl = Boolean.valueOf(value);
@@ -145,12 +145,12 @@ public class LynxeProperties {
 	// Agent Settings
 	// Begin---------------------------------------------------------------------------------------------
 
-	@ConfigProperty(group = "lynxe", subGroup = "agent", key = "maxSteps", path = "lynxe.maxSteps",
-			description = "lynxe.agent.maxSteps.description", defaultValue = "30", inputType = ConfigInputType.NUMBER)
+	@ConfigProperty(group = "agentj", subGroup = "agent", key = "maxSteps", path = "agentj.maxSteps",
+			description = "agentj.agent.maxSteps.description", defaultValue = "30", inputType = ConfigInputType.NUMBER)
 	private volatile Integer maxSteps;
 
 	public Integer getMaxSteps() {
-		String configPath = "lynxe.maxSteps";
+		String configPath = "agentj.maxSteps";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			maxSteps = Integer.valueOf(value);
@@ -162,13 +162,13 @@ public class LynxeProperties {
 		this.maxSteps = maxSteps;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "agent", key = "userInputTimeout",
-			path = "lynxe.agent.userInputTimeout", description = "lynxe.agent.userInputTimeout.description",
+	@ConfigProperty(group = "agentj", subGroup = "agent", key = "userInputTimeout",
+			path = "agentj.agent.userInputTimeout", description = "agentj.agent.userInputTimeout.description",
 			defaultValue = "300", inputType = ConfigInputType.NUMBER)
 	private volatile Integer userInputTimeout;
 
 	public Integer getUserInputTimeout() {
-		String configPath = "lynxe.agent.userInputTimeout";
+		String configPath = "agentj.agent.userInputTimeout";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			userInputTimeout = Integer.valueOf(value);
@@ -187,13 +187,13 @@ public class LynxeProperties {
 		this.userInputTimeout = userInputTimeout;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "agent", key = "maxMemory", path = "lynxe.agent.maxMemory",
-			description = "lynxe.agent.maxMemory.description", defaultValue = "1000",
+	@ConfigProperty(group = "agentj", subGroup = "agent", key = "maxMemory", path = "agentj.agent.maxMemory",
+			description = "agentj.agent.maxMemory.description", defaultValue = "1000",
 			inputType = ConfigInputType.NUMBER)
 	private volatile Integer maxMemory;
 
 	public Integer getMaxMemory() {
-		String configPath = "lynxe.agent.maxMemory";
+		String configPath = "agentj.agent.maxMemory";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			maxMemory = Integer.valueOf(value);
@@ -208,16 +208,16 @@ public class LynxeProperties {
 		this.maxMemory = maxMemory;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "general", key = "enableConversationMemory",
-			path = "lynxe.general.enableConversationMemory",
-			description = "lynxe.general.enableConversationMemory.description", defaultValue = "true",
+	@ConfigProperty(group = "agentj", subGroup = "general", key = "enableConversationMemory",
+			path = "agentj.general.enableConversationMemory",
+			description = "agentj.general.enableConversationMemory.description", defaultValue = "true",
 			inputType = ConfigInputType.CHECKBOX,
-			options = { @ConfigOption(value = "true", label = "lynxe.general.enableConversationMemory.option.true"),
-					@ConfigOption(value = "false", label = "lynxe.general.enableConversationMemory.option.false") })
+			options = { @ConfigOption(value = "true", label = "agentj.general.enableConversationMemory.option.true"),
+					@ConfigOption(value = "false", label = "agentj.general.enableConversationMemory.option.false") })
 	private volatile Boolean enableConversationMemory;
 
 	public Boolean getEnableConversationMemory() {
-		String configPath = "lynxe.general.enableConversationMemory";
+		String configPath = "agentj.general.enableConversationMemory";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			enableConversationMemory = Boolean.valueOf(value);
@@ -233,14 +233,14 @@ public class LynxeProperties {
 		this.enableConversationMemory = enableConversationMemory;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "agent", key = "conversationMemoryMaxChars",
-			path = "lynxe.agent.conversationMemoryMaxChars",
-			description = "lynxe.agent.conversationMemoryMaxChars.description", defaultValue = "30000",
+	@ConfigProperty(group = "agentj", subGroup = "agent", key = "conversationMemoryMaxChars",
+			path = "agentj.agent.conversationMemoryMaxChars",
+			description = "agentj.agent.conversationMemoryMaxChars.description", defaultValue = "30000",
 			inputType = ConfigInputType.NUMBER)
 	private volatile Integer conversationMemoryMaxChars;
 
 	public Integer getConversationMemoryMaxChars() {
-		String configPath = "lynxe.agent.conversationMemoryMaxChars";
+		String configPath = "agentj.agent.conversationMemoryMaxChars";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			conversationMemoryMaxChars = Integer.valueOf(value);
@@ -255,15 +255,15 @@ public class LynxeProperties {
 		this.conversationMemoryMaxChars = conversationMemoryMaxChars;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "agent", key = "parallelToolCalls",
-			path = "lynxe.agent.parallelToolCalls", description = "lynxe.agent.parallelToolCalls.description",
+	@ConfigProperty(group = "agentj", subGroup = "agent", key = "parallelToolCalls",
+			path = "agentj.agent.parallelToolCalls", description = "agentj.agent.parallelToolCalls.description",
 			defaultValue = "false", inputType = ConfigInputType.CHECKBOX,
-			options = { @ConfigOption(value = "true", label = "lynxe.agent.parallelToolCalls.option.true"),
-					@ConfigOption(value = "false", label = "lynxe.agent.parallelToolCalls.option.false") })
+			options = { @ConfigOption(value = "true", label = "agentj.agent.parallelToolCalls.option.true"),
+					@ConfigOption(value = "false", label = "agentj.agent.parallelToolCalls.option.false") })
 	private volatile Boolean parallelToolCalls;
 
 	public Boolean getParallelToolCalls() {
-		String configPath = "lynxe.agent.parallelToolCalls";
+		String configPath = "agentj.agent.parallelToolCalls";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			parallelToolCalls = Boolean.valueOf(value);
@@ -278,13 +278,13 @@ public class LynxeProperties {
 		this.parallelToolCalls = parallelToolCalls;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "agent", key = "executorPoolSize",
-			path = "lynxe.agent.executorPoolSize", description = "lynxe.agent.executorPoolSize.description",
+	@ConfigProperty(group = "agentj", subGroup = "agent", key = "executorPoolSize",
+			path = "agentj.agent.executorPoolSize", description = "agentj.agent.executorPoolSize.description",
 			defaultValue = "5", inputType = ConfigInputType.NUMBER)
 	private volatile Integer executorPoolSize;
 
 	public Integer getExecutorPoolSize() {
-		String configPath = "lynxe.agent.executorPoolSize";
+		String configPath = "agentj.agent.executorPoolSize";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			executorPoolSize = Integer.valueOf(value);
@@ -300,13 +300,13 @@ public class LynxeProperties {
 		this.executorPoolSize = executorPoolSize;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "agent", key = "llmReadTimeout", path = "lynxe.agent.llmReadTimeout",
-			description = "lynxe.agent.llmReadTimeout.description", defaultValue = "120",
+	@ConfigProperty(group = "agentj", subGroup = "agent", key = "llmReadTimeout", path = "agentj.agent.llmReadTimeout",
+			description = "agentj.agent.llmReadTimeout.description", defaultValue = "120",
 			inputType = ConfigInputType.NUMBER)
 	private volatile Integer llmReadTimeout;
 
 	public Integer getLlmReadTimeout() {
-		String configPath = "lynxe.agent.llmReadTimeout";
+		String configPath = "agentj.agent.llmReadTimeout";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			llmReadTimeout = Integer.valueOf(value);
@@ -332,13 +332,13 @@ public class LynxeProperties {
 	// End----------------------------------------------------------------------------------------------
 
 	// File System Security SubGroup
-	@ConfigProperty(group = "lynxe", subGroup = "general", key = "externalLinkedFolder",
-			path = "lynxe.general.externalLinkedFolder", description = "lynxe.general.externalLinkedFolder.description",
+	@ConfigProperty(group = "agentj", subGroup = "general", key = "externalLinkedFolder",
+			path = "agentj.general.externalLinkedFolder", description = "agentj.general.externalLinkedFolder.description",
 			defaultValue = "", inputType = ConfigInputType.TEXT)
 	private volatile String externalLinkedFolder = "";
 
 	public String getExternalLinkedFolder() {
-		String configPath = "lynxe.general.externalLinkedFolder";
+		String configPath = "agentj.general.externalLinkedFolder";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			externalLinkedFolder = value;
@@ -353,14 +353,14 @@ public class LynxeProperties {
 	// MCP Service Loader Settings
 	// Begin--------------------------------------------------------------------------------------------
 
-	@ConfigProperty(group = "lynxe", subGroup = "mcpServiceLoader", key = "connectionTimeoutSeconds",
-			path = "lynxe.mcpServiceLoader.connectionTimeoutSeconds",
-			description = "lynxe.mcpServiceLoader.connectionTimeoutSeconds.description", defaultValue = "20",
+	@ConfigProperty(group = "agentj", subGroup = "mcpServiceLoader", key = "connectionTimeoutSeconds",
+			path = "agentj.mcpServiceLoader.connectionTimeoutSeconds",
+			description = "agentj.mcpServiceLoader.connectionTimeoutSeconds.description", defaultValue = "20",
 			inputType = ConfigInputType.NUMBER)
 	private volatile Integer mcpConnectionTimeoutSeconds;
 
 	public Integer getMcpConnectionTimeoutSeconds() {
-		String configPath = "lynxe.mcpServiceLoader.connectionTimeoutSeconds";
+		String configPath = "agentj.mcpServiceLoader.connectionTimeoutSeconds";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			mcpConnectionTimeoutSeconds = Integer.valueOf(value);
@@ -376,14 +376,14 @@ public class LynxeProperties {
 		this.mcpConnectionTimeoutSeconds = mcpConnectionTimeoutSeconds;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "mcpServiceLoader", key = "maxRetryCount",
-			path = "lynxe.mcpServiceLoader.maxRetryCount",
-			description = "lynxe.mcpServiceLoader.maxRetryCount.description", defaultValue = "3",
+	@ConfigProperty(group = "agentj", subGroup = "mcpServiceLoader", key = "maxRetryCount",
+			path = "agentj.mcpServiceLoader.maxRetryCount",
+			description = "agentj.mcpServiceLoader.maxRetryCount.description", defaultValue = "3",
 			inputType = ConfigInputType.NUMBER)
 	private volatile Integer mcpMaxRetryCount;
 
 	public Integer getMcpMaxRetryCount() {
-		String configPath = "lynxe.mcpServiceLoader.maxRetryCount";
+		String configPath = "agentj.mcpServiceLoader.maxRetryCount";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			mcpMaxRetryCount = Integer.valueOf(value);
@@ -399,14 +399,14 @@ public class LynxeProperties {
 		this.mcpMaxRetryCount = mcpMaxRetryCount;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "mcpServiceLoader", key = "maxConcurrentConnections",
-			path = "lynxe.mcpServiceLoader.maxConcurrentConnections",
-			description = "lynxe.mcpServiceLoader.maxConcurrentConnections.description", defaultValue = "10",
+	@ConfigProperty(group = "agentj", subGroup = "mcpServiceLoader", key = "maxConcurrentConnections",
+			path = "agentj.mcpServiceLoader.maxConcurrentConnections",
+			description = "agentj.mcpServiceLoader.maxConcurrentConnections.description", defaultValue = "10",
 			inputType = ConfigInputType.NUMBER)
 	private volatile Integer mcpMaxConcurrentConnections;
 
 	public Integer getMcpMaxConcurrentConnections() {
-		String configPath = "lynxe.mcpServiceLoader.maxConcurrentConnections";
+		String configPath = "agentj.mcpServiceLoader.maxConcurrentConnections";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			mcpMaxConcurrentConnections = Integer.valueOf(value);
@@ -428,13 +428,13 @@ public class LynxeProperties {
 	// Image Recognition Settings
 	// Begin--------------------------------------------------------------------------------------------
 
-	@ConfigProperty(group = "lynxe", subGroup = "imageRecognition", key = "poolSize",
-			path = "lynxe.imageRecognition.poolSize", description = "lynxe.imageRecognition.poolSize.description",
+	@ConfigProperty(group = "agentj", subGroup = "imageRecognition", key = "poolSize",
+			path = "agentj.imageRecognition.poolSize", description = "agentj.imageRecognition.poolSize.description",
 			defaultValue = "4", inputType = ConfigInputType.NUMBER)
 	private volatile Integer imageRecognitionPoolSize;
 
 	public Integer getImageRecognitionPoolSize() {
-		String configPath = "lynxe.imageRecognition.poolSize";
+		String configPath = "agentj.imageRecognition.poolSize";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			imageRecognitionPoolSize = Integer.valueOf(value);
@@ -450,13 +450,13 @@ public class LynxeProperties {
 		this.imageRecognitionPoolSize = imageRecognitionPoolSize;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "imageRecognition", key = "modelName",
-			path = "lynxe.imageRecognition.modelName", description = "lynxe.imageRecognition.modelName.description",
+	@ConfigProperty(group = "agentj", subGroup = "imageRecognition", key = "modelName",
+			path = "agentj.imageRecognition.modelName", description = "agentj.imageRecognition.modelName.description",
 			defaultValue = "qwen-vl-ocr-latest", inputType = ConfigInputType.TEXT)
 	private volatile String imageRecognitionModelName;
 
 	public String getImageRecognitionModelName() {
-		String configPath = "lynxe.imageRecognition.modelName";
+		String configPath = "agentj.imageRecognition.modelName";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			imageRecognitionModelName = value;
@@ -472,13 +472,13 @@ public class LynxeProperties {
 		this.imageRecognitionModelName = imageRecognitionModelName;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "imageRecognition", key = "dpi", path = "lynxe.imageRecognition.dpi",
-			description = "lynxe.imageRecognition.dpi.description", defaultValue = "120.0",
+	@ConfigProperty(group = "agentj", subGroup = "imageRecognition", key = "dpi", path = "agentj.imageRecognition.dpi",
+			description = "agentj.imageRecognition.dpi.description", defaultValue = "120.0",
 			inputType = ConfigInputType.NUMBER)
 	private volatile Float imageRecognitionDpi;
 
 	public Float getImageRecognitionDpi() {
-		String configPath = "lynxe.imageRecognition.dpi";
+		String configPath = "agentj.imageRecognition.dpi";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			imageRecognitionDpi = Float.valueOf(value);
@@ -494,13 +494,13 @@ public class LynxeProperties {
 		this.imageRecognitionDpi = imageRecognitionDpi;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "imageRecognition", key = "imageType",
-			path = "lynxe.imageRecognition.imageType", description = "lynxe.imageRecognition.imageType.description",
+	@ConfigProperty(group = "agentj", subGroup = "imageRecognition", key = "imageType",
+			path = "agentj.imageRecognition.imageType", description = "agentj.imageRecognition.imageType.description",
 			defaultValue = "RGB", inputType = ConfigInputType.TEXT)
 	private volatile String imageRecognitionImageType;
 
 	public String getImageRecognitionImageType() {
-		String configPath = "lynxe.imageRecognition.imageType";
+		String configPath = "agentj.imageRecognition.imageType";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			imageRecognitionImageType = value;
@@ -516,14 +516,14 @@ public class LynxeProperties {
 		this.imageRecognitionImageType = imageRecognitionImageType;
 	}
 
-	@ConfigProperty(group = "lynxe", subGroup = "imageRecognition", key = "maxRetryAttempts",
-			path = "lynxe.imageRecognition.maxRetryAttempts",
-			description = "lynxe.imageRecognition.maxRetryAttempts.description", defaultValue = "3",
+	@ConfigProperty(group = "agentj", subGroup = "imageRecognition", key = "maxRetryAttempts",
+			path = "agentj.imageRecognition.maxRetryAttempts",
+			description = "agentj.imageRecognition.maxRetryAttempts.description", defaultValue = "3",
 			inputType = ConfigInputType.NUMBER)
 	private volatile Integer imageRecognitionMaxRetryAttempts;
 
 	public Integer getImageRecognitionMaxRetryAttempts() {
-		String configPath = "lynxe.imageRecognition.maxRetryAttempts";
+		String configPath = "agentj.imageRecognition.maxRetryAttempts";
 		String value = configService.getConfigValue(configPath);
 		if (value != null) {
 			imageRecognitionMaxRetryAttempts = Integer.valueOf(value);
