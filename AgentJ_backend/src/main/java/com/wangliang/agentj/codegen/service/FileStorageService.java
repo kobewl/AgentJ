@@ -1,18 +1,3 @@
-/*
- * Copyright 2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.wangliang.agentj.codegen.service;
 
 import org.slf4j.Logger;
@@ -157,10 +142,12 @@ public class FileStorageService {
 	/**
 	 * 删除应用文件
 	 *
-	 * @param appId 应用 ID
+	 * @param appId     应用 ID
+	 * @param deployKey 部署标识（可为空）
 	 */
-	public void deleteAppFiles(Long appId) {
+	public void deleteAppFiles(Long appId, String deployKey) {
 		try {
+			// 删除输出目录中的文件
 			Path appDir = Paths.get(outputDir, String.valueOf(appId));
 			if (Files.exists(appDir)) {
 				try (Stream<Path> walk = Files.walk(appDir)) {
@@ -173,7 +160,25 @@ public class FileStorageService {
 								}
 							});
 				}
-				log.info("Deleted files for app {}", appId);
+				log.info("Deleted output files for app {}", appId);
+			}
+
+			// 删除部署目录中的文件
+			if (deployKey != null && !deployKey.isBlank()) {
+				Path deployPath = Paths.get(deployDir, deployKey);
+				if (Files.exists(deployPath)) {
+					try (Stream<Path> walk = Files.walk(deployPath)) {
+						walk.sorted((a, b) -> b.compareTo(a))
+								.forEach(path -> {
+									try {
+										Files.delete(path);
+									} catch (IOException e) {
+										log.warn("Failed to delete file: {}", path);
+									}
+								});
+					}
+					log.info("Deleted deploy files for deployKey {}", deployKey);
+				}
 			}
 		} catch (IOException e) {
 			log.error("Failed to delete files for app {}", appId, e);
